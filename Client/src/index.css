@@ -1,0 +1,19 @@
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@200..1000&display=swap');
+@import "tailwindcss";
+@theme {
+    
+}
+
+body {
+    
+}
+
+@layer utilities {
+  .scrollbar-none::-webkit-scrollbar {
+    display: none; 
+  }
+  .scrollbar-none {
+    -ms-overflow-style: none;  
+    scrollbar-width: none; 
+  }
+}
