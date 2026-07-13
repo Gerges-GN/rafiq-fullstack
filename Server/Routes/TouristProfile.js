@@ -7,5 +7,7 @@ router.post('/', profileController.createProfile);
 router.get('/:userId', profileController.getProfileByUserId);
 router.put('/:userId', profileController.updateProfile);      // Changed to :userId
 router.delete('/:userId', profileController.deleteProfile);   // Changed to :userId
+router.get('/', profileController.getAllProfiles);            // Added route for getting all profiles
+
 
 module.exports = router;

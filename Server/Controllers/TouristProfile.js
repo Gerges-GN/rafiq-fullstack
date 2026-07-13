@@ -56,3 +56,25 @@ exports.deleteProfile = async (req, res) => {
     res.status(400).json({ error: error.message });
   }
 };
+
+// Get All Profiles with filtering and sorting
+exports.getAllProfiles = async (req, res) => {
+  try {
+    // Extract query parameters (e.g., /api/profiles?city=Cairo)
+    const { city } = req.query;
+
+    const filter = {};
+
+    // Apply filter if city is provided
+    if (city) filter.city = city;
+
+    const profiles = await Profile.find(filter)
+      .populate('owner', 'username email')
+      .populate('posts')
+      .sort({ createdAt: -1 }); // Default sorting by newest first
+
+    res.status(200).json(profiles);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};

@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { MapPin, Calendar, SlidersHorizontal, Cpu, ChevronRight, CalendarRange, Clock, ExternalLink } from 'lucide-react';
 
 function TripPlanner() {
   const [city, setCity] = useState('cairo');
   const [budget, setBudget] = useState('standard');
-  const [days, setDays] = useState(3); 
+  const [days, setDays] = useState(3);
   const [activeDayIndex, setActiveDayIndex] = useState(0);
   const [generatedPlan, setGeneratedPlan] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -272,28 +273,45 @@ function TripPlanner() {
     e.preventDefault();
     setLoading(true);
     setGeneratedPlan(null);
-    
+
     setTimeout(() => {
       const customizedPlan = currentData.itinerary.slice(0, parseInt(days));
       setGeneratedPlan(customizedPlan);
-      setActiveDayIndex(0); 
+      setActiveDayIndex(0);
       setLoading(false);
     }, 800);
   };
 
+  const destinations = [
+    { id: 'cairo', label: 'Cairo', img: 'https://images.unsplash.com/photo-1539650116574-8efeb43e2750?q=80&w=200' },
+    { id: 'alexandria', label: 'Alexandria', img: 'https://images.unsplash.com/photo-1628135111195-20703c94f57c?q=80&w=200' },
+    { id: 'luxor', label: 'Luxor', img: wiki("Templo de Karnak, Luxor, Egipto, 2022-04-03, DD 144.jpg", 200) },
+    { id: 'aswan', label: 'Aswan', img: wiki("Aswan Philae temple Nile view.jpg", 200) },
+    { id: 'hurghada', label: 'Hurghada', img: 'https://images.unsplash.com/photo-1510414842594-a61c69b5ae57?q=80&w=200' },
+    { id: 'sharm', label: 'Sharm El Sheikh', img: wiki("Sharm El Sheikh Panoramic.jpg", 200) },
+    { id: 'dahab', label: 'Dahab', img: 'https://images.unsplash.com/photo-1544735716-392fe2489ffa?q=80&w=200' },
+    { id: 'nuweiba', label: 'Nuweiba', img: 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?q=80&w=200' },
+    { id: 'siwa', label: 'Siwa Oasis', img: wiki("Siwa Oasis, Houses in the desert, Egypt.jpg", 200) },
+    { id: 'matrouh', label: 'Marsa Matrouh', img: wiki("Marsa Matruh beach, Egypt.jpg", 200) },
+    { id: 'fayoum', label: 'Fayoum', img: wiki("MadinatFayyumWaterWheel.jpg", 200) },
+    { id: 'portsaid', label: 'Port Said', img: wiki("Evergreen container ship in Suez Canal (4171874814).jpg", 200) },
+    { id: 'ismailia', label: 'Ismailia', img: wiki("Evergreen container ship in Suez Canal (4171874814).jpg", 200) },
+    { id: 'suez', label: 'Suez', img: wiki("Evergreen container ship in Suez Canal (4171874814).jpg", 200) }
+  ];
+
   return (
-    <div className="trip-planner-layout position-relative" style={{ backgroundColor: '#fdfcf7', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-      
+    <div className="relative" style={{ backgroundColor: '#fdfcf7', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+
       {/* 1. CINEMATIC HERO DESIGN BLOCK */}
-      <section 
+      <section
         ref={heroRef}
         onMouseMove={handleHeroMouseMove}
         onMouseLeave={handleHeroMouseLeave}
-        className="position-relative overflow-hidden d-flex flex-column justify-content-between pt-5" 
+        className="relative overflow-hidden flex flex-col justify-between pt-12"
         style={{ minHeight: '90vh' }}>
 
         {/* PARALLAX + KEN BURNS + CROSSFADE BACKGROUND LAYERS */}
-        <div 
+        <div
           className="hero-parallax-wrapper"
           style={{ transform: `translate3d(${parallax.x}px, ${parallax.y}px, 0)` }}>
           <div
@@ -324,93 +342,90 @@ function TripPlanner() {
           ))}
         </div>
 
-        <div className="position-absolute top-0 start-0 w-100 h-100" style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.2) 50%, rgba(15,20,25,0.95) 100%)', zIndex: 2 }}></div>
+        <div className="absolute top-0 left-0 w-full h-full z-[2]" style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.2) 50%, rgba(15,20,25,0.95) 100%)' }}></div>
 
-        <div className="container position-relative text-center text-white my-auto pt-4" style={{ zIndex: 3 }}>
-          <h1 className="display-3 fw-bold mb-3" style={{ letterSpacing: '-1.5px', fontStyle: 'italic', fontFamily: "'Playfair Display', serif" }}>
+        <div className="relative text-center text-white my-auto pt-8 z-[3] max-w-7xl mx-auto px-4 w-full">
+          <h1 className="text-5xl md:text-7xl font-bold mb-3 italic" style={{ letterSpacing: '-1.5px', fontFamily: "'Playfair Display', serif" }}>
             Design Your Perfect Stay
           </h1>
-          <p className="fs-5 opacity-75 max-width-600 mx-auto fw-light mb-4 text-white-50">
+          <p className="text-lg opacity-75 max-w-[600px] mx-auto font-light mb-6 text-white/50">
             Tell us your duration. We formulate tailored structural digital itineraries automatically.
           </p>
 
           {/* GLASSMORPHISM FILTER PANEL */}
           <div className="mx-auto" style={{ maxWidth: '950px' }}>
-            <form onSubmit={handleGeneratePlan} 
-              className="p-3 rounded-5 border shadow-lg d-flex flex-column flex-md-row align-items-center gap-3"
-              style={{ 
-                background: 'rgba(255, 255, 255, 0.08)', 
-                backdropFilter: 'blur(30px)', 
+            <form onSubmit={handleGeneratePlan}
+              className="p-4 rounded-[2rem] border shadow-lg flex flex-col md:flex-row items-center gap-4"
+              style={{
+                background: 'rgba(255, 255, 255, 0.08)',
+                backdropFilter: 'blur(30px)',
                 WebkitBackdropFilter: 'blur(30px)',
-                borderColor: 'rgba(255, 255, 255, 0.18)' 
+                borderColor: 'rgba(255, 255, 255, 0.18)'
               }}>
-              
+
               {/* Selector 1: Destination */}
-              <div className="d-flex align-items-center text-start px-3 py-1 flex-fill w-100 border-end border-white-20">
-                <i className="bi bi-geo-alt text-white opacity-60 fs-5 me-2.5"></i>
-                <div className="flex-fill">
-                  <label className="d-block text-white-50 fw-bold tracking-wider mb-0" style={{ fontSize: '0.65rem' }}>DESTINATION</label>
-                  <select className="form-select bg-transparent text-white border-0 p-0 fw-semibold shadow-none" 
-                    style={{ fontSize: '0.9rem', cursor: 'pointer' }}
-                    value={city} 
+              <div className="flex items-center text-left px-4 py-1 flex-1 w-full border-white/20 md:border-r border-b md:border-b-0 pb-3 md:pb-1">
+                <MapPin className="text-white opacity-60 w-5 h-5 mr-2.5 shrink-0" />
+                <div className="flex-1">
+                  <label className="block text-white/50 font-bold tracking-wider mb-0 text-[0.65rem]">DESTINATION</label>
+                  <select className="w-full bg-transparent text-white border-0 p-0 font-semibold shadow-none focus:outline-none focus:ring-0 text-sm cursor-pointer"
+                    value={city}
                     onChange={(e) => { setCity(e.target.value); setGeneratedPlan(null); }}>
-                    <option value="cairo" className="text-dark">Cairo Region</option>
-                    <option value="alexandria" className="text-dark">Alexandria Coast</option>
-                    <option value="luxor" className="text-dark">Luxor Monuments</option>
-                    <option value="aswan" className="text-dark">Aswan Nile South</option>
-                    <option value="hurghada" className="text-dark">Hurghada Riviera</option>
-                    <option value="sharm" className="text-dark">Sharm El Sheikh</option>
-                    <option value="dahab" className="text-dark">Dahab Paradise</option>
-                    <option value="nuweiba" className="text-dark">Nuweiba Camps</option>
-                    <option value="siwa" className="text-dark">Siwa Oasis</option>
-                    <option value="matrouh" className="text-dark">Marsa Matrouh</option>
-                    <option value="fayoum" className="text-dark">Fayoum Lakes</option>
-                    <option value="portsaid" className="text-dark">Port Said Canal</option>
-                    <option value="ismailia" className="text-dark">Ismailia Garden City</option>
-                    <option value="suez" className="text-dark">Suez Gateway</option>
+                    <option value="cairo" className="text-gray-900">Cairo Region</option>
+                    <option value="alexandria" className="text-gray-900">Alexandria Coast</option>
+                    <option value="luxor" className="text-gray-900">Luxor Monuments</option>
+                    <option value="aswan" className="text-gray-900">Aswan Nile South</option>
+                    <option value="hurghada" className="text-gray-900">Hurghada Riviera</option>
+                    <option value="sharm" className="text-gray-900">Sharm El Sheikh</option>
+                    <option value="dahab" className="text-gray-900">Dahab Paradise</option>
+                    <option value="nuweiba" className="text-gray-900">Nuweiba Camps</option>
+                    <option value="siwa" className="text-gray-900">Siwa Oasis</option>
+                    <option value="matrouh" className="text-gray-900">Marsa Matrouh</option>
+                    <option value="fayoum" className="text-gray-900">Fayoum Lakes</option>
+                    <option value="portsaid" className="text-gray-900">Port Said Canal</option>
+                    <option value="ismailia" className="text-gray-900">Ismailia Garden City</option>
+                    <option value="suez" className="text-gray-900">Suez Gateway</option>
                   </select>
                 </div>
               </div>
 
               {/* Selector 2: Trip Duration Selector */}
-              <div className="d-flex align-items-center text-start px-3 py-1 flex-fill w-100 border-end border-white-20">
-                <i className="bi bi-calendar3 text-white opacity-60 fs-5 me-2.5"></i>
-                <div className="flex-fill">
-                  <label className="d-block text-white-50 fw-bold tracking-wider mb-0" style={{ fontSize: '0.65rem' }}>TRIP DURATION</label>
-                  <select className="form-select bg-transparent text-white border-0 p-0 fw-semibold shadow-none" 
-                    style={{ fontSize: '0.9rem', cursor: 'pointer' }}
-                    value={days} 
+              <div className="flex items-center text-left px-4 py-1 flex-1 w-full border-white/20 md:border-r border-b md:border-b-0 pb-3 md:pb-1">
+                <Calendar className="text-white opacity-60 w-5 h-5 mr-2.5 shrink-0" />
+                <div className="flex-1">
+                  <label className="block text-white/50 font-bold tracking-wider mb-0 text-[0.65rem]">TRIP DURATION</label>
+                  <select className="w-full bg-transparent text-white border-0 p-0 font-semibold shadow-none focus:outline-none focus:ring-0 text-sm cursor-pointer"
+                    value={days}
                     onChange={(e) => { setDays(e.target.value); setGeneratedPlan(null); }}>
-                    <option value="1" className="text-dark">1 Single Day</option>
-                    <option value="2" className="text-dark">2 Days Escape</option>
-                    <option value="3" className="text-dark">3 Days Standard</option>
-                    <option value="4" className="text-dark">4 Days Mini Week</option>
-                    <option value="5" className="text-dark">5 Days Immersion</option>
-                    <option value="6" className="text-dark">6 Days Deep Tour</option>
-                    <option value="7" className="text-dark">7 Days Full Epic</option>
+                    <option value="1" className="text-gray-900">1 Single Day</option>
+                    <option value="2" className="text-gray-900">2 Days Escape</option>
+                    <option value="3" className="text-gray-900">3 Days Standard</option>
+                    <option value="4" className="text-gray-900">4 Days Mini Week</option>
+                    <option value="5" className="text-gray-900">5 Days Immersion</option>
+                    <option value="6" className="text-gray-900">6 Days Deep Tour</option>
+                    <option value="7" className="text-gray-900">7 Days Full Epic</option>
                   </select>
                 </div>
               </div>
 
               {/* Selector 3: Budget */}
-              <div className="d-flex align-items-center text-start px-3 py-1 flex-fill w-100">
-                <i className="bi bi-sliders text-white opacity-60 fs-5 me-2.5"></i>
-                <div className="flex-fill">
-                  <label className="d-block text-white-50 fw-bold tracking-wider mb-0" style={{ fontSize: '0.65rem' }}>BUDGET TIER</label>
-                  <select className="form-select bg-transparent text-white border-0 p-0 fw-semibold shadow-none" 
-                    style={{ fontSize: '0.9rem', cursor: 'pointer' }}
-                    value={budget} 
+              <div className="flex items-center text-left px-4 py-1 flex-1 w-full">
+                <SlidersHorizontal className="text-white opacity-60 w-5 h-5 mr-2.5 shrink-0" />
+                <div className="flex-1">
+                  <label className="block text-white/50 font-bold tracking-wider mb-0 text-[0.65rem]">BUDGET TIER</label>
+                  <select className="w-full bg-transparent text-white border-0 p-0 font-semibold shadow-none focus:outline-none focus:ring-0 text-sm cursor-pointer"
+                    value={budget}
                     onChange={(e) => { setBudget(e.target.value); setGeneratedPlan(null); }}>
-                    <option value="economy" className="text-dark">Economy</option>
-                    <option value="standard" className="text-dark">Standard VIP</option>
+                    <option value="economy" className="text-gray-900">Economy</option>
+                    <option value="standard" className="text-gray-900">Standard VIP</option>
                   </select>
                 </div>
               </div>
 
               {/* Submit Action */}
-              <button type="submit" className="btn btn-lg rounded-pill text-white fw-bold px-4 py-2.5 w-100 w-md-auto border-0 shadow-sm" 
+              <button type="submit" className="text-lg rounded-full text-white font-bold px-6 py-2.5 w-full md:w-auto border-0 shadow-sm flex items-center justify-center gap-1.5"
                 style={{ backgroundColor: '#ff6f3c', fontSize: '0.95rem', minWidth: '160px' }}>
-                <i className="bi bi-cpu-fill me-1.5"></i> Build Plan
+                <Cpu className="w-4 h-4" /> Build Plan
               </button>
 
             </form>
@@ -418,27 +433,12 @@ function TripPlanner() {
         </div>
 
         {/* INTERACTIVE THUMBNAILS CONTAINER */}
-        <div className="container position-relative pb-4" style={{ zIndex: 3 }}>
-          <div className="row g-3 overflow-x-auto flex-nowrap pb-2 justify-content-md-center text-start hide-scrollbar">
-            {[
-              { id: 'cairo', label: 'Cairo', img: 'https://images.unsplash.com/photo-1539650116574-8efeb43e2750?q=80&w=200' },
-              { id: 'alexandria', label: 'Alexandria', img: 'https://images.unsplash.com/photo-1628135111195-20703c94f57c?q=80&w=200' },
-              { id: 'luxor', label: 'Luxor', img: wiki("Templo de Karnak, Luxor, Egipto, 2022-04-03, DD 144.jpg", 200) },
-              { id: 'aswan', label: 'Aswan', img: wiki("Aswan Philae temple Nile view.jpg", 200) },
-              { id: 'hurghada', label: 'Hurghada', img: 'https://images.unsplash.com/photo-1510414842594-a61c69b5ae57?q=80&w=200' },
-              { id: 'sharm', label: 'Sharm El Sheikh', img: wiki("Sharm El Sheikh Panoramic.jpg", 200) },
-              { id: 'dahab', label: 'Dahab', img: 'https://images.unsplash.com/photo-1544735716-392fe2489ffa?q=80&w=200' },
-              { id: 'nuweiba', label: 'Nuweiba', img: 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?q=80&w=200' },
-              { id: 'siwa', label: 'Siwa Oasis', img: wiki("Siwa Oasis, Houses in the desert, Egypt.jpg", 200) },
-              { id: 'matrouh', label: 'Marsa Matrouh', img: wiki("Marsa Matruh beach, Egypt.jpg", 200) },
-              { id: 'fayoum', label: 'Fayoum', img: wiki("MadinatFayyumWaterWheel.jpg", 200) },
-              { id: 'portsaid', label: 'Port Said', img: wiki("Evergreen container ship in Suez Canal (4171874814).jpg", 200) },
-              { id: 'ismailia', label: 'Ismailia', img: wiki("Evergreen container ship in Suez Canal (4171874814).jpg", 200) },
-              { id: 'suez', label: 'Suez', img: wiki("Evergreen container ship in Suez Canal (4171874814).jpg", 200) }
-            ].map((node) => (
-              <div key={node.id} className={`col-5 col-sm-3 col-md-2 filter-tab-card ${city === node.id ? 'active' : ''}`} onClick={() => { setCity(node.id); setGeneratedPlan(null); }}>
-                <div className="img-thumbnail-node position-relative rounded-4 overflow-hidden shadow" style={{ height: '85px', backgroundImage: `url(${node.img})`, backgroundSize: 'cover', backgroundPosition: 'center', cursor: 'pointer' }}>
-                  <div className="card-glass-title position-absolute bottom-0 start-0 w-100 p-1.5 text-white text-center fw-bold" style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)', fontSize: '0.75rem' }}>{node.label}</div>
+        <div className="relative pb-4 z-[3] max-w-7xl mx-auto px-4 w-full">
+          <div className="flex gap-3 overflow-x-auto flex-nowrap pb-2 justify-start md:justify-center text-left hide-scrollbar">
+            {destinations.map((node) => (
+              <div key={node.id} className={`shrink-0 w-[40%] sm:w-[23%] md:w-[14%] filter-tab-card ${city === node.id ? 'active' : ''}`} onClick={() => { setCity(node.id); setGeneratedPlan(null); }}>
+                <div className="img-thumbnail-node relative rounded-2xl overflow-hidden shadow h-[85px] bg-cover bg-center cursor-pointer" style={{ backgroundImage: `url(${node.img})` }}>
+                  <div className="card-glass-title absolute bottom-0 left-0 w-full p-1.5 text-white text-center font-bold text-xs" style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }}>{node.label}</div>
                 </div>
               </div>
             ))}
@@ -448,65 +448,66 @@ function TripPlanner() {
       </section>
 
       {/* 2. CREATIVE TIMELINE GRID AND ACTIVE CONTENT CANVAS */}
-      <section className="py-5 container">
+      <section className="py-12 max-w-7xl mx-auto px-4">
         {loading && (
-          <div className="text-center py-5">
-            <div className="spinner-border" role="status" style={{ color: '#ff6f3c' }}></div>
-            <p className="text-muted fw-semibold mt-3 small tracking-wider">Compiling Your Custom {days}-Day Matrix Array...</p>
+          <div className="text-center py-12">
+            <div className="spinner inline-block w-10 h-10 rounded-full border-4 border-gray-200 animate-spin" style={{ borderTopColor: '#ff6f3c' }}></div>
+            <p className="text-gray-500 font-semibold mt-3 text-sm tracking-wider">Compiling Your Custom {days}-Day Matrix Array...</p>
           </div>
         )}
 
         {generatedPlan ? (
           <div>
-            <div className="text-start border-bottom pb-3 mb-5 d-flex align-items-center justify-content-between flex-wrap gap-2">
+            <div className="text-left border-b pb-3 mb-12 flex items-center justify-between flex-wrap gap-2">
               <div>
-                <span className="badge bg-dark px-3 py-1.5 rounded-3 mb-2 text-uppercase tracking-wider" style={{ fontSize: '0.65rem' }}>Custom Plan Generated</span>
-                <h2 className="fw-bolder text-dark display-6 m-0" style={{ letterSpacing: '-1px' }}>{currentData.title} ({generatedPlan.length} Days)</h2>
+                <span className="inline-block bg-gray-900 text-white px-3 py-1.5 rounded-lg mb-2 uppercase tracking-wider text-[0.65rem]">Custom Plan Generated</span>
+                <h2 className="font-extrabold text-gray-900 text-4xl m-0" style={{ letterSpacing: '-1px' }}>{currentData.title} ({generatedPlan.length} Days)</h2>
               </div>
-              <span className="fs-5 fw-bold text-secondary" style={{ fontStyle: 'italic' }}>{days} Days Personalized Grid</span>
+              <span className="text-lg font-bold text-gray-600 italic">{days} Days Personalized Grid</span>
             </div>
 
-            <div className="row g-4 align-items-start">
-              
+            <div className="flex flex-col lg:flex-row gap-6 items-start">
+
               {/* LEFT COLUMN: Timeline Controllers */}
-              <div className="col-lg-4 text-start">
-                <div className="timeline-scroller p-2 bg-white rounded-4 border border-light-subtle shadow-sm">
+              <div className="w-full lg:w-1/3 text-left">
+                <div className="timeline-scroller p-2 bg-white rounded-2xl border border-gray-100 shadow-sm">
                   {generatedPlan.map((item, idx) => (
-                    <div key={idx} 
-                      className={`d-flex align-items-center p-3 mb-2 rounded-3 timeline-node-row ${activeDayIndex === idx ? 'active' : ''}`}
-                      onClick={() => setActiveDayIndex(idx)}
-                      style={{ cursor: 'pointer', transition: 'all 0.25s' }}>
-                      <div className="day-index-bubble fw-bold me-3 rounded-circle d-flex align-items-center justify-content-center" 
-                        style={{ width: '40px', height: '40px', backgroundColor: activeDayIndex === idx ? '#ff6f3c' : '#f0ede4', color: activeDayIndex === idx ? 'white' : '#4a5568' }}>
+                    <div key={idx}
+                      className={`flex items-center p-3 mb-2 rounded-xl timeline-node-row cursor-pointer transition-all duration-200 ${activeDayIndex === idx ? 'active' : ''}`}
+                      onClick={() => setActiveDayIndex(idx)}>
+                      <div className="day-index-bubble font-bold mr-3 rounded-full flex items-center justify-center w-10 h-10 shrink-0"
+                        style={{ backgroundColor: activeDayIndex === idx ? '#ff6f3c' : '#f0ede4', color: activeDayIndex === idx ? 'white' : '#4a5568' }}>
                         0{idx + 1}
                       </div>
-                      <div className="flex-fill">
-                        <span className="d-block text-muted small fw-bold" style={{ fontSize: '0.65rem' }}>{item.day} PLAN</span>
-                        <strong className={`d-block ${activeDayIndex === idx ? 'text-dark' : 'text-secondary'} small text-truncate`} style={{ maxWidth: '200px' }}>{item.title}</strong>
+                      <div className="flex-1 min-w-0">
+                        <span className="block text-gray-500 text-xs font-bold">{item.day} PLAN</span>
+                        <strong className={`block ${activeDayIndex === idx ? 'text-gray-900' : 'text-gray-600'} text-sm truncate max-w-[200px]`}>{item.title}</strong>
                       </div>
-                      <i className="bi bi-chevron-right text-muted opacity-50 ms-auto"></i>
+                      <ChevronRight className="text-gray-400 opacity-50 ml-auto w-4 h-4 shrink-0" />
                     </div>
                   ))}
                 </div>
               </div>
 
               {/* RIGHT COLUMN: Display Canvas */}
-              <div className="col-lg-8 text-start">
+              <div className="w-full lg:w-2/3 text-left">
                 {(() => {
                   const currentDayItem = generatedPlan[activeDayIndex];
                   if (!currentDayItem) return null;
                   return (
-                    <div className="card border-0 rounded-5 shadow-sm overflow-hidden bg-white active-canvas-card animate-fade">
-                      <div className="position-relative" style={{ height: '350px', overflow: 'hidden' }}>
-                        <img src={currentDayItem.img} alt={currentDayItem.title} className="w-100 h-100 object-fit-cover transition-scale" />
-                        <div className="position-absolute bottom-0 start-0 w-100 p-4 d-flex align-items-end justify-content-between" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0) 100%)' }}>
-                          <span className="badge px-3 py-2 text-white fw-bold h6 m-0 rounded-3 text-uppercase" style={{ backgroundColor: '#ff6f3c', fontSize: '0.75rem' }}>{currentDayItem.day} Execution Node</span>
-                          <span className="text-white fw-semibold small bg-dark bg-opacity-50 px-3 py-1.5 rounded-pill"><i className="bi bi-clock me-1.5 text-warning"></i>{currentDayItem.time}</span>
+                    <div className="border-0 rounded-[2rem] shadow-sm overflow-hidden bg-white active-canvas-card animate-fade">
+                      <div className="relative overflow-hidden h-[350px]">
+                        <img src={currentDayItem.img} alt={currentDayItem.title} className="w-full h-full object-cover transition-scale" />
+                        <div className="absolute bottom-0 left-0 w-full p-4 flex items-end justify-between" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0) 100%)' }}>
+                          <span className="px-3 py-2 text-white font-bold m-0 rounded-lg uppercase text-xs" style={{ backgroundColor: '#ff6f3c' }}>{currentDayItem.day} Execution Node</span>
+                          <span className="text-white font-semibold text-sm bg-black/50 px-3 py-1.5 rounded-full flex items-center gap-1.5">
+                            <Clock className="w-4 h-4 text-yellow-400" />{currentDayItem.time}
+                          </span>
                         </div>
                       </div>
-                      <div className="card-body p-4 p-md-5">
-                        <h3 className="h2 fw-bold text-dark mb-3" style={{ letterSpacing: '-0.5px' }}>{currentDayItem.title}</h3>
-                        <p className="text-muted fs-5 fw-light mb-0 lh-lg" style={{ fontFamily: "'Inter', sans-serif" }}>
+                      <div className="p-6 md:p-10">
+                        <h3 className="text-3xl font-bold text-gray-900 mb-3" style={{ letterSpacing: '-0.5px' }}>{currentDayItem.title}</h3>
+                        <p className="text-gray-500 text-lg font-light mb-0 leading-loose" style={{ fontFamily: "'Inter', sans-serif" }}>
                           {currentDayItem.desc} This micro-itinerary coordinate has been compiled based on geospatial proximity metrics and optimal transit loops to minimize daily exhaustion indexes.
                         </p>
                       </div>
@@ -519,40 +520,40 @@ function TripPlanner() {
           </div>
         ) : (
           !loading && (
-            <div className="text-center py-5 bg-white rounded-5 p-5 border shadow-sm">
-              <i className="bi bi-calendar-range text-muted fs-1 mb-2 d-block opacity-30"></i>
-              <h4 className="fw-bold text-secondary">Custom Itinerary Setup Void</h4>
-              <p className="text-muted small max-width-500 mx-auto mb-0">Select your destination and specify exactly how many days you need inside the glassmorphism hero panel above.</p>
+            <div className="text-center py-12 bg-white rounded-[2rem] p-12 border shadow-sm">
+              <CalendarRange className="text-gray-400 w-10 h-10 mb-2 mx-auto opacity-30" />
+              <h4 className="font-bold text-gray-600 text-xl">Custom Itinerary Setup Void</h4>
+              <p className="text-gray-500 text-sm max-w-[500px] mx-auto mb-0">Select your destination and specify exactly how many days you need inside the glassmorphism hero panel above.</p>
             </div>
           )
         )}
       </section>
 
       {/* 3. DYNAMIC MAP SYNC SECTION */}
-      <section className="pb-5 mb-5 container">
-        <div className="p-4 p-md-5 overflow-hidden rounded-5 shadow-lg" style={{ background: 'linear-gradient(145deg, #F6F3EC 0%, #EFE9DA 100%)', border: '1px solid #E8E5DD' }}>
-          <div className="row align-items-center text-start g-4">
-            <div className="col-lg-5 px-3">
-              <span className="badge px-3 py-1.5 rounded-3 mb-2" style={{ fontSize: '0.65rem', backgroundColor: '#161614', color: 'rgba(255,255,255,0.7)' }}>GEOSPATIAL SERVER INTERFACE</span>
-              <h2 className="h1 fw-bold mb-3" style={{ letterSpacing: '-1px', color: '#161614', fontFamily: "'Playfair Display', serif" }}>Native Mapping Sync</h2>
-              <p className="small mb-4 lh-lg" style={{ color: '#6E6E6A' }}>
+      <section className="pb-12 mb-12 max-w-7xl mx-auto px-4">
+        <div className="p-6 md:p-10 overflow-hidden rounded-[2rem] shadow-lg" style={{ background: 'linear-gradient(145deg, #F6F3EC 0%, #EFE9DA 100%)', border: '1px solid #E8E5DD' }}>
+          <div className="flex flex-col lg:flex-row items-center text-left gap-6">
+            <div className="w-full lg:w-5/12 px-3">
+              <span className="inline-block px-3 py-1.5 rounded-lg mb-2 text-[0.65rem]" style={{ backgroundColor: '#161614', color: 'rgba(255,255,255,0.7)' }}>GEOSPATIAL SERVER INTERFACE</span>
+              <h2 className="text-4xl font-bold mb-3" style={{ letterSpacing: '-1px', color: '#161614', fontFamily: "'Playfair Display', serif" }}>Native Mapping Sync</h2>
+              <p className="text-sm mb-6 leading-loose" style={{ color: '#6E6E6A' }}>
                 Track spatial patterns and coordinates live. Renders structural vector coordinates loaded straight from cloud mapping databases simultaneously with active index routes.
               </p>
-              <button type="button" className="btn text-white fw-bold px-4 py-2.5 rounded-pill shadow-sm" style={{ backgroundColor: '#F36926', fontSize: '0.85rem' }}>
-                Maximize Coordinate Canvas <i className="bi bi-box-arrow-up-right ms-1.5"></i>
+              <button type="button" className="text-white font-bold px-6 py-2.5 rounded-full shadow-sm text-sm flex items-center gap-1.5" style={{ backgroundColor: '#F36926' }}>
+                Maximize Coordinate Canvas <ExternalLink className="w-4 h-4" />
               </button>
             </div>
-            
-            <div className="col-lg-7">
-              <div className="map-iframe-container" style={{ width: '100%', height: '390px', borderRadius: '24px', overflow: 'hidden', boxShadow: '0 12px 30px rgba(22,22,20,0.15)', border: '1px solid #E8E5DD' }}>
-                <iframe 
+
+            <div className="w-full lg:w-7/12">
+              <div className="map-iframe-container w-full rounded-3xl overflow-hidden" style={{ height: '390px', boxShadow: '0 12px 30px rgba(22,22,20,0.15)', border: '1px solid #E8E5DD' }}>
+                <iframe
                   title="Dynamic Egypt Map Node"
                   src={currentData.googleMapUrl}
-                  width="100%" 
-                  height="100%" 
-                  style={{ border: 0 }} 
-                  allowFullScreen="" 
-                  loading="lazy" 
+                  width="100%"
+                  height="100%"
+                  style={{ border: 0 }}
+                  allowFullScreen=""
+                  loading="lazy"
                   referrerPolicy="no-referrer-when-downgrade">
                 </iframe>
               </div>
@@ -563,17 +564,16 @@ function TripPlanner() {
 
       {/* COMPONENT CSS SKINS */}
       <style>{`
-        .border-white-20 { border-color: rgba(255,255,255,0.15) !important; }
         .filter-tab-card { transition: all 0.3s ease; }
         .filter-tab-card:hover { transform: translateY(-4px); }
-        .filter-tab-card.active .img-thumbnail-node { border: 3px solid #ff6f3c; box-shadow: 0 8px 20px rgba(255,111,60,0.3) !important; }
+        .filter-tab-card.active .img-thumbnail-node { border: 3px solid #ff6f3c; box-shadow: 0 8px 20px rgba(255,111,60,0.3); }
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        
+
         .timeline-node-row { background-color: transparent; }
         .timeline-node-row:hover { background-color: #fcfbfa; }
         .timeline-node-row.active { background-color: #fdf5f0; border-left: 4px solid #ff6f3c; }
-        
+
         .animate-fade { animation: canvasEntry 0.4s ease-in-out forwards; }
         @keyframes canvasEntry { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .transition-scale { transition: transform 0.6s ease; }
@@ -634,10 +634,6 @@ function TripPlanner() {
           15%  { opacity: 0.9; }
           85%  { opacity: 0.5; }
           100% { transform: translate(var(--drift), -105vh) scale(1); opacity: 0; }
-        }
-
-        @media (max-width: 767px) {
-          .border-white-20 { border-end: none !important; border-bottom: 1px solid rgba(255,255,255,0.15) !important; padding-bottom: 12px; }
         }
       `}</style>
 
