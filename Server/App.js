@@ -12,6 +12,7 @@ const chatRoutes = require('./routes/chat');
 const tripRoutes = require('./routes/Trip');
 const tourGuideProfileRoutes = require('./routes/tourGuideProfile');
 const bookingRoutes = require('./routes/Booking');
+const reviewRoutes = require('./routes/Review');
 const app = express();
 // ✅ Add these BEFORE your routes
 app.use(cors());
@@ -36,6 +37,8 @@ app.use('/api/chats', chatRoutes);
 app.use('/api/trips', tripRoutes);
 app.use('/api/tourguide-profiles', tourGuideProfileRoutes);
 app.use('/api/bookings', bookingRoutes);
+app.use('/api/reviews', reviewRoutes);
+
 // Global Error Handler
 app.use((err, req, res, next) => {
   console.error(err.stack);
