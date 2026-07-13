@@ -9,6 +9,7 @@ const profileRoutes = require('./routes/TouristProfile');
 const postRoutes = require('./routes/Post');
 const placeRoutes = require('./routes/Place');
 const chatRoutes = require('./routes/chat');
+const tripRoutes = require('./routes/Trip');
 const app = express();
 // ✅ Add these BEFORE your routes
 app.use(cors());
@@ -30,6 +31,8 @@ app.use('/api/profiles', profileRoutes);
 app.use('/api/posts', postRoutes);
 app.use('/api/places', placeRoutes);
 app.use('/api/chats', chatRoutes);
+app.use('/api/trips', tripRoutes);
+
 // Global Error Handler
 app.use((err, req, res, next) => {
   console.error(err.stack);
