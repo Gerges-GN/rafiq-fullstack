@@ -7,7 +7,6 @@ const SORT_OPTIONS = [
   { label: "Latest", value: "latest" },
   { label: "Oldest", value: "oldest" },
   { label: "Most Liked", value: "most_liked" },
-  { label: "Most Commented", value: "most_commented" },
 ];
 
 const Feed = ({ posts }) => {
@@ -61,8 +60,6 @@ const Feed = ({ posts }) => {
         return new Date(a.date) - new Date(b.date);
       case "most_liked":
         return (b.likes || 0) - (a.likes || 0);
-      case "most_commented":
-        return (b.comments || 0) - (a.comments || 0);
       case "latest":
       default:
         return new Date(b.date) - new Date(a.date);

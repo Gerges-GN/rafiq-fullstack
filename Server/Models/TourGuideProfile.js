@@ -1,70 +1,67 @@
 const mongoose = require('mongoose');
 
 const tourGuideProfileSchema = new mongoose.Schema(
-  {
-    owner: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
-      required: true,
-      unique: true,
+    {
+        owner: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User',
+            required: true,
+            unique: true,
+        },
+        name: {
+            type: String,
+            required: [true, 'Name is required'],
+            trim: true,
+        },
+        role: {
+            type: String,
+            default: 'guide',
+        },
+        avatar: {
+            type: String,
+            default: '',
+        },
+        bio: {
+            type: String,
+            default: '',
+        },
+        city: {
+            type: String,
+            default: '',
+        },
+        languages: [{ type: String, required: true }],
+        rate: {
+            type: String,
+            default: '',
+        },
+        rating: {
+            type: Number,
+            default: 0,
+            min: 0,
+            max: 5,
+        },
+        reviews: {
+            type: Number,
+            default: 0,
+        },
+        phone: {
+            type: String,
+            default: '',
+        },
+        email: {
+            type: String,
+            default: '',
+        },
+        completedTrips: {
+            type: Number,
+            default: 0,
+        },
+        verified: {
+            type: Boolean,
+            default: false,
+        },
     },
-    name: {
-      type: String,
-      required: [true, 'Name is required'],
-      trim: true,
-    },
-    role: {
-      type: String,
-      default: 'guide',
-    },
-    avatar: {
-      type: String,
-      default: '',
-    },
-    bio: {
-      type: String,
-      default: '',
-    },
-    city: {
-      type: String,
-      default: '',
-    },
-    languages: {
-      type: String,
-      default: '',
-    },
-    rate: {
-      type: String,
-      default: '',
-    },
-    rating: {
-      type: Number,
-      default: 0,
-      min: 0,
-      max: 5,
-    },
-    reviews: {
-      type: Number,
-      default: 0,
-    },
-    phone: {
-      type: String,
-      default: '',
-    },
-    email: {
-      type: String,
-      default: '',
-    },
-    completedTrips: {
-      type: Number,
-      default: 0,
-    },
-    verified: {
-      type: Boolean,
-      default: false,
-    },
-  },
-  { timestamps: true }
+    { timestamps: true }
 );
 
 module.exports = mongoose.model('TourGuideProfile', tourGuideProfileSchema);
