@@ -7,12 +7,21 @@ const profileSchema = new mongoose.Schema({
     required: true, 
     unique: true 
   },
+  ownerName: { type: String, default: "" },
   headline: { type: String, default: "" },    // tagline
   quote: { type: String, default: "" },        // separate inspirational quote
   bio: { type: String, default: "" },
   location: { type: String, default: "" },     // "Cairo, Egypt"
   website: { type: String, default: "" },
   isVerified: { type: Boolean, default: false },
+  status: {
+    type: String,
+    enum: {
+      values: ['active', 'suspicious'],
+      message: "Status must be either 'active' or 'suspicious'",
+    },
+    default: 'active',
+  },
   languages: [{ type: String }],
   num_trips: { type: Number, default: 0 },
   num_posts: { type: Number, default: 0 },

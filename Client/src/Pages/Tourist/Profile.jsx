@@ -83,7 +83,7 @@ export default function Profile() {
   // --- Map backend data shape to what your components expect ---
 
   const user = {
-    name: profileData.owner?.username || "Unknown",
+    name: profileData.ownerName || "Unknown",
     isVerified: profileData.isVerified,
     tagline: profileData.headline,
     location: profileData.location,
