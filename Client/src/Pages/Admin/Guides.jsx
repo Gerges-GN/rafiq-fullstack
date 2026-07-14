@@ -59,7 +59,7 @@ export default function Guides() {
       const payload = {
         name: newGuideData.name,
         city: newGuideData.city,
-        avatar: newGuideData.avatar,
+        avatar: newGuideData.avatarUrl,
         languages: newGuideData.languages,
         owner: [...Array(24)]
           .map(() => Math.floor(Math.random() * 16).toString(16))
@@ -85,7 +85,7 @@ export default function Guides() {
     try {
       const payload = {
         name: guideData.name,
-        avatar: guideData.avatar,
+        avatar: guideData.avatarUrl,
         bio: guideData.bio,
         city: guideData.city,
         rate: guideData.rate,
@@ -175,7 +175,7 @@ export default function Guides() {
       header: "Guide Name",
       render: (row) => (
         <div className="flex items-center gap-3">
-          <Avatar src={row.avatar} alt={row.name} size="sm" />
+          <Avatar src={row.avatarUrl} alt={row.name} size="sm" />
           <span className="font-semibold text-ink-900">{row.name}</span>
         </div>
       ),

@@ -58,7 +58,6 @@ export default function GuidesPage() {
   if (loading) {
     return (
       <div className="relative">
-        <Navbar className="mb-10" />
         <div className="min-h-[60vh] flex items-center justify-center">
           <div className="flex items-center gap-2 text-slate-500 font-semibold text-sm">
             <Loader2 className="w-5 h-5 animate-spin" /> Loading tour guides...
@@ -71,7 +70,6 @@ export default function GuidesPage() {
   if (loadError) {
     return (
       <div className="relative">
-        <Navbar className="mb-10" />
         <div className="min-h-[60vh] flex items-center justify-center p-6">
           <div className="bg-white border border-red-100 rounded-2xl p-6 max-w-md text-center space-y-3">
             <AlertTriangle className="w-8 h-8 text-red-500 mx-auto" />
@@ -89,8 +87,7 @@ export default function GuidesPage() {
   }
 
   return (
-    <div className="relative">
-      <Navbar className="mb-10" />
+    <div className="relative my-20">
       <div className="max-w-6xl mx-auto space-y-8">
         <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm">
           <div className="flex flex-wrap items-end justify-between gap-4 border-b border-slate-50 pb-4 mb-4">

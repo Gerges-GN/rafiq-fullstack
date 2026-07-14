@@ -28,8 +28,6 @@ function App() {
       {/* Everything below requires a logged-in user (checked via ProtectedRoute).
           If there's no user in storage, it redirects to /login. */}
       <Route element={<ProtectedRoute />}>
-        <Route path="/profile/:userId" element={<Profile />} />
-        <Route path="/profile/edit/:userId" element={<EditProfile />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/guides" element={<Guides />} />
         <Route path="/places" element={<Places />} />
@@ -39,13 +37,15 @@ function App() {
         <Route path="/pricing-fraud" element={<ComingSoon title="Pricing / Fraud" />} />
         <Route path="/reports" element={<ComingSoon title="Reports" />} />
         <Route path="/guide/dashboard/messages" element={<GuideInbox />} />
-        <Route path="/guide/dashboard/trips" element={<TripsPage />} />
-        <Route path="/guide" element={<Guide />} />
         <Route path="/guide/dashboard/:id" element={<GuideDashboard />} />
         <Route path="/" element={<Layout />}>
           <Route index element={<Home />} />
           <Route path="trip-planner" element={<TripPlanner />} />
           <Route path="explore" element={<Explore />} />
+          <Route path="profile/:userId" element={<Profile />} />
+          <Route path="profile/edit/:userId" element={<EditProfile />} />
+          <Route path="guide/dashboard/trips" element={<TripsPage />} />
+          <Route path="guide" element={<Guide />} />
         </Route>
       </Route>
     </Routes>

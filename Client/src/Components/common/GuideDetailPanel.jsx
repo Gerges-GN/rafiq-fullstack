@@ -31,7 +31,7 @@ export default function GuideDetailPanel({
 
       <div className="flex-1 overflow-y-auto p-6 space-y-6">
         <div className="flex items-center gap-4">
-          <Avatar src={guide.avatar} alt={guide.name} size="lg" />
+          <Avatar src={guide.avatarUrl} alt={guide.name} size="lg" />
           <div>
             <h3 className="text-xl font-bold text-ink-900">{guide.name}</h3>
             <p className="text-ink-500">{guide.location}</p>

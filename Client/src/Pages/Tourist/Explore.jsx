@@ -2,45 +2,41 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 // ---------- CONFIG ----------
-const REGIONS = ["All", "Greater Cairo", "Delta", "Canal", "Sinai", "Upper Egypt", "Red Sea", "Mediterranean", "Western Desert"];
-const WIKI_BASE = "https://commons.wikimedia.org/wiki/Special:FilePath/";
-const wiki = (file) => `${WIKI_BASE}${encodeURIComponent(file)}?width=400`;
+// Matches your actual Mongo schema: name, city, category ("Touristic" | "Historical"), imageUrl, description
+const CATEGORIES = ["All", "Touristic", "Historical"];
+const FALLBACK_IMAGE = "https://images.unsplash.com/photo-1568322445389-f64ac2515020?w=800"; // generic Egypt fallback
 const API_URL = "http://localhost:5000/api/places";
 
 const HERO_IMAGES = [
+  "https://media.bookmundi.com/tour/egypt-alexandria-to-aswan-1281316-1767183707.jpg?format=auto&quality=60&width=1772",
+  "https://media.bookmundi.com/tour/egypt-alexandria-to-aswan-1281299-1767183677.jpeg?format=auto&quality=60&width=1772",
+  "https://media.bookmundi.com/tour/egypt-alexandria-to-aswan-1281311-1767183701.jpg?format=auto&quality=60&width=1772",
+  "https://media.bookmundi.com/tour/egypt-alexandria-to-aswan-1281321-1767183717.jpg?format=auto&quality=60&width=1772",
   "https://img.magnific.com/premium-photo/pyramids-night-view-from-giza-buildings-egypt_400112-687.jpg",
-  wiki("Sharm El Sheikh Panoramic.jpg"),
-  wiki("Aswan Philae temple Nile view.jpg"),
-  wiki("Siwa Oasis, Houses in the desert, Egypt.jpg"),
-  wiki("Marsa Matruh beach, Egypt.jpg"),
 ];
 
-// يحول أي شكل استجابة راجع من الـ API لشكل موحّد نستخدمه في الواجهة
-// بيقبل: name/title, region/governorate_region, file/image/photo, desc/description
+// Normalizes whatever the API returns into the shape the UI uses.
+// Your backend returns: { _id, name, city, category, imageUrl, description, createdAt, updatedAt }
 function normalizePlace(raw) {
-  const name = raw.name ?? raw.title ?? raw.governorate ?? "Unknown";
-  const region = raw.region ?? raw.governorate_region ?? raw.area ?? "All";
-  const desc = raw.desc ?? raw.description ?? raw.summary ?? "";
-  const imageField = raw.file ?? raw.image ?? raw.photo ?? raw.img ?? null;
-
-  // لو الـ API راجع رابط صورة كامل (http...) نستخدمه زي ما هو،
-  // لو راجع اسم ملف بس (زي Wikimedia) نبنيه بدالة wiki()
-  const imageUrl =
-    imageField && /^https?:\/\//i.test(imageField) ? imageField : wiki(imageField || "All Gizah Pyramids.jpg");
-
-  return { name, region, desc, imageUrl };
+  return {
+    id: raw._id ?? raw.id ?? raw.name,
+    name: raw.name ?? "Unknown",
+    city: raw.city ?? "",
+    category: raw.category ?? "Touristic",
+    desc: raw.description ?? "",
+    imageUrl: raw.imageUrl && /^https?:\/\//i.test(raw.imageUrl) ? raw.imageUrl : FALLBACK_IMAGE,
+  };
 }
 
 export default function Explore() {
   const navigate = useNavigate();
-
-  const [region, setRegion] = useState("All");
+  const [heroIndex, setHeroIndex] = useState(0);
+  const [category, setCategory] = useState("All");
   const [query, setQuery] = useState("");
   const [favorites, setFavorites] = useState(() => {
     const saved = localStorage.getItem("route_favs");
     return saved ? new Set(JSON.parse(saved)) : new Set();
   });
-  const [heroIndex, setHeroIndex] = useState(0);
   const trackRef = useRef(null);
 
   // ---------- API STATE ----------
@@ -60,14 +56,14 @@ export default function Explore() {
           throw new Error(`HTTP ${res.status}`);
         }
         const data = await res.json();
-        // بيدعم لو الـ API راجع array مباشرة أو { places: [...] } أو { data: [...] }
+        // Supports API returning a raw array or { places: [...] } / { data: [...] }
         const list = Array.isArray(data) ? data : data.places ?? data.data ?? [];
         if (!cancelled) {
           setPlaces(list.map(normalizePlace));
         }
       } catch (err) {
         if (!cancelled) {
-          setError(err.message || "فشل تحميل الوجهات");
+          setError(err.message || "Failed to load destinations");
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -87,20 +83,22 @@ export default function Explore() {
   const filtered = useMemo(() => {
     const q = query.toLowerCase();
     return places.filter(
-      (g) =>
-        (region === "All" || g.region === region) &&
-        (g.name.toLowerCase().includes(q) || g.desc.toLowerCase().includes(q))
+      (p) =>
+        (category === "All" || p.category === category) &&
+        (p.name.toLowerCase().includes(q) ||
+          p.desc.toLowerCase().includes(q) ||
+          p.city.toLowerCase().includes(q))
     );
-  }, [region, query, places]);
+  }, [category, query, places]);
 
   const scroll = (dir) => {
     trackRef.current?.scrollBy({ left: dir === "next" ? 520 : -520, behavior: "smooth" });
   };
 
-  const toggleFavorite = (name) => {
+  const toggleFavorite = (id) => {
     setFavorites((prev) => {
       const next = new Set(prev);
-      next.has(name) ? next.delete(name) : next.add(name);
+      next.has(id) ? next.delete(id) : next.add(id);
       return next;
     });
   };
@@ -111,14 +109,13 @@ export default function Explore() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F6F3EC] text-[#161614] pb-10 px-6" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+    <div className="min-h-screen text-[#161614] pb-10 px-6" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
       <link rel="preconnect" href="https://fonts.googleapis.com" />
       <link
         rel="stylesheet"
         href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap"
       />
 
-      {/* HERO */}
       <header
         onMouseEnter={() => setHeroIndex((i) => (i + 1) % HERO_IMAGES.length)}
         className="relative mx-auto mt-6 h-[540px] sm:h-[640px] max-w-[1320px] overflow-hidden rounded-[40px] bg-[#0b0b0a] shadow-[0_30px_70px_-20px_rgba(22,22,20,0.15)]"
@@ -144,8 +141,15 @@ export default function Explore() {
           >
             Discover every corner<br />of the Nile's story
           </h1>
-          <p className="mb-9 max-w-[560px] text-[0.98rem] leading-relaxed text-white/90" style={{ textShadow: "0 2px 8px rgba(0,0,0,0.4)" }}>
-            From hidden majestic desert oases to the brilliant sapphire waters of the Red Sea — explore all 27 architectural governorates perfectly crafted for you.
+          <p
+            className="mb-9 max-w-[560px] text-[0.98rem] leading-relaxed text-white/90"
+            style={{
+              textShadow: "0 2px 8px rgba(0,0,0,0.4)",
+              wordSpacing: "4px",
+            }}
+          >
+            From hidden majestic desert oases to the brilliant sapphire waters of the
+            Red Sea explore all 27 architectural governorates perfectly crafted for you.
           </p>
         </div>
       </header>
@@ -160,11 +164,11 @@ export default function Explore() {
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Where does your soul want to go? Search a city or region..."
+            placeholder="Search a place or city..."
             className="flex-1 bg-transparent text-[0.95rem] outline-none placeholder:text-[#6E6E6A]/70"
           />
           <span className="hidden whitespace-nowrap rounded-full bg-[#F6F3EC] px-6 py-3 text-[0.72rem] font-bold tracking-wide text-[#6E6E6A] sm:block">
-            🇪🇬 Egypt · 27 Governorates
+            🇪🇬 Egypt Places
           </span>
         </div>
       </div>
@@ -178,10 +182,10 @@ export default function Explore() {
               className="mb-4 text-4xl font-semibold leading-[1.1] tracking-tight sm:text-[3.6rem]"
               style={{ fontFamily: "'Playfair Display', serif", color: "#F36926" }}
             >
-              Book your trip<br />to any governorate
+              Book your trip<br />to any place
             </h2>
             <p className="max-w-[580px] text-base leading-relaxed text-[#161614]/85">
-              Filter by region or search by name — every single corner of Egypt's magical terrain is active and waiting.
+              Filter by category or search by name — Touristic and Historical spots across Egypt.
             </p>
           </div>
           <span className="self-start rounded-full bg-[#161614] px-6 py-3 text-[0.78rem] font-semibold tracking-wide text-white">
@@ -191,17 +195,16 @@ export default function Explore() {
 
         {/* FILTER CHIPS */}
         <div className="mb-11 flex flex-wrap gap-2.5">
-          {REGIONS.map((r) => (
+          {CATEGORIES.map((c) => (
             <button
-              key={r}
-              onClick={() => setRegion(r)}
-              className={`rounded-full border px-[22px] py-2.5 text-[0.8rem] font-semibold transition-all duration-200 ${
-                r === region
+              key={c}
+              onClick={() => setCategory(c)}
+              className={`rounded-full border px-[22px] py-2.5 text-[0.8rem] font-semibold transition-all duration-200 ${c === category
                   ? "border-[#F36926] bg-[#F36926] text-white shadow-[0_8px_20px_rgba(243,105,38,0.35)]"
                   : "border-[#E8E5DD] bg-white text-[#6E6E6A] hover:border-[#F36926] hover:text-[#F36926]"
-              }`}
+                }`}
             >
-              {r}
+              {c}
             </button>
           ))}
         </div>
@@ -231,39 +234,39 @@ export default function Explore() {
 
           {loading ? (
             <div className="w-full rounded-[40px] border border-dashed border-[#E8E5DD] bg-white p-20 text-center">
-              <h4 className="text-xl" style={{ fontFamily: "'Playfair Display', serif" }}>...جاري تحميل الوجهات</h4>
-              <p className="mt-2 text-sm text-[#6E6E6A]">برجاء الانتظار قليلاً.</p>
+              <h4 className="text-xl" style={{ fontFamily: "'Playfair Display', serif" }}>Loading destinations...</h4>
+              <p className="mt-2 text-sm text-[#6E6E6A]">Please wait a moment.</p>
             </div>
           ) : error ? (
             <div className="w-full rounded-[40px] border border-dashed border-red-300 bg-white p-20 text-center">
-              <h4 className="text-xl text-red-600" style={{ fontFamily: "'Playfair Display', serif" }}>تعذر تحميل البيانات</h4>
-              <p className="mt-2 text-sm text-[#6E6E6A]">{error}. تأكد إن السيرفر شغال على {API_URL}</p>
+              <h4 className="text-xl text-red-600" style={{ fontFamily: "'Playfair Display', serif" }}>Couldn't load data</h4>
+              <p className="mt-2 text-sm text-[#6E6E6A]">{error}. Make sure the server is running at {API_URL}</p>
             </div>
           ) : filtered.length > 0 ? (
             <div ref={trackRef} className="flex gap-6 overflow-x-auto py-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-              {filtered.map((gov) => {
-                const isFav = favorites.has(gov.name);
+              {filtered.map((place) => {
+                const isFav = favorites.has(place.id);
                 return (
                   <div
-                    key={gov.name}
-                    className="group relative h-[390px] w-[236px] shrink-0 overflow-hidden rounded-[28px] bg-black shadow-[0_15px_35px_-10px_rgba(22,22,20,0.18)] transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_25px_50px_-15px_rgba(243,105,38,0.25)]"
+                    key={place.id}
+                    className="group relative h-[390px] w-[236px] shrink-0 overflow-hidden rounded-[20px] transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_25px_50px_-15px_rgba(243,105,38,0.25)]"
                   >
                     <img
-                      src={gov.imageUrl}
-                      alt={gov.name}
+                      src={place.imageUrl}
+                      alt={place.name}
                       loading="lazy"
                       onError={(e) => {
                         e.target.onerror = null;
-                        e.target.src = wiki("All Gizah Pyramids.jpg");
+                        e.target.src = FALLBACK_IMAGE;
                       }}
                       className="absolute inset-0 h-full w-full scale-[1.01] object-cover opacity-85 transition-transform duration-500 group-hover:scale-[1.06]"
                     />
                     <div className="absolute inset-0 bg-gradient-to-b from-black/0 via-black/30 to-black/90" />
 
                     <div className="absolute inset-x-0 top-[18px] flex justify-between px-[18px]">
-                      <span className="rounded-full bg-white/95 px-3.5 py-1.5 text-[0.65rem] font-bold">{gov.region}</span>
+                      <span className="rounded-full bg-white/95 px-3.5 py-1.5 text-[0.65rem] font-bold">{place.category}</span>
                       <button
-                        onClick={() => toggleFavorite(gov.name)}
+                        onClick={() => toggleFavorite(place.id)}
                         aria-label="Favorite"
                         className="flex h-[30px] w-[30px] items-center justify-center rounded-full bg-white text-[#F36926] shadow-[0_4px_10px_rgba(0,0,0,0.1)] transition-transform hover:scale-110"
                       >
@@ -274,11 +277,11 @@ export default function Explore() {
                     </div>
 
                     <div className="absolute inset-x-0 bottom-0 flex flex-col items-center px-5 py-7 text-center">
-                      <span className="mb-1 text-[0.62rem] font-bold uppercase tracking-[2px] text-[#E2A856]">{gov.region}</span>
+                      <span className="mb-1 text-[0.62rem] font-bold uppercase tracking-[2px] text-[#E2A856]">{place.city}</span>
                       <h4 className="mb-2 text-[1.6rem] font-semibold text-white" style={{ fontFamily: "'Playfair Display', serif" }}>
-                        {gov.name}
+                        {place.name}
                       </h4>
-                      <p className="mb-4 line-clamp-2 px-2 text-[0.7rem] font-light leading-[1.4] text-white/72">{gov.desc}</p>
+                      <p className="mb-4 line-clamp-2 px-2 text-[0.7rem] font-light leading-[1.4] text-white/72">{place.desc}</p>
                       <button
                         onClick={goToPlanner}
                         className="rounded-full bg-[#F36926] px-6 py-2 text-[0.72rem] font-bold text-white transition-colors hover:bg-[#d95c1c]"
@@ -292,8 +295,8 @@ export default function Explore() {
             </div>
           ) : (
             <div className="w-full rounded-[40px] border border-dashed border-[#E8E5DD] bg-white p-20 text-center">
-              <h4 className="text-xl" style={{ fontFamily: "'Playfair Display', serif" }}>No luxury routes found</h4>
-              <p className="mt-2 text-sm text-[#6E6E6A]">Try resetting your region filters or custom search queries.</p>
+              <h4 className="text-xl" style={{ fontFamily: "'Playfair Display', serif" }}>No places found</h4>
+              <p className="mt-2 text-sm text-[#6E6E6A]">Try resetting your category filter or search query.</p>
             </div>
           )}
         </div>
@@ -304,7 +307,7 @@ export default function Explore() {
         className="relative mx-auto my-[100px] max-w-[1280px] overflow-hidden rounded-[40px] bg-cover bg-center px-10 py-[90px] text-center text-white shadow-[0_25px_55px_-15px_rgba(243,105,38,0.35)]"
         style={{
           backgroundImage:
-            "radial-gradient(circle at 50% 0%, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0) 55%), linear-gradient(135deg, rgba(243,105,38,0.93) 0%, rgba(160,55,9,0.94) 100%), url('https://img.magnific.com/premium-photo/pyramids-night-view-from-giza-buildings-egypt_400112-687.jpg')",
+            "radial-gradient(circle at 50% 0%, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0) 55%), linear-gradient(135deg, rgba(241, 237, 235, 0.3) 0%, rgba(225, 217, 213, 0.4) 100%), url('https://img.magnific.com/premium-photo/pyramids-night-view-from-giza-buildings-egypt_400112-687.jpg')",
           backgroundAttachment: "fixed",
         }}
       >
@@ -312,7 +315,7 @@ export default function Explore() {
           Ready for your Egyptian story?
         </h3>
         <p className="mx-auto mb-9 max-w-[540px] text-base leading-relaxed text-white/85">
-          Tell us where your heart desires to wander, and our local experts will architecturalize a tailored premium itinerary around it.
+          Tell us where your heart desires to wander, and our local experts will craft a tailored itinerary around it.
         </p>
         <button
           onClick={goToPlanner}
@@ -321,39 +324,6 @@ export default function Explore() {
           Plan My Trip
         </button>
       </section>
-
-      {/* FOOTER */}
-      <footer className="mx-auto max-w-[1320px] rounded-t-[40px] bg-[#0F0F0E] px-12 py-20 text-white/50">
-        <div className="mb-16 grid grid-cols-1 gap-12 sm:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr_1fr]">
-          <div>
-            <h4 className="mb-[18px] text-[1.8rem] text-white" style={{ fontFamily: "'Playfair Display', serif" }}>Travel Premium</h4>
-            <p className="max-w-[300px] text-[0.88rem] font-light leading-relaxed">
-              Your trusted premium companion to discover luxury, comfort, and ultra-deep heritage experiences across Egypt.
-            </p>
-          </div>
-          <div>
-            <h5 className="mb-6 text-[0.95rem] font-semibold text-white">Quick Links</h5>
-            <ul className="space-y-3.5 text-[0.88rem]">
-              <li><a href="#home" className="hover:text-white">Home</a></li>
-              <li><a href="#explore" className="hover:text-white">Destinations</a></li>
-            </ul>
-          </div>
-          <div>
-            <h5 className="mb-6 text-[0.95rem] font-semibold text-white">Popular Regions</h5>
-            <ul className="space-y-3.5 text-[0.88rem]">
-              <li><a href="#cairo" className="hover:text-white">Greater Cairo</a></li>
-              <li><a href="#upper" className="hover:text-white">Upper Egypt</a></li>
-            </ul>
-          </div>
-          <div>
-            <h5 className="mb-6 text-[0.95rem] font-semibold text-white">Contact Info</h5>
-            <ul className="space-y-3.5 text-[0.88rem]">
-              <li>📍 Egypt</li>
-              <li>✉️ support@premium-travel.com</li>
-            </ul>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 }
