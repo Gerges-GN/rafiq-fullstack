@@ -16,8 +16,8 @@ import ComingSoon from './pages/Admin/ComingSoon.jsx'
 import ProtectedRoute from './components/Protection/Protectedroute.jsx'
 import GuideInbox from './Features/chat/pages/GuideInbox'
 import TripsPage from './Components/Tourist/Trips'
-import GuideDashboard from './Components/Tourist/Guides'
-
+import Guide from './Components/Tourist/Guides'
+import GuideDashboard from './pages/TourGuide/GuideDashboard'
 function App() {
   return (
     <Routes>
@@ -40,7 +40,8 @@ function App() {
         <Route path="/reports" element={<ComingSoon title="Reports" />} />
         <Route path="/guide/dashboard/messages" element={<GuideInbox />} />
         <Route path="/guide/dashboard/trips" element={<TripsPage />} />
-        <Route path="/guide" element={<GuideDashboard />} />
+        <Route path="/guide" element={<Guide />} />
+        <Route path="/guide/dashboard/:id" element={<GuideDashboard />} />
         <Route path="/" element={<Layout />}>
           <Route index element={<Home />} />
           <Route path="trip-planner" element={<TripPlanner />} />

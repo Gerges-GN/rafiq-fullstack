@@ -48,7 +48,7 @@ export default function Login() {
         navigate("/dashboard"); // change to wherever you want to land post-login
       }
       else if(data.user.role === "tourguide") {
-        navigate("/tourguide-dashboard"); // change to wherever you want to land post-login
+        navigate("/guide/dashboard/"+data.user._id); // change to wherever you want to land post-login
       }
       else {
         navigate("/profile/" + data.user._id); // change to wherever you want to land post-login
