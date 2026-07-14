@@ -6,7 +6,7 @@ import logo from '../../../public/images/logo.png';
 import AddPostModal from '../Tourist/AddPostModal';
 import { Link } from 'react-router-dom';
 
-const Navbar = () => {
+const Navbar = ({ className = "" }) => {
   // Read the logged-in user from storage once, synchronously, so `_id` is
   // available immediately (e.g. for AddPostModal's ownerId) without waiting
   // on the profile fetch below.
@@ -40,9 +40,9 @@ const Navbar = () => {
 
   const navLinks = [
     { name: 'Home', icon: Home, path: `/profile/${authUser._id}` },
-    { name: 'Trips', icon: Compass },
+    { name: 'Trips', icon: Compass,path:'/guide/dashboard/trips' },
     { name: 'Explore', icon: Map, path: '/explore' },
-    { name: 'Community', icon: Users },
+    { name: 'Community', icon: Users,path:'/guide' },
     { name: 'Deals', icon: Percent },
   ];
 
@@ -51,7 +51,7 @@ const Navbar = () => {
   const avatarUrl = profile?.avatarUrl || authUser?.avatarUrl || "/images/default-avatar.png";
 
   return (
-    <nav className="bg-white/100 backdrop-blur-md border-b border-gray-200 sticky top-0 z-50">
+    <nav className={`bg-white/100 backdrop-blur-md border-b border-gray-200 sticky top-0 z-50 ${className}`}>
       <div className="max-w-[1536px] mx-auto px-4 sm:px-[52px] py-3 flex items-center justify-between relative">
 
         <div className="flex items-center gap-2 font-bold text-xl text-gray-900 z-10">

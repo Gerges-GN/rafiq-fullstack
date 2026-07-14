@@ -91,7 +91,7 @@ export default function Profile() {
   if (profileNotFound) {
     return (
       <>
-        <Navbar userId={userId} />
+        <Navbar />
 
         <div className="min-h-screen bg-[#fafafa] flex items-center justify-center px-4">
           <div className="bg-white rounded-3xl shadow-xl p-10 max-w-md w-full text-center">

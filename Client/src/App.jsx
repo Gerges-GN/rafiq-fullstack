@@ -15,6 +15,8 @@ import Users from './pages/Admin/Users.jsx'
 import ComingSoon from './pages/Admin/ComingSoon.jsx'
 import ProtectedRoute from './components/Protection/Protectedroute.jsx'
 import GuideInbox from './Features/chat/pages/GuideInbox'
+import TripsPage from './Components/Tourist/Trips'
+import GuideDashboard from './Components/Tourist/Guides'
 
 function App() {
   return (
@@ -37,6 +39,8 @@ function App() {
         <Route path="/pricing-fraud" element={<ComingSoon title="Pricing / Fraud" />} />
         <Route path="/reports" element={<ComingSoon title="Reports" />} />
         <Route path="/guide/dashboard/messages" element={<GuideInbox />} />
+        <Route path="/guide/dashboard/trips" element={<TripsPage />} />
+        <Route path="/guide" element={<GuideDashboard />} />
         <Route path="/" element={<Layout />}>
           <Route index element={<Home />} />
           <Route path="trip-planner" element={<TripPlanner />} />
