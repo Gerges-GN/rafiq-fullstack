@@ -129,7 +129,9 @@ export default function Dashboard() {
     const fetchGuides = async () => {
       setIsLoadingGuides(true);
       try {
-        const response = await fetch("http://localhost:5000/api/tourguide-profiles");
+        const response = await fetch(
+          "http://localhost:5000/api/tourguide-profiles",
+        );
         if (!response.ok) {
           throw new Error("Failed to fetch guides");
         }
@@ -171,7 +173,6 @@ export default function Dashboard() {
           status: booking.status,
           touristimg: booking.touristimg || "", // Assuming the API provides this field
           tourguideimg: booking.tourguideimg || "", // Assuming the API provides this field
-
         }));
         setBookings(formattedBookings);
 
@@ -270,7 +271,6 @@ export default function Dashboard() {
   };
 
   const bookingColumns = [
-    { key: "id", header: "Booking ID" },
     {
       key: "tourist",
       header: "Tourist",
