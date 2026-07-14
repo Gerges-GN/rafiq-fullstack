@@ -78,3 +78,35 @@ exports.getAllProfiles = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+// PATCH /api/profiles/:userId/status
+exports.updateProfileStatus = async (req, res) => {
+  try {
+    const { status } = req.body;
+
+
+    const profile = await Profile.findOneAndUpdate(
+      { owner: req.params.userId },
+      { $set: { status } },
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
+
+    if (!profile) {
+      return res.status(404).json({
+        message: "Profile not found",
+      });
+    }
+
+    res.status(200).json({
+      message: "Profile status updated successfully",
+      profile,
+    });
+  } catch (error) {
+    res.status(500).json({
+      error: error.message,
+    });
+  }
+};
