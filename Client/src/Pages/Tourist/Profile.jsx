@@ -1,17 +1,13 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import {
-  MapPin,
-  MessageCircle,
-  Globe,
-  PlusCircle,
-} from "lucide-react";
+import { MapPin, MessageCircle, Globe, PlusCircle } from "lucide-react";
 
 import Navbar from "../../Components/Layout/TouristNav";
 import ProfileHeader from "../../Components/Tourist/ProfileHeader";
 import Sidebar from "../../Components/Tourist/sidebar";
 import Feed from "../../Components/Tourist/Feed";
 import ChatWidget from "../../Features/chat/index";
+import CreateProfileModal from "../../Components/modals/CreateProfileModal";
 
 export default function Profile() {
   const { userId } = useParams();
@@ -21,13 +17,10 @@ export default function Profile() {
   const [loading, setLoading] = useState(true);
   const [profileNotFound, setProfileNotFound] = useState(false);
   const [error, setError] = useState("");
+  const [isCreateModalOpen, setCreateModalOpen] = useState(false);
 
-  useEffect(() => {
-    if (!userId) return;
-
-    const controller = new AbortController();
-
-    const fetchProfile = async () => {
+  const fetchProfile = useCallback(
+    async (signal) => {
       try {
         setLoading(true);
         setError("");
@@ -36,8 +29,8 @@ export default function Profile() {
         const response = await fetch(
           `http://localhost:5000/api/profiles/${userId}`,
           {
-            signal: controller.signal,
-          }
+            signal,
+          },
         );
 
         if (response.status === 404) {
@@ -61,13 +54,24 @@ export default function Profile() {
       } finally {
         setLoading(false);
       }
-    };
+    },
+    [userId],
+  );
 
-    fetchProfile();
+  useEffect(() => {
+    if (!userId) return;
+
+    const controller = new AbortController();
+    fetchProfile(controller.signal);
 
     return () => controller.abort();
-  }, [userId]);
+  }, [userId, fetchProfile]);
 
+  const handleProfileCreated = () => {
+    setCreateModalOpen(false);
+    const controller = new AbortController();
+    fetchProfile(controller.signal);
+  };
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#fafafa]">
@@ -81,9 +85,7 @@ export default function Profile() {
   if (error) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#fafafa]">
-        <div className="text-red-500 text-lg">
-          {error}
-        </div>
+        <div className="text-red-500 text-lg">{error}</div>
       </div>
     );
   }
@@ -91,30 +93,33 @@ export default function Profile() {
   if (profileNotFound) {
     return (
       <>
-
         <div className="min-h-screen bg-[#fafafa] flex items-center justify-center px-4">
           <div className="bg-white rounded-3xl shadow-xl p-10 max-w-md w-full text-center">
-
             <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-orange-100 flex items-center justify-center">
               <PlusCircle className="w-12 h-12 text-orange-500" />
             </div>
 
-            <h2 className="text-3xl font-bold text-gray-900">
-              No Profile Yet
-            </h2>
+            <h2 className="text-3xl font-bold text-gray-900">No Profile Yet</h2>
 
             <p className="text-gray-500 mt-3">
-              Create your profile and start sharing your travel memories with everyone.
+              Create your profile and start sharing your travel memories with
+              everyone.
             </p>
 
             <button
-              onClick={() => navigate(`/create-profile/${userId}`)}
+              onClick={() => setCreateModalOpen(true)}
               className="mt-8 bg-orange-500 hover:bg-orange-600 transition text-white px-8 py-3 rounded-xl font-semibold"
             >
               Create Profile
             </button>
           </div>
         </div>
+        <CreateProfileModal
+          isOpen={isCreateModalOpen}
+          onClose={() => setCreateModalOpen(false)}
+          userId={userId}
+          onProfileCreated={handleProfileCreated}
+        />
       </>
     );
   }
@@ -123,9 +128,10 @@ export default function Profile() {
     return null;
   }
 
-    const user = {
+  const user = {
     // Uses owner.username if populated; falls back to ownerName if present
-    name: profileData.owner?.username || profileData.ownerName || "Unknown User",
+    name:
+      profileData.owner?.username || profileData.ownerName || "Unknown User",
     isVerified: profileData.isVerified || false,
     tagline: profileData.headline || "",
     location: profileData.location || "",
@@ -197,8 +203,8 @@ export default function Profile() {
       post.images && post.images.length > 0
         ? post.images
         : post.imageUrl
-        ? [post.imageUrl]
-        : [],
+          ? [post.imageUrl]
+          : [],
     title: post.title,
     date: post.createdAt
       ? new Date(post.createdAt).toLocaleDateString("en-US", {
@@ -215,15 +221,9 @@ export default function Profile() {
 
   return (
     <div className="min-h-screen bg-[#fafafa] font-sans selection:bg-orange-100 selection:text-orange-900">
-      
-
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-      <ChatWidget></ChatWidget>
-        <ProfileHeader
-          user={user}
-          stats={stats}
-          id={userId}
-        />
+        <ChatWidget></ChatWidget>
+        <ProfileHeader user={user} stats={stats} id={userId} />
 
         <div className="flex flex-col lg:flex-row gap-6 sm:gap-8">
           <aside className="w-full lg:w-[300px] xl:w-[320px] shrink-0">
