@@ -21,7 +21,7 @@ export default function DataTable({ columns, rows, onRowClick, selectedRowId, ro
             {columns.map((col) => (
               <th
                 key={col.key}
-                className={`text-left font-semibold text-ink-500 pb-3 px-2 first:pl-0 ${col.className || ''}`}
+                className={`text-left font-semibold text-ink-500 pb-3 px-2 first:pl-6 ${col.className || ""}`}
               >
                 {col.header}
               </th>
@@ -35,12 +35,11 @@ export default function DataTable({ columns, rows, onRowClick, selectedRowId, ro
               <tr
                 key={row[rowIdKey]}
                 onClick={() => onRowClick?.(row)}
-                className={`border-b border-surface-border last:border-0 transition-colors ${
-                  onRowClick ? 'cursor-pointer' : ''
-                } ${isSelected ? 'bg-[#fe6800]' : 'hover:bg-surface'}`}
+                className={`border-b border-surface-border last:border-0 transition-colors ${onRowClick ? 'cursor-pointer' : ''
+                  } ${isSelected ? 'bg-[#fe6800]' : 'hover:bg-surface'}`}
               >
                 {columns.map((col) => (
-                  <td key={col.key} className={`py-3.5 px-2 first:pl-0 align-middle ${col.className || ''}`}>
+                  <td key={col.key} className={`py-3.5 px-2 first:pl-6 align-middle ${col.className || ''}`}>
                     {col.render ? col.render(row) : row[col.key]}
                   </td>
                 ))}

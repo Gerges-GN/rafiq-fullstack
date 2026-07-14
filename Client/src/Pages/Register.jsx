@@ -46,7 +46,7 @@ export default function Register() {
       className="min-h-screen w-full bg-cover bg-center flex items-center justify-center px-6 py-12 relative"
       style={{ backgroundImage: `url(${bgImage})` }}
     >
-    <div className="absolute inset-0 bg-gray-900/20" />
+    <div className="absolute inset-0 bg-gray-900/50" />
       <div className="w-full max-w-6xl grid md:grid-cols-2 gap-10 items-center relative z-10">
         {/* Left: Brand + Copy */}
         <div className="relative self-stretch flex flex-col justify-start pt-8 pb-10 px-8 overflow-hidden rounded-3xl">

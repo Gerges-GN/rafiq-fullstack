@@ -13,7 +13,7 @@ import {
   Landmark,
   X,
 } from "lucide-react";
-
+import { useNavigate } from "react-router-dom";
 /**
  * Left navigation sidebar shared across every dashboard page.
  *
@@ -29,21 +29,29 @@ const NAV_ITEMS = [
   { to: "/guides", label: "Guides", icon: Compass },
   { to: "/chats", label: "Chats", icon: MessageSquare },
   { to: "/places", label: "Places", icon: Map },
-  { to: "/reviews", label: "Reviews", icon: Star },
-  { to: "/pricing-fraud", label: "Pricing / Fraud", icon: ShieldAlert },
+  { to: "/admin/reviews", label: "Reviews", icon: Star },
   { to: "/users", label: "Users", icon: Users },
-  { to: "/reports", label: "Reports", icon: BarChart2 },
+  { to: "/admin/reports", label: "Reports", icon: BarChart2 },
 ];
+
 
 export default function Sidebar({
   brandName = "Admin",
   brandSubtitle = "Platform Manager",
   showLogo = true,
   footer = "logout",
-  systemStatus = { status: "operational", label: "Servers Operational" },
   isOpen,
   onClose,
 }) {
+  const navigate = useNavigate();
+  const handleLogout = () => {
+    // clear both, since "Remember me" decided which one Login.jsx used
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    sessionStorage.removeItem("token");
+    sessionStorage.removeItem("user");
+    navigate("/login");
+  };
   return (
     <aside
       className={`w-60 flex-shrink-0 bg-white border-r border-surface-border h-screen flex flex-col z-50 transition-transform duration-300 ease-in-out
@@ -94,28 +102,11 @@ export default function Sidebar({
         ))}
       </nav>
 
-      {footer === "status" && (
-        <div className="mx-4 mb-4 rounded-xl bg-surface p-3">
-          <p className="text-[11px] font-semibold text-ink-500 tracking-wide uppercase mb-1.5">
-            System Status
-          </p>
-          <div className="flex items-center gap-2 text-sm text-ink-700">
-            <span
-              className={`w-2 h-2 rounded-full ${
-                systemStatus.status === "operational"
-                  ? "bg-status-green"
-                  : "bg-status-red"
-              }`}
-            />
-            {systemStatus.label}
-          </div>
-        </div>
-      )}
-
       {footer === "logout" && (
         <div className="px-4 pb-6">
           <button
             type="button"
+            onClick={handleLogout}
             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-ink-500 hover:bg-surface hover:text-status-red transition-colors"
           >
             <LogOut size={18} />
@@ -128,6 +119,7 @@ export default function Sidebar({
         <div className="px-4 pb-6">
           <button
             type="button"
+            onClick={handleLogout}
             className="w-full flex items-center justify-center px-3 py-2.5 rounded-lg text-sm font-semibold text-[#fe6800] bg-[#fe6800] hover:bg-[#fe6800] transition-colors"
           >
             Logout

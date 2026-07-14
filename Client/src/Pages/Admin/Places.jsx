@@ -333,7 +333,7 @@ export default function Places() {
 
   return (
     <DashboardLayout
-      sidebarProps={{ showLogo: false, footer: "status", active: "/places" }}
+      sidebarProps={{ showLogo: false, footer: "logout", active: "/places" }}
       topbarProps={{
         title: "Dashboard - Tourism Mgmt",
         user: currentAdmin.places,

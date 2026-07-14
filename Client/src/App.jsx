@@ -18,6 +18,8 @@ import GuideInbox from './Features/chat/pages/GuideInbox'
 import TripsPage from './Components/Tourist/Trips'
 import Guide from './Components/Tourist/Guides'
 import GuideDashboard from './pages/TourGuide/GuideDashboard'
+import ReviewsPage from './Pages/Admin/Review'
+import ReportsPage from './Pages/Admin/Reports'
 function App() {
   return (
     <Routes>
@@ -38,6 +40,8 @@ function App() {
         <Route path="/reports" element={<ComingSoon title="Reports" />} />
         <Route path="/guide/dashboard/messages" element={<GuideInbox />} />
         <Route path="/guide/dashboard/:id" element={<GuideDashboard />} />
+        <Route path="/admin/reviews" element={<ReviewsPage />} />
+        <Route path="/admin/reports" element={<ReportsPage />} />
         <Route path="/" element={<Layout />}>
           <Route index element={<Home />} />
           <Route path="trip-planner" element={<TripPlanner />} />

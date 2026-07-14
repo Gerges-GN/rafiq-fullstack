@@ -76,26 +76,7 @@ export default function Topbar({
           </div>
         </div>
 
-        {showLogout && logoutVariant === "button" && (
-          <button
-            type="button"
-            onClick={handleLogout}
-            className="inline-flex items-center gap-2 bg-[#fe6800] hover:bg-[#fe6800] text-white border text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
-          >
-            <LogOut size={15} />
-            Logout
-          </button>
-        )}
-
-        {showLogout && logoutVariant === "text" && (
-          <button
-            type="button"
-            onClick={handleLogout}
-            className="text-sm font-semibold text-[#fe6800] hover:text-[#fe6800] transition-colors"
-          >
-            Logout
-          </button>
-        )}
+        
       </div>
     </header>
   );

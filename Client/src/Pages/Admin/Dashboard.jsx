@@ -301,7 +301,7 @@ export default function Dashboard() {
 
   return (
     <DashboardLayout
-      sidebarProps={{ active: "/", showLogo: false, footer: "status" }}
+      sidebarProps={{ active: "/", showLogo: false, footer: "logout" }}
       topbarProps={{
         title: "Dashboard",
         showLogout: true,
