@@ -13,6 +13,7 @@ const tripRoutes = require('./routes/Trip');
 const tourGuideProfileRoutes = require('./routes/tourGuideProfile');
 const bookingRoutes = require('./routes/Booking');
 const reviewRoutes = require('./routes/Review');
+const reportRoutes = require('./routes/Report');
 const app = express();
 // ✅ Add these BEFORE your routes
 app.use(express.json());
@@ -41,7 +42,7 @@ app.use('/api/trips', tripRoutes);
 app.use('/api/tourguide-profiles', tourGuideProfileRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/reviews', reviewRoutes);
-
+app.use('/api/reports', reportRoutes);
 // Global Error Handler
 app.use((err, req, res, next) => {
   console.error(err.stack);
