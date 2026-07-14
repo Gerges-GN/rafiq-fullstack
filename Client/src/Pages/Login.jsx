@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { Mail, Lock, Eye, EyeOff, ArrowRight, ShieldCheck } from "lucide-react";
 import bgImage from "../assets/nile.png"; // ضع الصورة في src/assets وعدّل المسار لو مختلف
-
+import { useNavigate } from "react-router-dom";
 export default function Login() {
+  const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [remember, setRemember] = useState(false);
   const [form, setForm] = useState({ email: "", password: "" });
@@ -16,19 +17,42 @@ export default function Login() {
     e.preventDefault();
     setError("");
     setLoading(true);
+
     try {
-      const res = await fetch("/api/auth/login", {
+      // Matches: app.use('/api/users', userRoutes) + router.post('/login', ...)
+      const res = await fetch("http://localhost:5000/api/users/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "بيانات الدخول غير صحيحة");
 
-      // خزّن التوكن حسب الطريقة اللي شغال بيها الباك اند
-      if (data.token) localStorage.setItem("token", data.token);
+      let data = {};
+      try {
+        data = await res.json();
+      } catch {
+        // no JSON body
+      }
 
-      window.location.href = "/dashboard"; // غيّرها للمسار اللي عايز توديه بعد تسجيل الدخول
+      if (!res.ok) {
+        throw new Error(data.message || "Invalid email or password.");
+      }
+
+      // Backend returns { message, token, user } on success.
+      // "Remember me" decides whether the session survives a browser restart:
+      // - checked  -> localStorage (persists across tabs/restarts)
+      // - unchecked -> sessionStorage (cleared when the tab/browser closes)
+      const storage = remember ? localStorage : sessionStorage;
+      storage.setItem("token", data.token);
+      storage.setItem("user", JSON.stringify(data.user));
+      if(data.user.role === "admin") {
+        navigate("/dashboard"); // change to wherever you want to land post-login
+      }
+      else if(data.user.role === "tourguide") {
+        navigate("/tourguide-dashboard"); // change to wherever you want to land post-login
+      }
+      else {
+        navigate("/profile/" + data.user._id); // change to wherever you want to land post-login
+      }
     } catch (err) {
       setError(err.message);
     } finally {
@@ -41,18 +65,10 @@ export default function Login() {
       className="min-h-screen w-full bg-cover bg-center flex items-center justify-center px-6 py-12 relative"
       style={{ backgroundImage: `url(${bgImage})` }}
     >
+    <div className="absolute inset-0 bg-gray-900/50" />
       <div className="w-full max-w-6xl grid md:grid-cols-2 gap-10 items-center relative z-10">
         {/* Left: Brand + Copy */}
         <div className="relative self-stretch flex flex-col justify-start pt-8 pb-10 px-8 overflow-hidden rounded-3xl">
-          {/* cream panel behind the text, fading out at the bottom so the photo shows through */}
-          {/* <div
-            className="absolute inset-0 -z-10"
-            style={{
-              background:
-                "linear-gradient(180deg, #F6EEE2 0%, #F6EEE2 55%, rgba(246,238,226,0.85) 70%, rgba(246,238,226,0) 100%)",
-            }}
-          /> */}
-
           {/* faint hieroglyph-style pattern, right side of the cream panel only */}
           <div className="absolute top-0 right-0 h-2/3 w-28 -z-10 flex flex-col items-center justify-start gap-7 pt-10 opacity-25 text-orange-900">
             <svg width="20" height="26" viewBox="0 0 20 26" fill="none" stroke="currentColor" strokeWidth="1.6">
@@ -82,7 +98,7 @@ export default function Login() {
               <circle cx="33" cy="26" r="3" fill="#f97316" />
               <path d="M33 20 L33 32 M27 26 L39 26" stroke="#f97316" strokeWidth="1.5" />
             </svg>
-            <span className="text-3xl font-bold tracking-wide text-slate-900">Rafiq</span>
+            <span className="text-3xl font-bold tracking-wide text-white">Rafiq</span>
           </div>
 
           <div className="flex items-center gap-2 mb-4">
@@ -94,12 +110,12 @@ export default function Login() {
             <span className="h-px w-6 bg-orange-400/70" />
           </div>
 
-          <h1 className="text-5xl font-extrabold leading-tight mb-4 text-bg-slate-900/95">
+          <h1 className="text-5xl font-extrabold leading-tight mb-4 text-white">
             Welcome back to{" "}
             <span className="text-orange-500">Rafiq</span>
           </h1>
 
-          <p className="text-lg text-slate-700 max-w-md">
+          <p className="text-lg text-white max-w-md">
             Sign in to keep exploring Egypt, chatting with your guides, and
             picking up your journey right where you left it.
           </p>
@@ -164,7 +180,7 @@ export default function Login() {
               disabled={loading}
               className="w-full bg-orange-500 hover:bg-orange-600 disabled:opacity-60 text-white font-semibold py-3 rounded-lg flex items-center justify-center gap-2 transition-colors"
             >
-              {loading ? "جارٍ الدخول..." : "Sign In"}
+              {loading ? "Signing in..." : "Sign In"}
               <ArrowRight size={18} />
             </button>
           </form>

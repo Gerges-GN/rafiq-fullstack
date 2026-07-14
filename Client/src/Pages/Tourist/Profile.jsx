@@ -1,48 +1,60 @@
-import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import {
-  MapPin, MessageCircle, Globe
-} from 'lucide-react';
-import Navbar from '../../Components/Layout/TouristNav';
-import ProfileHeader from '../../Components/Tourist/ProfileHeader';
-import Sidebar from '../../Components/Tourist/sidebar';
-import Feed from '../../Components/Tourist/Feed';
+  MapPin,
+  MessageCircle,
+  Globe,
+  PlusCircle,
+} from "lucide-react";
+
+import Navbar from "../../Components/Layout/TouristNav";
+import ProfileHeader from "../../Components/Tourist/ProfileHeader";
+import Sidebar from "../../Components/Tourist/sidebar";
+import Feed from "../../Components/Tourist/Feed";
 
 export default function Profile() {
-  const { userId } = useParams(); // expects route like /profile/:userId
+  const { userId } = useParams();
+  const navigate = useNavigate();
+
   const [profileData, setProfileData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [profileNotFound, setProfileNotFound] = useState(false);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    // Guard: don't fetch if there's no userId yet (e.g. route still resolving)
-    if (!userId) {
-      setLoading(false);
-      return;
-    }
+    if (!userId) return;
 
     const controller = new AbortController();
 
     const fetchProfile = async () => {
       try {
         setLoading(true);
-        setError(null);
+        setError("");
+        setProfileNotFound(false);
 
-        const res = await fetch(`http://localhost:5000/api/profiles/${userId}`, {
-          signal: controller.signal,
-        });
+        const response = await fetch(
+          `http://localhost:5000/api/profiles/${userId}`,
+          {
+            signal: controller.signal,
+          }
+        );
 
-        if (!res.ok) {
-          const errData = await res.json().catch(() => ({}));
-          throw new Error(errData.message || `Request failed with status ${res.status}`);
+        if (response.status === 404) {
+          setProfileNotFound(true);
+          setProfileData(null);
+          return;
         }
 
-        const data = await res.json();
+        if (!response.ok) {
+          throw new Error("Failed to load profile");
+        }
+
+        const data = await response.json();
+
         setProfileData(data);
       } catch (err) {
-        // Ignore abort errors — they happen when the component unmounts/re-runs, not a real failure
-        if (err.name !== 'AbortError') {
-          console.error('Fetch profile error:', err);
+        if (err.name !== "AbortError") {
+          console.error(err);
           setError(err.message);
         }
       } finally {
@@ -52,66 +64,128 @@ export default function Profile() {
 
     fetchProfile();
 
-    // Cleanup: cancel the request if userId changes or component unmounts
     return () => controller.abort();
-  }, [userId]); // only re-runs when userId actually changes
+  }, [userId]);
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-gray-500">Loading profile...</p>
+      <div className="min-h-screen flex items-center justify-center bg-[#fafafa]">
+        <div className="text-lg font-medium text-gray-500">
+          Loading profile...
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-red-500">Error: {error}</p>
+      <div className="min-h-screen flex items-center justify-center bg-[#fafafa]">
+        <div className="text-red-500 text-lg">
+          {error}
+        </div>
       </div>
+    );
+  }
+
+  if (profileNotFound) {
+    return (
+      <>
+        <Navbar userId={userId} />
+
+        <div className="min-h-screen bg-[#fafafa] flex items-center justify-center px-4">
+          <div className="bg-white rounded-3xl shadow-xl p-10 max-w-md w-full text-center">
+
+            <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-orange-100 flex items-center justify-center">
+              <PlusCircle className="w-12 h-12 text-orange-500" />
+            </div>
+
+            <h2 className="text-3xl font-bold text-gray-900">
+              No Profile Yet
+            </h2>
+
+            <p className="text-gray-500 mt-3">
+              Create your profile and start sharing your travel memories with everyone.
+            </p>
+
+            <button
+              onClick={() => navigate(`/create-profile/${userId}`)}
+              className="mt-8 bg-orange-500 hover:bg-orange-600 transition text-white px-8 py-3 rounded-xl font-semibold"
+            >
+              Create Profile
+            </button>
+          </div>
+        </div>
+      </>
     );
   }
 
   if (!profileData) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-gray-500">Profile not found.</p>
-      </div>
-    );
+    return null;
   }
 
-  // --- Map backend data shape to what your components expect ---
-
-  const user = {
-    name: profileData.ownerName || "Unknown",
-    isVerified: profileData.isVerified,
-    tagline: profileData.headline,
-    location: profileData.location,
+    const user = {
+    // Uses owner.username if populated; falls back to ownerName if present
+    name: profileData.owner?.username || profileData.ownerName || "Unknown User",
+    isVerified: profileData.isVerified || false,
+    tagline: profileData.headline || "",
+    location: profileData.location || "",
     joinedDate: profileData.createdAt
-      ? new Date(profileData.createdAt).toLocaleDateString('en-US', {
-        month: 'long',
-        year: 'numeric',
-      })
-      : '',
-    avatarUrl: profileData.avatarUrl,
-    coverUrl: profileData.coverUrl,
+      ? new Date(profileData.createdAt).toLocaleDateString("en-US", {
+          month: "long",
+          year: "numeric",
+        })
+      : "",
+    avatarUrl:
+      profileData.avatarUrl ||
+      "https://ui-avatars.com/api/?name=User&background=f97316&color=fff",
+    coverUrl:
+      profileData.coverUrl ||
+      "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee",
   };
 
   const stats = [
-    { label: "Trips", value: profileData.num_trips ?? 0 },
-    { label: "Posts", value: profileData.num_posts ?? 0 },
-    { label: "Followers", value: profileData.num_followers ?? 0 },
-    { label: "Following", value: profileData.num_following ?? 0 },
+    {
+      label: "Trips",
+      value: profileData.num_trips ?? 0,
+    },
+    {
+      label: "Posts",
+      value: profileData.num_posts ?? 0,
+    },
+    {
+      label: "Followers",
+      value: profileData.num_followers ?? 0,
+    },
+    {
+      label: "Following",
+      value: profileData.num_following ?? 0,
+    },
   ];
 
   const about = {
-    quote: profileData.quote,
-    bio: profileData.bio,
+    quote: profileData.quote || "",
+    bio: profileData.bio || "",
     details: [
-      { icon: MapPin, label: "From", value: profileData.location },
-      { icon: MessageCircle, label: "Language", value: profileData.languages?.join(', ') },
-      { icon: Globe, label: "Website", value: profileData.website, link: profileData.website },
-    ]
+      {
+        icon: MapPin,
+        label: "From",
+        value: profileData.location || "Unknown",
+      },
+      {
+        icon: MessageCircle,
+        label: "Language",
+        value:
+          profileData.languages?.length > 0
+            ? profileData.languages.join(", ")
+            : "Not specified",
+      },
+      {
+        icon: Globe,
+        label: "Website",
+        value: profileData.website || "No website",
+        link: profileData.website || "",
+      },
+    ],
   };
 
   const posts = (profileData.posts || []).map((post) => ({
@@ -119,24 +193,36 @@ export default function Profile() {
     location: post.tripLocation,
     imageCount: `1/${post.images?.length || 1}`,
     imageUrl: post.images?.[0],
-    images: post.images && post.images.length > 0 ? post.images : (post.imageUrl ? [post.imageUrl] : []), // 👈 full array for the modal carousel
+    images:
+      post.images && post.images.length > 0
+        ? post.images
+        : post.imageUrl
+        ? [post.imageUrl]
+        : [],
     title: post.title,
-    date: post.createdAt ? new Date(post.createdAt).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    }) : '',
+    date: post.createdAt
+      ? new Date(post.createdAt).toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+        })
+      : "",
     description: post.description,
-    likes: post.numLikes,
-    comments: post.numComments,
-    saved: post.saved,
+    likes: post.numLikes ?? 0,
+    comments: post.numComments ?? 0,
+    saved: post.saved ?? false,
   }));
+
   return (
     <div className="min-h-screen bg-[#fafafa] font-sans selection:bg-orange-100 selection:text-orange-900">
-      <Navbar userAvatar={user.avatarUrl} userId={userId}/>
+      <Navbar/>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-        <ProfileHeader user={user} stats={stats} id={userId} />
+        <ProfileHeader
+          user={user}
+          stats={stats}
+          id={userId}
+        />
 
         <div className="flex flex-col lg:flex-row gap-6 sm:gap-8">
           <aside className="w-full lg:w-[300px] xl:w-[320px] shrink-0">

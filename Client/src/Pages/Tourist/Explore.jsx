@@ -240,7 +240,7 @@ export default function Explore() {
               <p className="mt-2 text-sm text-[#6E6E6A]">{error}. تأكد إن السيرفر شغال على {API_URL}</p>
             </div>
           ) : filtered.length > 0 ? (
-            <div ref={trackRef} className="grid grid-rows-2 grid-flow-col gap-6 overflow-x-auto py-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <div ref={trackRef} className="flex gap-6 overflow-x-auto py-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               {filtered.map((gov) => {
                 const isFav = favorites.has(gov.name);
                 return (

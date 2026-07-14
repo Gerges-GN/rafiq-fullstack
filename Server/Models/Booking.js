@@ -12,6 +12,16 @@ const bookingSchema = new mongoose.Schema(
       required: [true, 'Tourist name is required'],
       trim: true,
     },
+    touristimg: {
+      type: String,
+      required: [true, 'Tourist image is required'],
+      trim: true,
+    },
+    tourguideimg: {
+      type: String,
+      required: [true, 'Tour guide image is required'],
+      trim: true,
+    },
     tourGuideId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',

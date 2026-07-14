@@ -1,14 +1,15 @@
 import { useState } from "react";
 import { User, Mail, Lock, MapPin, Eye, EyeOff, ArrowRight, ShieldCheck } from "lucide-react";
 import bgImage from "../assets/nile.png"; // ضع الصورة في src/assets وعدّل المسار لو مختلف
+import { useNavigate } from "react-router-dom";
 
 const ROLES = [
   { key: "tourist", label: "Tourist", icon: User },
   { key: "tourguide", label: "Tour Guide", icon: User },
-  { key: "admin", label: "Admin", icon: ShieldCheck },
 ];
 
 export default function Register() {
+  const navigate = useNavigate();
   const [role, setRole] = useState("tourist");
   const [showPassword, setShowPassword] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", password: "", location: "" });
@@ -23,7 +24,7 @@ export default function Register() {
     setError("");
     setLoading(true);
     try {
-      const res = await fetch("/api/auth/register", {
+      const res = await fetch("http://localhost:5000/api/users/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...form, role }),
@@ -32,6 +33,7 @@ export default function Register() {
       if (!res.ok) throw new Error(data.message || "error");
       // TODO: وجّه المستخدم بعد نجاح التسجيل (login أو dashboard)
       console.log("Registered:", data);
+      navigate("/login");
     } catch (err) {
       setError(err.message);
     } finally {
@@ -44,6 +46,7 @@ export default function Register() {
       className="min-h-screen w-full bg-cover bg-center flex items-center justify-center px-6 py-12 relative"
       style={{ backgroundImage: `url(${bgImage})` }}
     >
+    <div className="absolute inset-0 bg-gray-900/20" />
       <div className="w-full max-w-6xl grid md:grid-cols-2 gap-10 items-center relative z-10">
         {/* Left: Brand + Copy */}
         <div className="relative self-stretch flex flex-col justify-start pt-8 pb-10 px-8 overflow-hidden rounded-3xl">
@@ -90,7 +93,7 @@ export default function Register() {
               <circle cx="33" cy="26" r="3" fill="#f97316" />
               <path d="M33 20 L33 32 M27 26 L39 26" stroke="#f97316" strokeWidth="1.5" />
             </svg>
-            <span className="text-3xl font-bold tracking-wide text-slate-900">Rafiq</span>
+            <span className="text-3xl font-bold tracking-wide text-white">Rafiq</span>
           </div>
 
           <div className="flex items-center gap-2 mb-4">
@@ -102,12 +105,12 @@ export default function Register() {
             <span className="h-px w-6 bg-orange-400/70" />
           </div>
 
-          <h1 className="text-5xl font-extrabold leading-tight mb-4 text-bg-slate-900/95">
+          <h1 className="text-5xl font-extrabold leading-tight mb-4 text-white">
             Start your journey with{" "}
             <span className="text-orange-500">Rafiq</span>
           </h1>
 
-          <p className="text-lg text-slate-900/95 max-w-md">
+          <p className="text-lg text-white max-w-md">
             Discover the beauty of Egypt, connect with guides, and create
             unforgettable memories.
           </p>
@@ -131,7 +134,7 @@ export default function Register() {
           </div>
 
           {/* Role Tabs */}
-          <div className="grid grid-cols-3 gap-2 mb-6 bg-slate-800 p-1 rounded-lg">
+          <div className="grid grid-cols-2 gap-2 mb-6 bg-slate-800 p-1 rounded-lg">
             {ROLES.map(({ key, label }) => (
               <button
                 key={key}
