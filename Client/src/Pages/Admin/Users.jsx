@@ -72,52 +72,44 @@ export default function Users() {
   }, []);
 
   const handleUpdateUser = async (updatedUser) => {
-    const payload = {
-      owner: updatedUser.userId,
-      ownerName: updatedUser.ownerName || "",
-      headline: updatedUser.headline || "",
-      quote: updatedUser.quote || "",
-      bio: updatedUser.bio || "",
-      location: updatedUser.location || "",
-      website: updatedUser.website || "",
-      languages: updatedUser.languages || [],
-      avatarUrl: updatedUser.avatarUrl || "",
-      coverUrl: updatedUser.coverUrl || "",
-    };
-
-    if (updatedUser.status !== undefined) {
-      payload.status = updatedUser.status;
-    }
-    if (updatedUser.isVerified !== undefined) {
-      payload.isVerified = updatedUser.isVerified;
-    }
-
-    try {
-      const response = await fetch(
-        `http://localhost:5000/api/profiles/${updatedUser.id}`,
-        {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
+  try {
+    const response = await fetch(
+      `http://localhost:5000/api/profiles/${updatedUser.userId}/status`,
+      {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
         },
-      );
-      if (!response.ok) throw new Error("Failed to update user");
-      const updatedProfileFromServer = await response.json();
+        body: JSON.stringify({
+          status: updatedUser.status, // "ACTIVE" or "SUSPENDED"
+        }),
+      }
+    );
 
-      const mergedData = { ...updatedUser, ...updatedProfileFromServer };
-      const newPreparedUser = prepareProfileData(mergedData);
-
-      setUsers(
-        users.map((u) => (u.id === updatedUser.id ? newPreparedUser : u)),
-      );
-
-      setViewingUser((prev) =>
-        prev && prev.id === updatedUser.id ? newPreparedUser : prev,
-      );
-    } catch (error) {
-      console.error("Failed to update user:", error);
+    if (!response.ok) {
+      throw new Error("Failed to update status");
     }
-  };
+
+    const result = await response.json();
+
+    setUsers((prev) =>
+      prev.map((user) =>
+        user.userId === updatedUser.userId
+          ? { ...user, status: result.profile.status }
+          : user
+      )
+    );
+
+    setViewingUser((prev) =>
+      prev && prev.userId === updatedUser.userId
+        ? { ...prev, status: result.profile.status }
+        : prev
+    );
+
+  } catch (error) {
+    console.error("Failed to update status:", error);
+  }
+};
 
   const handleDeleteUser = async (profileId) => {
     try {
