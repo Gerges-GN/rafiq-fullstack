@@ -13,25 +13,35 @@ import Guides from './pages/Admin/Guides.jsx'
 import Places from './pages/Admin/Places.jsx'
 import Users from './pages/Admin/Users.jsx'
 import ComingSoon from './pages/Admin/ComingSoon.jsx'
+import ProtectedRoute from './components/Protection/Protectedroute.jsx'
+import GuideInbox from './Features/chat/pages/GuideInbox'
+
 function App() {
   return (
     <Routes>
+      {/* Public routes — accessible without being logged in */}
       <Route path="/register" element={<Register />} />
       <Route path="/login" element={<Login />} />
-      <Route path="/profile/:userId" element={<Profile />} />
-      <Route path="/profile/edit/:userId" element={<EditProfile />} />
-      <Route path="/dashboard" element={<Dashboard />} />
-      <Route path="/guides" element={<Guides />} />
-      <Route path="/places" element={<Places />} />
-      <Route path="/users" element={<Users />} />
-      <Route path="/chats" element={<ComingSoon title="Chats" />} />
-      <Route path="/reviews" element={<ComingSoon title="Reviews" />} />
-      <Route path="/pricing-fraud" element={<ComingSoon title="Pricing / Fraud" />} />
-      <Route path="/reports" element={<ComingSoon title="Reports" />} />
-      <Route path="/" element={<Layout />} >
-        <Route index element={<Home />} />
-        <Route path="trip-planner" element={<TripPlanner />} />
-        <Route path="explore" element={<Explore />} />
+
+      {/* Everything below requires a logged-in user (checked via ProtectedRoute).
+          If there's no user in storage, it redirects to /login. */}
+      <Route element={<ProtectedRoute />}>
+        <Route path="/profile/:userId" element={<Profile />} />
+        <Route path="/profile/edit/:userId" element={<EditProfile />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/guides" element={<Guides />} />
+        <Route path="/places" element={<Places />} />
+        <Route path="/users" element={<Users />} />
+        <Route path="/chats" element={<ComingSoon title="Chats" />} />
+        <Route path="/reviews" element={<ComingSoon title="Reviews" />} />
+        <Route path="/pricing-fraud" element={<ComingSoon title="Pricing / Fraud" />} />
+        <Route path="/reports" element={<ComingSoon title="Reports" />} />
+        <Route path="/guide/dashboard/messages" element={<GuideInbox />} />
+        <Route path="/" element={<Layout />}>
+          <Route index element={<Home />} />
+          <Route path="trip-planner" element={<TripPlanner />} />
+          <Route path="explore" element={<Explore />} />
+        </Route>
       </Route>
     </Routes>
   )

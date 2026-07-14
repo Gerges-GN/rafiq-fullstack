@@ -11,6 +11,7 @@ import Navbar from "../../Components/Layout/TouristNav";
 import ProfileHeader from "../../Components/Tourist/ProfileHeader";
 import Sidebar from "../../Components/Tourist/sidebar";
 import Feed from "../../Components/Tourist/Feed";
+import ChatWidget from "../../Features/chat/index";
 
 export default function Profile() {
   const { userId } = useParams();
@@ -218,6 +219,7 @@ export default function Profile() {
       <Navbar/>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+      <ChatWidget></ChatWidget>
         <ProfileHeader
           user={user}
           stats={stats}

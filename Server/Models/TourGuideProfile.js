@@ -17,7 +17,7 @@ const tourGuideProfileSchema = new mongoose.Schema(
             type: String,
             default: 'guide',
         },
-        avatar: {
+        avatarUrl: {
             type: String,
             default: '',
         },

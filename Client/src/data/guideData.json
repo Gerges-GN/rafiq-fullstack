@@ -1,0 +1,36 @@
+{
+  "initialBookings": [
+    {
+      "id": 1,
+      "touristName": "John Doe",
+      "date": "2026-07-15",
+      "duration": "3 Days",
+      "status": "Pending"
+    }
+  ],
+  "initialTrips": [
+    {
+      "id": 101,
+      "title": "Luxor East Bank Tour",
+      "location": "Luxor",
+      "days": 1,
+      "details": "Explore Karnak Temple and Luxor Temple with an expert guide.",
+      "images": [
+        "https://i.pinimg.com/736x/66/21/da/6621da0dcddcd4f932b3cbbda186e7b3.jpg",
+        "https://i.pinimg.com/736x/60/fe/06/60fe0631825152fa674f7f2da05f22bb.jpg",
+        "https://i.pinimg.com/736x/dc/cc/9d/dccc9d1de98a0964334dd56fbf9cca00.jpg"
+      ]
+    },
+    {
+      "id": 102,
+      "title": "Pyramids & Sphinx Day Trip",
+      "location": "Giza",
+      "days": 1,
+      "details": "A comprehensive tour of the Great Pyramids of Giza, the Sphinx, and Valley Temple.",
+      "images": [
+        "https://images.unsplash.com/photo-1503177119275-0aa32b3a9368?auto=format&fit=crop&w=800&q=80",
+        "https://i.pinimg.com/736x/2e/e1/fb/2ee1fba7ae50831e11ca13baf1015eab.jpg"
+      ]
+    }
+  ]
+}

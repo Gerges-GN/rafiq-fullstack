@@ -15,9 +15,12 @@ const bookingRoutes = require('./routes/Booking');
 const reviewRoutes = require('./routes/Review');
 const app = express();
 // ✅ Add these BEFORE your routes
-app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cors({
+  origin: 'http://localhost:5173', // your Vite dev server, not '*'
+  credentials: true,
+}));
 
 // Database Connection
 mongoose
