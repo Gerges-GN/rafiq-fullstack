@@ -20,64 +20,59 @@ import {
   Loader2,
   AlertTriangle,
 } from "lucide-react";
-
-// --- INLINE API HELPERS (no separate api.js file) ---
-//
-// ASSUMPTIONS (change these if wrong):
-//   1. Base URL — reads VITE_API_URL from your .env if set (e.g.
-//      VITE_API_URL=http://localhost:5000/api), otherwise falls back to the
-//      relative "/api" (only works if your dev server proxies it).
-//   2. Auth token is stored in localStorage under the key "token", and the
-//      backend's verifyToken middleware expects "Authorization: Bearer <token>".
-//   3. The JWT payload was signed with `{ id: user._id }` — see getCurrentUserId()
-//      below. If your login code signs a different shape, adjust that one spot.
-
+import { useNavigate } from "react-router-dom";
 const API_BASE_URL = import.meta.env?.VITE_API_URL || "/api";
 
+console.log("API_BASE_URL =", API_BASE_URL);
+
+// Single source of truth for the token — checks both storages.
+function getToken() {
+  const t = localStorage.getItem("token") || sessionStorage.getItem("token");
+  console.log("[auth] getToken() ->", t ? t.slice(0, 20) + "..." : null);
+  return t;
+}
+
 function getCurrentUserId() {
-  const token = localStorage.getItem("token");
-  if (!token) return null;
+  const token = getToken();
+  if (!token) {
+    console.warn("[auth] getCurrentUserId: no token found in either storage");
+    return null;
+  }
   try {
     const payload = JSON.parse(atob(token.split(".")[1]));
-    return payload.id || payload._id || null;
-  } catch {
+    console.log("[auth] decoded payload ->", payload);
+    const id = payload.id || payload._id || payload.userId || payload.sub;
+    if (!id)
+      console.warn("[auth] payload has no id/_id/userId/sub field:", payload);
+    return id || null;
+  } catch (err) {
+    console.warn("[auth] token decode failed:", err);
     return null;
   }
 }
-
 async function apiRequest(path, options = {}) {
-  const token = localStorage.getItem("token");
+  const token = getToken();
 
-  let res;
-  try {
-    res = await fetch(`${API_BASE_URL}${path}`, {
-      headers: {
-        "Content-Type": "application/json",
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-      ...options,
-    });
-  } catch {
-    throw new Error(
-      `Couldn't reach the server at ${API_BASE_URL}. Is the backend running and reachable from the frontend?`,
-    );
-  }
+  const res = await fetch(`${API_BASE_URL}${path}`, {
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    ...options,
+  });
 
-  let data = null;
-  try {
-    data = await res.json();
-  } catch {
-    // no body (e.g. some DELETE responses, or a non-JSON error page)
-  }
+  console.log("Status:", res.status);
+
+  const data = await res.json();
+
+  console.log("Response from API:", data);
 
   if (!res.ok) {
-    const message = data?.message || `Request failed (${res.status})`;
-    throw new Error(message);
+    throw new Error(data?.message || `Request failed (${res.status})`);
   }
 
   return data;
 }
-
 const profileApi = {
   getByOwnerId: (ownerId) => apiRequest(`/tourguide-profiles/owner/${ownerId}`),
   create: (payload) =>
@@ -229,12 +224,31 @@ const TripCard = ({ trip, onOpenDetails, onDeleteTrip }) => {
 
 // --- MAIN PORTAL PAGE COMPONENT ---
 const GuideDashboard = ({ user, onLogout }) => {
+  const navigate = useNavigate();
+  const handleLogout = () => {
+    // clear both, since "Remember me" decided which one Login.jsx used
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    sessionStorage.removeItem("token");
+    sessionStorage.removeItem("user");
+    navigate("/login");
+  };
+  console.log("GuideDashboard rendered");
   const [activeTab, setActiveTab] = useState("dashboard");
 
   // The guide's id — comes from the `user` prop if provided (e.g. from an
   // AuthContext / login response), falling back to decoding the stored JWT.
   // ASSUMPTION: user._id (or user.id) is the Mongo ObjectId for this guide.
+  console.log("GuideDashboard user:", user);
+  console.log("Decoded token id:", getCurrentUserId());
   const tourGuideId = user?._id || user?.id || getCurrentUserId();
+  console.log("Resolved guide id:", tourGuideId);
+  console.log(
+    "[auth] tourGuideId resolved to ->",
+    tourGuideId,
+    "| user prop was:",
+    user,
+  );
 
   const [profileInfo, setProfileInfo] = useState(null);
   const [trips, setTrips] = useState([]);
@@ -285,6 +299,7 @@ const GuideDashboard = ({ user, onLogout }) => {
       let profile;
       try {
         profile = await profileApi.getByOwnerId(tourGuideId);
+        console.log("Profile returned from API:", profile);
       } catch (err) {
         profile = await profileApi.create({
           owner: tourGuideId,
@@ -300,7 +315,7 @@ const GuideDashboard = ({ user, onLogout }) => {
         Array.isArray(profile.languages) ? profile.languages.join(", ") : "",
       );
       setEditRate(profile.rate || "");
-      setEditAvatar(profile.avatar || "");
+      setEditAvatar(profile.avatarUrl || "");
 
       const [tripsData, bookingsData] = await Promise.all([
         tripApi.getByTourGuideId(tourGuideId),
@@ -507,7 +522,7 @@ const GuideDashboard = ({ user, onLogout }) => {
         <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex items-center gap-4">
             <img
-              src={profileInfo.avatar || DEFAULT_AVATAR}
+              src={profileInfo.avatarUrl || DEFAULT_AVATAR}
               alt={profileInfo.name}
               className="w-14 h-14 rounded-full object-cover border-2 border-orange-500 shadow-inner"
             />
@@ -536,7 +551,7 @@ const GuideDashboard = ({ user, onLogout }) => {
             </button>
             <div className="w-px h-6 bg-slate-200 mx-1 hidden sm:block" />
             <button
-              onClick={onLogout}
+              onClick={handleLogout}
               className="border border-slate-200 text-slate-600 font-semibold text-sm py-2 px-4 rounded-xl hover:border-red-200 hover:text-red-600 transition-colors cursor-pointer"
             >
               Log Out →
@@ -779,7 +794,7 @@ const GuideDashboard = ({ user, onLogout }) => {
               <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm text-center space-y-4">
                 <div className="relative w-28 h-28 mx-auto">
                   <img
-                    src={profileInfo.avatar || DEFAULT_AVATAR}
+                    src={profileInfo.avatarUrl || DEFAULT_AVATAR}
                     alt="Guide Avatar"
                     className="w-full h-full object-cover rounded-full border-4 border-slate-50 shadow-md"
                   />
