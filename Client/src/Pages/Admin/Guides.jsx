@@ -1,15 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { Plus, Eye, Edit, Trash2 } from "lucide-react";
+import { Eye, Trash2 } from "lucide-react";
 import DashboardLayout from "../../components/Layout/DashboardLayout.jsx";
 import PageHeader from "../../components/common/PageHeader.jsx";
-import Button from "../../components/common/Button.jsx";
 import SearchInput from "../../components/common/SearchInput.jsx";
 import DataTable from "../../components/common/DataTable.jsx";
 import Badge from "../../components/common/Badge.jsx";
 import Avatar from "../../components/common/Avatar.jsx";
 import { currentAdmin } from "../../data/mockData.js";
-import AddGuideModal from "../../components/modals/AddGuideModal.jsx";
-import EditGuideModal from "../../components/modals/EditGuideModal.jsx";
 import DeleteConfirmationModal from "../../components/modals/DeleteConfirmationModal.jsx";
 import GuideDetailPanel from "../../components/common/GuideDetailPanel.jsx";
 import Pagination from "../../components/common/Pagination.jsx";
@@ -18,8 +15,6 @@ export default function Guides() {
   const [guides, setGuides] = useState([]);
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [guideToEdit, setGuideToEdit] = useState(null);
   const [guideToDelete, setGuideToDelete] = useState(null);
   const [viewingGuide, setViewingGuide] = useState(null);
 
@@ -33,6 +28,7 @@ export default function Guides() {
     return {
       ...guide,
       id: guide._id,
+      avatar: guide.avatar,
       status: status,
       languages: Array.isArray(guide.languages) ? guide.languages : [],
     };
@@ -41,7 +37,9 @@ export default function Guides() {
   useEffect(() => {
     const fetchGuides = async () => {
       try {
-        const response = await fetch("http://localhost:5000/api/tourguide-profiles");
+        const response = await fetch(
+          "http://localhost:5000/api/tourguide-profiles",
+        );
         if (!response.ok) {
           throw new Error("Network response was not ok");
         }
@@ -54,33 +52,6 @@ export default function Guides() {
     fetchGuides();
   }, []);
 
-  const handleAddGuide = async (newGuideData) => {
-    try {
-      const payload = {
-        name: newGuideData.name,
-        city: newGuideData.city,
-        avatar: newGuideData.avatarUrl,
-        languages: newGuideData.languages,
-        owner: [...Array(24)]
-          .map(() => Math.floor(Math.random() * 16).toString(16))
-          .join(""),
-      };
-
-      const response = await fetch("http://localhost:5000/api/tourguide-profiles", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      if (!response.ok) throw new Error("Failed to add guide");
-
-      const createdGuide = await response.json();
-      const newGuide = prepareGuideForState(createdGuide);
-      setGuides([newGuide, ...guides]);
-    } catch (error) {
-      console.error("Failed to add guide:", error);
-    }
-  };
-
   const handleUpdateGuide = async (guideData) => {
     try {
       const payload = {
@@ -92,29 +63,31 @@ export default function Guides() {
         phone: guideData.phone,
         email: guideData.email,
         languages: guideData.languages,
-        status: guideData.status,
       };
 
+      if (guideData.status) {
+        payload.status = guideData.status.toLowerCase();
+      }
       if (typeof guideData.verified === "boolean") {
         payload.verified = guideData.verified;
       }
 
-      const response = await fetch(`http://localhost:5000/api/tourguide-profiles/${guideData.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      if (!response.ok) throw new Error("Failed to update guide");
-      const updatedGuideResponse = await response.json();
-      const updatedGuide = prepareGuideForState(
-        updatedGuideResponse,
-        guideData.status,
+      const response = await fetch(
+        `http://localhost:5000/api/tourguide-profiles/${guideData.id}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        },
       );
+      if (!response.ok) throw new Error("Failed to update guide");
+      const updatedGuideFromServer = await response.json();
+      const mergedData = { ...guideData, ...updatedGuideFromServer };
+      const updatedGuide = prepareGuideForState(mergedData, guideData.status);
 
       setGuides(
         guides.map((g) => (g.id === updatedGuide.id ? updatedGuide : g)),
       );
-      setGuideToEdit(null);
       setViewingGuide((prev) =>
         prev && prev.id === updatedGuide.id ? updatedGuide : prev,
       );
@@ -125,9 +98,12 @@ export default function Guides() {
 
   const handleDeleteGuide = async (guideId) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/tourguide-profiles/${guideId}`, {
-        method: "DELETE",
-      });
+      const response = await fetch(
+        `http://localhost:5000/api/tourguide-profiles/${guideId}`,
+        {
+          method: "DELETE",
+        },
+      );
       if (!response.ok) throw new Error("Failed to delete guide");
       setGuides(guides.filter((g) => g.id !== guideId));
       setGuideToDelete(null);
@@ -213,12 +189,6 @@ export default function Guides() {
       render: (row) => (
         <div className="flex items-center gap-3">
           <button
-            className="text-ink-400 hover:text-[#fe6800]"
-            onClick={() => setGuideToEdit(row)}
-          >
-            <Edit size={16} />
-          </button>
-          <button
             className="text-ink-400 hover:text-red-500"
             onClick={() => setGuideToDelete(row)}
           >
@@ -248,15 +218,6 @@ export default function Guides() {
       <PageHeader
         title="Tour Guides Management"
         description="Review, approve, and manage tour guides on the platform."
-        action={
-          <Button
-            variant="primary"
-            icon={<Plus size={16} />}
-            onClick={() => setIsAddModalOpen(true)}
-          >
-            Add New Guide
-          </Button>
-        }
       />
 
       <div className="mb-6">
@@ -297,17 +258,6 @@ export default function Guides() {
         )}
       </div>
 
-      <AddGuideModal
-        isOpen={isAddModalOpen}
-        onClose={() => setIsAddModalOpen(false)}
-        onAdd={handleAddGuide}
-      />
-      <EditGuideModal
-        isOpen={!!guideToEdit}
-        onClose={() => setGuideToEdit(null)}
-        onUpdate={handleUpdateGuide}
-        guide={guideToEdit}
-      />
       <DeleteConfirmationModal
         isOpen={!!guideToDelete}
         onClose={() => setGuideToDelete(null)}
