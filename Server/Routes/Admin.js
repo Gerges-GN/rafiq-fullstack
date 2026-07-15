@@ -15,5 +15,8 @@ router.put('/fraud/:id', Admin.updateFraud)
 router.get('/reports', Admin.getReports)
 router.get('/db-scan', Admin.dbScan)
 router.post('/migrate-reviews', Admin.migrateReviews)
+router.get('/chats', Admin.getAllChats)
+router.get('/chats/:id', Admin.getChatById)
+router.delete('/chats/:id', Admin.deleteChat)
 
 module.exports = router

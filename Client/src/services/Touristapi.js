@@ -50,6 +50,10 @@ export const profileApi = {
   getAll: () => apiRequest(`/tourguide-profiles`),
 };
 
+export const bookingApi = {
+  getByTourist: (touristId) => apiRequest(`/bookings/tourist/${touristId}`),
+};
+
 export function guideLanguages(guide) {
   return Array.isArray(guide.languages) ? guide.languages : [];
 }

@@ -1,5 +1,13 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { MapPin, Clock, X, Star, BadgeCheck, Loader2, AlertTriangle } from "lucide-react";
+import {
+  MapPin,
+  Clock,
+  X,
+  Star,
+  BadgeCheck,
+  Loader2,
+  AlertTriangle,
+} from "lucide-react";
 import Navbar from "../../Components/Layout/TouristNav";
 import { tripApi, profileApi } from "../../services/Touristapi";
 
@@ -171,122 +179,136 @@ export default function TripsPage() {
       {selectedTrip && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-100 flex flex-col relative [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-slate-50 [&::-webkit-scrollbar-thumb]:bg-slate-200 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-slate-300">
-            <button
-              onClick={() => setSelectedTrip(null)}
-              className="absolute top-4 right-4 bg-white/90 hover:bg-white text-slate-600 hover:text-slate-900 w-8 h-8 rounded-full flex items-center justify-center shadow-md z-20 cursor-pointer"
-            >
-              <X className="w-4 h-4" />
-            </button>
+            <div className="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-100 flex flex-col relative [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-slate-50 [&::-webkit-scrollbar-thumb]:bg-slate-200 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-slate-300">
+              <button
+                onClick={() => setSelectedTrip(null)}
+                className="absolute top-4 right-4 bg-white/90 hover:bg-white text-slate-600 hover:text-slate-900 w-8 h-8 rounded-full flex items-center justify-center shadow-md z-20 cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
 
-            {Array.isArray(selectedTrip.images) && selectedTrip.images.length > 0 && (
-              <div className="p-6 pb-2 space-y-2">
-                <div className="h-60 w-full rounded-2xl overflow-hidden bg-slate-100 border border-slate-100 shadow-sm">
-                  <img
-                    src={selectedTrip.images[0]}
-                    alt={selectedTrip.title}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                {selectedTrip.images.length > 1 && (
-                  <div className="grid grid-cols-2 gap-2">
-                    {selectedTrip.images.slice(1, 3).map((url, idx) => (
-                      <div
-                        key={idx}
-                        className="h-28 rounded-xl overflow-hidden bg-slate-50 border border-slate-100 shadow-inner"
-                      >
-                        <img
-                          src={url}
-                          alt={`album reference ${idx + 1}`}
-                          className="w-full h-full object-cover"
-                        />
+              {Array.isArray(selectedTrip.images) &&
+                selectedTrip.images.length > 0 && (
+                  <div className="p-6 pb-2 space-y-2">
+                    <div className="h-60 w-full rounded-2xl overflow-hidden bg-slate-100 border border-slate-100 shadow-sm">
+                      <img
+                        src={selectedTrip.images[0]}
+                        alt={selectedTrip.title}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    {selectedTrip.images.length > 1 && (
+                      <div className="grid grid-cols-2 gap-2">
+                        {selectedTrip.images.slice(1, 3).map((url, idx) => (
+                          <div
+                            key={idx}
+                            className="h-28 rounded-xl overflow-hidden bg-slate-50 border border-slate-100 shadow-inner"
+                          >
+                            <img
+                              src={url}
+                              alt={`album reference ${idx + 1}`}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                        ))}
                       </div>
-                    ))}
+                    )}
+                  </div>
+                )}
+
+              <div className="p-6 space-y-4">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-xs font-bold text-orange-600 bg-orange-50 px-2.5 py-1 rounded-md uppercase tracking-wide inline-flex items-center gap-1">
+                    <MapPin className="w-3 h-3" /> {selectedTrip.location}
+                  </span>
+                  <span className="text-xs font-bold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-md uppercase tracking-wide inline-flex items-center gap-1">
+                    <Clock className="w-3 h-3" /> Duration: {selectedTrip.days}{" "}
+                    {selectedTrip.days === 1 ? "Day" : "Days"}
+                  </span>
+                </div>
+
+                <div>
+                  <h2 className="text-2xl font-black text-slate-900 leading-tight">
+                    {selectedTrip.title}
+                  </h2>
+                  <div className="h-0.5 bg-slate-100 w-full mt-3 mb-4" />
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">
+                    Detailed Package Itinerary & Milestones
+                  </h4>
+                  <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-line bg-slate-50/50 p-4 border border-slate-100 rounded-xl">
+                    {selectedTrip.details}
+                  </p>
+                </div>
+
+                {getGuideByOwnerId(selectedTrip.tourGuideId) && (
+                  <div>
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">
+                      Posted By
+                    </h4>
+                    <button
+                      onClick={() =>
+                        setSelectedGuide(
+                          getGuideByOwnerId(selectedTrip.tourGuideId),
+                        )
+                      }
+                      className="w-full flex items-center gap-3 bg-slate-50/50 border border-slate-100 rounded-xl p-3 hover:border-orange-200 hover:bg-orange-50/40 transition-colors cursor-pointer text-left"
+                    >
+                      <div className="relative shrink-0">
+                        <div className="w-11 h-11 rounded-full overflow-hidden border-2 border-orange-100">
+                          <img
+                            src={
+                              getGuideByOwnerId(selectedTrip.tourGuideId)
+                                .avatarUrl
+                            }
+                            alt={
+                              getGuideByOwnerId(selectedTrip.tourGuideId).name
+                            }
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        {getGuideByOwnerId(selectedTrip.tourGuideId)
+                          .verified && (
+                          <BadgeCheck className="w-4 h-4 text-orange-500 bg-white rounded-full absolute -bottom-0.5 -right-0.5" />
+                        )}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-bold text-slate-900 truncate">
+                          {getGuideByOwnerId(selectedTrip.tourGuideId).name}
+                        </p>
+                        <div className="flex items-center gap-1">
+                          <Star className="w-3 h-3 text-orange-500 fill-orange-500" />
+                          <span className="text-xs font-semibold text-slate-500">
+                            {(
+                              getGuideByOwnerId(selectedTrip.tourGuideId)
+                                .rating || 0
+                            ).toFixed(1)}{" "}
+                            · {getGuideByOwnerId(selectedTrip.tourGuideId).city}
+                          </span>
+                        </div>
+                      </div>
+                      <span className="text-[10px] font-bold text-orange-600 uppercase tracking-wide whitespace-nowrap">
+                        View Profile
+                      </span>
+                    </button>
                   </div>
                 )}
               </div>
-            )}
 
-            <div className="p-6 space-y-4">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="text-xs font-bold text-orange-600 bg-orange-50 px-2.5 py-1 rounded-md uppercase tracking-wide inline-flex items-center gap-1">
-                  <MapPin className="w-3 h-3" /> {selectedTrip.location}
-                </span>
-                <span className="text-xs font-bold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-md uppercase tracking-wide inline-flex items-center gap-1">
-                  <Clock className="w-3 h-3" /> Duration: {selectedTrip.days}{" "}
-                  {selectedTrip.days === 1 ? "Day" : "Days"}
-                </span>
+              <div className="p-6 pt-2 bg-slate-50/50 border-t border-slate-100 flex justify-end gap-2">
+                <button
+                  onClick={() => setSelectedTrip(null)}
+                  className="bg-white border border-slate-200 text-slate-600 hover:border-slate-300 font-bold px-5 py-2 rounded-xl text-xs uppercase tracking-wide transition-colors cursor-pointer"
+                >
+                  Close
+                </button>
+                <button
+                  onClick={() => setSelectedTrip(null)}
+                  title="Booking flow not wired up yet — needs the current tourist's id/name"
+                  className="bg-orange-500 hover:bg-orange-600 text-white font-bold px-5 py-2 rounded-xl text-xs uppercase tracking-wide transition-colors cursor-pointer shadow-sm"
+                >
+                  Request This Trip
+                </button>
               </div>
-
-              <div>
-                <h2 className="text-2xl font-black text-slate-900 leading-tight">
-                  {selectedTrip.title}
-                </h2>
-                <div className="h-0.5 bg-slate-100 w-full mt-3 mb-4" />
-                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">
-                  Detailed Package Itinerary & Milestones
-                </h4>
-                <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-line bg-slate-50/50 p-4 border border-slate-100 rounded-xl">
-                  {selectedTrip.details}
-                </p>
-              </div>
-
-              {getGuideByOwnerId(selectedTrip.tourGuideId) && (
-                <div>
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">
-                    Posted By
-                  </h4>
-                  <button
-                    onClick={() =>
-                      setSelectedGuide(getGuideByOwnerId(selectedTrip.tourGuideId))
-                    }
-                    className="w-full flex items-center gap-3 bg-slate-50/50 border border-slate-100 rounded-xl p-3 hover:border-orange-200 hover:bg-orange-50/40 transition-colors cursor-pointer text-left"
-                  >
-                    <div className="relative shrink-0">
-                      <div className="w-11 h-11 rounded-full overflow-hidden border-2 border-orange-100">
-                        <img
-                          src={getGuideByOwnerId(selectedTrip.tourGuideId).avatarUrl}
-                          alt={getGuideByOwnerId(selectedTrip.tourGuideId).name}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                      {getGuideByOwnerId(selectedTrip.tourGuideId).verified && (
-                        <BadgeCheck className="w-4 h-4 text-orange-500 bg-white rounded-full absolute -bottom-0.5 -right-0.5" />
-                      )}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-bold text-slate-900 truncate">
-                        {getGuideByOwnerId(selectedTrip.tourGuideId).name}
-                      </p>
-                      <div className="flex items-center gap-1">
-                        <Star className="w-3 h-3 text-orange-500 fill-orange-500" />
-                        <span className="text-xs font-semibold text-slate-500">
-                          {(getGuideByOwnerId(selectedTrip.tourGuideId).rating || 0).toFixed(1)}{" "}
-                          · {getGuideByOwnerId(selectedTrip.tourGuideId).city}
-                        </span>
-                      </div>
-                    </div>
-                    <span className="text-[10px] font-bold text-orange-600 uppercase tracking-wide whitespace-nowrap">
-                      View Profile
-                    </span>
-                  </button>
-                </div>
-              )}
-            </div>
-
-            <div className="p-6 pt-2 bg-slate-50/50 border-t border-slate-100 flex justify-end gap-2">
-              <button
-                onClick={() => setSelectedTrip(null)}
-                className="bg-white border border-slate-200 text-slate-600 hover:border-slate-300 font-bold px-5 py-2 rounded-xl text-xs uppercase tracking-wide transition-colors cursor-pointer"
-              >
-                Close
-              </button>
-              <button
-                onClick={() => setSelectedTrip(null)}
-                title="Booking flow not wired up yet — needs the current tourist's id/name"
-                className="bg-orange-500 hover:bg-orange-600 text-white font-bold px-5 py-2 rounded-xl text-xs uppercase tracking-wide transition-colors cursor-pointer shadow-sm"
-              >
-                Request This Trip
-              </button>
             </div>
           </div>
         </div>
@@ -311,8 +333,12 @@ export default function TripsPage() {
                 />
               </div>
               <div className="flex items-center gap-1.5 mt-3">
-                <h2 className="text-xl font-black text-slate-900">{selectedGuide.name}</h2>
-                {selectedGuide.verified && <BadgeCheck className="w-5 h-5 text-orange-500" />}
+                <h2 className="text-xl font-black text-slate-900">
+                  {selectedGuide.name}
+                </h2>
+                {selectedGuide.verified && (
+                  <BadgeCheck className="w-5 h-5 text-orange-500" />
+                )}
               </div>
               <span className="text-xs font-semibold text-slate-400 inline-flex items-center gap-1 mt-1">
                 <MapPin className="w-3 h-3" /> {selectedGuide.city}
@@ -386,7 +412,9 @@ function TripCard({ trip, guide, onOpenDetails, onViewGuide }) {
               <span
                 key={index}
                 className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${
-                  index === currentImageIndex ? "bg-orange-500 w-3" : "bg-white/60"
+                  index === currentImageIndex
+                    ? "bg-orange-500 w-3"
+                    : "bg-white/60"
                 }`}
               />
             ))}
@@ -404,7 +432,8 @@ function TripCard({ trip, guide, onOpenDetails, onViewGuide }) {
             {trip.title}
           </h4>
           <span className="text-xs font-semibold text-slate-400 block mt-0.5 inline-flex items-center gap-1">
-            <Clock className="w-3 h-3" /> Duration: {trip.days} {trip.days === 1 ? "Day" : "Days"}
+            <Clock className="w-3 h-3" /> Duration: {trip.days}{" "}
+            {trip.days === 1 ? "Day" : "Days"}
           </span>
           <p className="text-xs text-slate-500 leading-relaxed border-t border-slate-50 pt-2 line-clamp-2 mt-2">
             {trip.details}
@@ -420,7 +449,11 @@ function TripCard({ trip, guide, onOpenDetails, onViewGuide }) {
             className="w-full flex items-center gap-2 border-t border-slate-50 pt-2 mt-1 cursor-pointer group/guide"
           >
             <div className="w-6 h-6 rounded-full overflow-hidden border border-orange-100 shrink-0">
-              <img src={guide.avatarUrl} alt={guide.name} className="w-full h-full object-cover" />
+              <img
+                src={guide.avatarUrl}
+                alt={guide.name}
+                className="w-full h-full object-cover"
+              />
             </div>
             <span className="text-[11px] font-semibold text-slate-500 group-hover/guide:text-orange-600 transition-colors truncate">
               Posted by {guide.name}

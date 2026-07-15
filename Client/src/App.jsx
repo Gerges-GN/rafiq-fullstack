@@ -20,6 +20,7 @@ import Guide from './Components/Tourist/Guides'
 import GuideDashboard from './Pages/TourGuide/GuideDashboard'
 import ReviewsPage from './Pages/Admin/Review'
 import ReportsPage from './Pages/Admin/Reports'
+import Deals from './Pages/Tourist/Deals.jsx'
 function App() {
   return (
     <Routes>
@@ -34,9 +35,12 @@ function App() {
         <Route path="/guides" element={<Guides />} />
         <Route path="/places" element={<Places />} />
         <Route path="/users" element={<Users />} />
-        <Route path="/chats" element={<ComingSoon title="Chats" />} />
+        <Route path="/chats" element={<Chats />} />
         <Route path="/reviews" element={<ComingSoon title="Reviews" />} />
-        <Route path="/pricing-fraud" element={<ComingSoon title="Pricing / Fraud" />} />
+        <Route
+          path="/pricing-fraud"
+          element={<ComingSoon title="Pricing / Fraud" />}
+        />
         <Route path="/reports" element={<ComingSoon title="Reports" />} />
         <Route path="/guide/dashboard/messages" element={<GuideInbox />} />
         <Route path="/guide/dashboard/:id" element={<GuideDashboard />} />
@@ -49,10 +53,11 @@ function App() {
           <Route path="profile/edit/:userId" element={<EditProfile />} />
           <Route path="guide/dashboard/trips" element={<TripsPage />} />
           <Route path="guide" element={<Guide />} />
+          <Route path="/my-deals" element={<Deals />} />
         </Route>
       </Route>
     </Routes>
-  )
+  );
 }
 
 export default App
