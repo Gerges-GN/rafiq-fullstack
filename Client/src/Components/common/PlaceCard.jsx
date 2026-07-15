@@ -50,19 +50,19 @@ export default function PlaceCard({
         />
         <div className="p-4 flex flex-col">
           <div className="cursor-pointer" onClick={onClick}>
-            <h3 className="font-semibold text-lg text-ink-900 dark:text-gray-200">
+            <h3 className="font-semibold text-lg text-ink-900 light:text-gray-200">
               {name}
             </h3>
-            <p className="text-sm text-ink-600 dark:text-gray-400 mb-2">
+            <p className="text-sm text-ink-600 light:text-gray-400 mb-2">
               {location}
             </p>
             {description && (
-              <p className="text-sm text-ink-700 dark:text-gray-300">
+              <p className="text-sm text-ink-700 light:text-gray-300">
                 {description.substring(0, 100)}...
               </p>
             )}
           </div>
-          <div className="flex items-center justify-end gap-2 mt-4 pt-4 border-t dark:border-gray-700">
+          <div className="flex items-center justify-end gap-2 mt-4 pt-4 border-t light:border-gray-700">
             <Button
               variant="outline"
               size="icon"
