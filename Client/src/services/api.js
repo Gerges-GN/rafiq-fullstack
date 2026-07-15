@@ -1,9 +1,22 @@
-const BASE = import.meta.env.VITE_API_URL|| "/api"
+const BASE = import.meta.env.VITE_API_URL || "/api";
 
 async function getJson(path) {
-  const res = await fetch(`${BASE}${path}`)
-  if (!res.ok) throw new Error(`Request failed ${res.status}`)
-  return res.json()
+  const url = `${BASE}${path}`;
+
+  console.log("Requesting:", url);
+
+  const res = await fetch(url);
+
+  const text = await res.text();
+
+  console.log("Status:", res.status);
+  console.log("Response:", text);
+
+  if (!res.ok) {
+    throw new Error(`Request failed ${res.status}`);
+  }
+
+  return JSON.parse(text);
 }
 
 export async function fetchStats() {
@@ -57,15 +70,15 @@ export async function fetchReports() {
 }
 
 export async function fetchChats() {
-  return getJson('/api/admin/chats')
+  return getJson('/admin/chats')
 }
 
 export async function fetchChatDetails(id) {
-  return getJson(`/api/admin/chats/${id}`)
+  return getJson(`/admin/chats/${id}`)
 }
 
 export async function deleteChat(id) {
-  const res = await fetch(`${BASE}/api/admin/chats/${id}`, {
+  const res = await fetch(`${BASE}/admin/chats/${id}`, {
     method: 'DELETE',
   })
   if (!res.ok) throw new Error('Delete chat request failed')

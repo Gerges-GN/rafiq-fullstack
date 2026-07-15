@@ -1,5 +1,5 @@
-const Review = require('../models/Review')
-const Chat = require('../models/Chat')
+const Review = require('../Models/Review')
+const Chat = require('../Models/Chat')
 
 function parseDate(value) {
   if (!value) return null

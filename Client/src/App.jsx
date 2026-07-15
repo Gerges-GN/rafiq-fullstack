@@ -14,13 +14,14 @@ import Places from './Pages/Admin/Places.jsx'
 import Users from './Pages/Admin/Users.jsx'
 import ComingSoon from './Pages/Admin/ComingSoon.jsx'
 import ProtectedRoute from './Components/Protection/Protectedroute.jsx'
-import GuideInbox from './Features/chat/pages/GuideInbox'
+import GuideInbox from './Features/chat/pages/GuideInbox.jsx'
 import TripsPage from './Components/Tourist/Trips'
 import Guide from './Components/Tourist/Guides'
 import GuideDashboard from './Pages/TourGuide/GuideDashboard'
 import ReviewsPage from './Pages/Admin/Review'
 import ReportsPage from './Pages/Admin/Reports'
 import Deals from './Pages/Tourist/Deals.jsx'
+import Chats from './Pages/Admin/Chats.jsx'
 function App() {
   return (
     <Routes>
