@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 
 
-const BASE_URL = "http://localhost:5000/api";
+const BASE_URL = import.meta.env.VITE_API_URL;
 const PROFILE_POLL_INTERVAL_MS = 30000; // profile data changes rarely, poll gently
 export default function useParticipantProfile(participantId, currentUserRole) {
   const [profile, setProfile] = useState(null);

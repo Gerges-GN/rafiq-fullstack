@@ -60,7 +60,7 @@ try {
 }
 
 try {
-    app.use("/api/chats", require("./Routes/chat"));
+    app.use("/api/chats", require("./Routes/Chat"));
     console.log("✅ Chat route loaded");
 } catch (e) {
     console.error("❌ Chat route failed");
