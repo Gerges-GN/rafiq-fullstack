@@ -1,17 +1,27 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 import {
-  Bell, Home, Compass, Map, Users, Percent, Menu, X, Plus
-} from 'lucide-react';
-import logo from '../../../public/images/logo.png';
-import AddPostModal from '../Tourist/AddPostModal';
-import { Link } from 'react-router-dom';
+  Bell,
+  Home,
+  Compass,
+  Map,
+  Users,
+  Percent,
+  Menu,
+  X,
+  Plus,
+} from "lucide-react";
+import logo from "../../../public/images/logo.png";
+import AddPostModal from "../Tourist/AddPostModal";
+import { Link } from "react-router-dom";
 
 const Navbar = ({ className = "" }) => {
   // Read the logged-in user from storage once, synchronously, so `_id` is
   // available immediately (e.g. for AddPostModal's ownerId) without waiting
   // on the profile fetch below.
   const [authUser] = useState(() =>
-    JSON.parse(localStorage.getItem("user") || sessionStorage.getItem("user") || "null")
+    JSON.parse(
+      localStorage.getItem("user") || sessionStorage.getItem("user") || "null",
+    ),
   );
   const [profile, setProfile] = useState(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -26,7 +36,9 @@ const Navbar = ({ className = "" }) => {
         // This assumes there's a route that looks up a Profile by the
         // owner's User id — confirm that's how your backend resolves this,
         // since Profile._id and User._id are different values.
-        const res = await fetch(`http://localhost:5000/api/profiles/${authUser._id}`);
+        const res = await fetch(
+          `http://localhost:5000/api/profiles/${authUser._id}`,
+        );
         if (!res.ok) throw new Error("Failed to fetch profile");
         const data = await res.json();
         setProfile(data);
@@ -39,34 +51,35 @@ const Navbar = ({ className = "" }) => {
   }, [authUser]);
 
   const navLinks = [
-    { name: 'Home', icon: Home, path: `/profile/${authUser._id}` },
-    { name: 'Trips', icon: Compass,path:'/guide/dashboard/trips' },
-    { name: 'Explore', icon: Map, path: '/explore' },
-    { name: 'Community', icon: Users,path:'/guide' },
-    { name: 'Deals', icon: Percent },
+    { name: "Home", icon: Home, path: `/profile/${authUser._id}` },
+    { name: "Trips", icon: Compass, path: "/guide/dashboard/trips" },
+    { name: "Explore", icon: Map, path: "/explore" },
+    { name: "Community", icon: Users, path: "/guide" },
+    { name: "Deals", icon: Percent, path: "/my-deals" },
   ];
 
   // Fall back to the avatar already saved at login if the profile fetch
   // hasn't resolved yet (or failed), and finally to a placeholder.
-  const avatarUrl = profile?.avatarUrl || authUser?.avatarUrl || "/images/default-avatar.png";
+  const avatarUrl =
+    profile?.avatarUrl || authUser?.avatarUrl || "/images/default-avatar.png";
 
   return (
-    <nav className={`bg-white/100 backdrop-blur-md border-b border-gray-200 sticky top-0 z-50 ${className}`}>
+    <nav
+      className={`bg-white/100 backdrop-blur-md border-b border-gray-200 sticky top-0 z-50 ${className}`}
+    >
       <div className="max-w-[1536px] mx-auto px-4 sm:px-[52px] py-3 flex items-center justify-between relative">
-
         <div className="flex items-center gap-2 font-bold text-xl text-gray-900 z-10">
           <img
             src={logo}
             alt="Rafiq Logo"
             className="w-16 h-16 object-contain"
             onError={(e) => {
-              e.target.style.display = 'none';
-              e.target.nextSibling.style.display = 'flex';
+              e.target.style.display = "none";
+              e.target.nextSibling.style.display = "flex";
             }}
           />
           <span>Rafiq</span>
         </div>
-
 
         <div className="hidden md:flex absolute left-1/2 -translate-x-1/2 items-center gap-1 bg-gray-100/50 p-1 rounded-full border border-gray-200/50">
           {navLinks.map((link) => (
@@ -109,7 +122,11 @@ const Navbar = ({ className = "" }) => {
             className="md:hidden p-2 text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           >
-            {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            {isMobileMenuOpen ? (
+              <X className="w-5 h-5" />
+            ) : (
+              <Menu className="w-5 h-5" />
+            )}
           </button>
         </div>
       </div>
@@ -145,7 +162,7 @@ const Navbar = ({ className = "" }) => {
           ownerId={authUser?._id}
           onClose={() => setIsAddPostOpen(false)}
           onPostCreated={(newPost) => {
-            console.log('New post created:', newPost);
+            console.log("New post created:", newPost);
             // Optionally: trigger a refetch/refresh of the feed here
           }}
         />
