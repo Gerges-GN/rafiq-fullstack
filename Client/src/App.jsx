@@ -13,6 +13,7 @@ import Guides from './pages/Admin/Guides.jsx'
 import Places from './pages/Admin/Places.jsx'
 import Users from './pages/Admin/Users.jsx'
 import ComingSoon from './pages/Admin/ComingSoon.jsx'
+import Chats from './Pages/Admin/Chats.jsx'
 import ProtectedRoute from './components/Protection/Protectedroute.jsx'
 import GuideInbox from './Features/chat/pages/GuideInbox'
 import TripsPage from './Components/Tourist/Trips'
@@ -35,7 +36,7 @@ function App() {
         <Route path="/guides" element={<Guides />} />
         <Route path="/places" element={<Places />} />
         <Route path="/users" element={<Users />} />
-        <Route path="/chats" element={<ComingSoon title="Chats" />} />
+        <Route path="/chats" element={<Chats />} />
         <Route path="/reviews" element={<ComingSoon title="Reviews" />} />
         <Route
           path="/pricing-fraud"

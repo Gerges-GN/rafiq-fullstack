@@ -56,4 +56,21 @@ export async function fetchReports() {
   return getJson('/api/admin/reports')
 }
 
-export default { fetchStats, fetchChart, fetchClassifications, fetchIncidents, fetchReviews, fetchFraud, fetchReports }
+export async function fetchChats() {
+  return getJson('/api/admin/chats')
+}
+
+export async function fetchChatDetails(id) {
+  return getJson(`/api/admin/chats/${id}`)
+}
+
+export async function deleteChat(id) {
+  const res = await fetch(`${BASE}/api/admin/chats/${id}`, {
+    method: 'DELETE',
+  })
+  if (!res.ok) throw new Error('Delete chat request failed')
+  return res.json()
+}
+
+export default { fetchStats, fetchChart, fetchClassifications, fetchIncidents, fetchReviews, fetchFraud, fetchReports, fetchChats, fetchChatDetails, deleteChat }
+

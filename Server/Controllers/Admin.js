@@ -1,4 +1,5 @@
-const Review = require('../Models/Review')
+const Review = require('../models/Review')
+const Chat = require('../models/Chat')
 
 function parseDate(value) {
   if (!value) return null
@@ -362,3 +363,45 @@ exports.migrateReviews = async (req, res) => {
     res.status(500).json({ error: 'Migration failed' })
   }
 }
+
+exports.getAllChats = async (req, res) => {
+  try {
+    const chats = await Chat.find()
+      .populate('touristId', 'name email')
+      .populate('tourGuideId', 'name email')
+      .sort({ updatedAt: -1 });
+    res.status(200).json(chats);
+  } catch (err) {
+    console.error('Failed to get all chats for admin:', err);
+    res.status(500).json({ error: 'Failed to fetch chats' });
+  }
+};
+
+exports.getChatById = async (req, res) => {
+  try {
+    const chat = await Chat.findById(req.params.id)
+      .populate('touristId', 'name email')
+      .populate('tourGuideId', 'name email');
+
+    if (!chat) {
+      return res.status(404).json({ error: 'Chat not found' });
+    }
+    res.status(200).json(chat);
+  } catch (err) {
+    console.error('Failed to get chat by id for admin:', err);
+    res.status(500).json({ error: 'Failed to fetch chat details' });
+  }
+};
+
+exports.deleteChat = async (req, res) => {
+  try {
+    const deletedChat = await Chat.findByIdAndDelete(req.params.id);
+    if (!deletedChat) {
+      return res.status(404).json({ error: 'Chat not found' });
+    }
+    res.status(200).json({ message: 'Chat deleted successfully' });
+  } catch (err) {
+    console.error('Failed to delete chat by admin:', err);
+    res.status(500).json({ error: 'Failed to delete chat' });
+  }
+};
