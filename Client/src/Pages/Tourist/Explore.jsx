@@ -5,7 +5,8 @@ import { useNavigate } from 'react-router-dom';
 // Matches your actual Mongo schema: name, city, category ("Touristic" | "Historical"), imageUrl, description
 const CATEGORIES = ["All", "Touristic", "Historical"];
 const FALLBACK_IMAGE = "https://images.unsplash.com/photo-1568322445389-f64ac2515020?w=800"; // generic Egypt fallback
-const API_URL = "http://localhost:5000/api/places";
+const API_BASE_URL = import.meta.env.VITE_API_URL|| "/api";
+const API_URL = `${API_BASE_URL}/places`;
 
 const HERO_IMAGES = [
   "https://media.bookmundi.com/tour/egypt-alexandria-to-aswan-1281316-1767183707.jpg?format=auto&quality=60&width=1772",

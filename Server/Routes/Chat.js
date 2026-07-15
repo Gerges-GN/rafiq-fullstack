@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const chatController = require('../controllers/Chat');
+const chatController = require('../Controllers/Chat');
 
 router.post('/', chatController.createChat);
 router.post('/:id/messages', chatController.sendMessage);

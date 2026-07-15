@@ -1,6 +1,6 @@
 import React from 'react'
-import DashboardLayout from '../../components/Layout/DashboardLayout.jsx'
-import Card from '../../components/common/Card.jsx'
+import DashboardLayout from '../../Components/Layout/DashboardLayout.jsx'
+import Card from '../../Components/common/Card.jsx'
 import { currentAdmin } from '../../data/mockData.js'
 
 /**

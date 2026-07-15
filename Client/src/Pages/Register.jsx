@@ -7,7 +7,7 @@ const ROLES = [
   { key: "tourist", label: "Tourist", icon: User },
   { key: "tourguide", label: "Tour Guide", icon: User },
 ];
-
+const API_BASE_URL = "/api";
 export default function Register() {
   const navigate = useNavigate();
   const [role, setRole] = useState("tourist");
@@ -24,7 +24,7 @@ export default function Register() {
     setError("");
     setLoading(true);
     try {
-      const res = await fetch("http://localhost:5000/api/users/register", {
+      const res = await fetch(`${API_BASE_URL}/users/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...form, role }),

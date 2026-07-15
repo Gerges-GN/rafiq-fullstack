@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const profileController = require('../controllers/TouristProfile');
+const profileController = require('../Controllers/TouristProfile');
 
 // No more verifyToken middleware needed
 router.post('/', profileController.createProfile);

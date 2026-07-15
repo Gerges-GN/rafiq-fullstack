@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { Eye, Trash2 } from "lucide-react";
-import DashboardLayout from "../../components/Layout/DashboardLayout.jsx";
-import PageHeader from "../../components/common/PageHeader.jsx";
-import SearchInput from "../../components/common/SearchInput.jsx";
-import DataTable from "../../components/common/DataTable.jsx";
-import Badge from "../../components/common/Badge.jsx";
-import Avatar from "../../components/common/Avatar.jsx";
+import DashboardLayout from "../../Components/Layout/DashboardLayout.jsx";
+import PageHeader from "../../Components/common/PageHeader.jsx";
+import SearchInput from "../../Components/common/SearchInput.jsx";
+import DataTable from "../../Components/common/DataTable.jsx";
+import Badge from "../../Components/common/Badge.jsx";
+import Avatar from "../../Components/common/Avatar.jsx";
 import { currentAdmin } from "../../data/mockData.js";
-import DeleteConfirmationModal from "../../components/modals/DeleteConfirmationModal.jsx";
-import UserDetailPanel from "../../components/common/UserDetailPanel.jsx";
-import Pagination from "../../components/common/Pagination.jsx";
-
+import DeleteConfirmationModal from "../../Components/modals/DeleteConfirmationModal.jsx";
+import UserDetailPanel from "../../Components/common/UserDetailPanel.jsx";
+import Pagination from "../../Components/common/Pagination.jsx";
+const API_BASE_URL = import.meta.env.VITE_API_URL|| "/api";
 /**
  * @typedef {object} User
  * @property {string} userId - The unique identifier for the user.
@@ -58,7 +58,7 @@ export default function Users() {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const response = await fetch("http://localhost:5000/api/profiles");
+        const response = await fetch(`${API_BASE_URL}/profiles`);
         if (!response.ok) {
           throw new Error("Network response was not ok");
         }
@@ -74,7 +74,7 @@ export default function Users() {
   const handleUpdateUser = async (updatedUser) => {
   try {
     const response = await fetch(
-      `http://localhost:5000/api/profiles/${updatedUser.userId}/status`,
+      `${API_BASE_URL}/profiles/${updatedUser.userId}/status`,
       {
         method: "PATCH",
         headers: {
@@ -114,7 +114,7 @@ export default function Users() {
   const handleDeleteUser = async (profileId) => {
     try {
       const response = await fetch(
-        `http://localhost:5000/api/profiles/${profileId}`,
+        `${API_BASE_URL}/profiles/${profileId}`,
         {
           method: "DELETE",
         },

@@ -1,4 +1,4 @@
-const Post = require('../models/Post');
+const Post = require('../Models/Post');
 const Profile = require('../models/TouristProfile');
 
 // Create Post

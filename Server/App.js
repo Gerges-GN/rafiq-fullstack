@@ -1,65 +1,136 @@
-const express = require('express');
-const mongoose = require('mongoose');
-const cors = require('cors');
-require('dotenv').config();
+const express = require("express");
+const mongoose = require("mongoose");
+const cors = require("cors");
+require("dotenv").config();
 
-// Route Imports
-const userRoutes = require('./routes/User');
-const profileRoutes = require('./routes/TouristProfile');
-const postRoutes = require('./routes/Post');
-const placeRoutes = require('./routes/Place');
-const chatRoutes = require('./routes/chat');
-const tripRoutes = require('./routes/Trip');
-const tourGuideProfileRoutes = require('./routes/tourGuideProfile');
-const bookingRoutes = require('./routes/Booking');
-const reviewRoutes = require('./routes/Review');
-const reportRoutes = require('./routes/Report');
-const adminRoutes = require('./routes/Admin');
 const app = express();
-// ✅ Add these BEFORE your routes
+
+console.log("=== SERVER START ===");
+console.log("NODE_ENV:", process.env.NODE_ENV);
+console.log("MONGO_URI exists:", !!process.env.MONGO_URI);
+console.log("JWT_SECRET exists:", !!process.env.JWT_SECRET);
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
 app.use(cors({
-    origin: [
-        "http://localhost:5173",
-    ],
-    credentials: true
+  origin: true,
+  credentials: true,
 }));
 
-// Database Connection
-mongoose
-  .connect(process.env.MONGO_URI)
-  .then(() => console.log('✅ MongoDB Connected Successfully'))
-  .catch((err) => {
-    console.error('❌ MongoDB Connection Failed');
-    console.error(err.message);
-  });
-
-// Routes
-app.use('/api/users', userRoutes);
-app.use('/api/profiles', profileRoutes);
-app.use('/api/posts', postRoutes);
-app.use('/api/places', placeRoutes);
-app.use('/api/chats', chatRoutes);
-app.use('/api/trips', tripRoutes);
-app.use('/api/tourguide-profiles', tourGuideProfileRoutes);
-app.use('/api/bookings', bookingRoutes);
-app.use('/api/reviews', reviewRoutes);
-app.use('/api/reports', reportRoutes);
-app.use('/api/admin', adminRoutes)
-// Global Error Handler
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ message: 'Something went wrong!' });
+// MongoDB
+mongoose.connect(process.env.MONGO_URI)
+.then(() => console.log("✅ MongoDB Connected"))
+.catch(err => {
+    console.error("❌ Mongo Error");
+    console.error(err);
 });
 
+// ---------- LOAD ROUTES ONE BY ONE ----------
+try {
+    app.use("/api/users", require("./Routes/User"));
+    console.log("✅ User route loaded");
+} catch (e) {
+    console.error("❌ User route failed");
+    console.error(e);
+}
+
+try {
+    app.use("/api/profiles", require("./Routes/TouristProfile"));
+    console.log("✅ TouristProfile route loaded");
+} catch (e) {
+    console.error("❌ TouristProfile route failed");
+    console.error(e);
+}
+
+try {
+    app.use("/api/posts", require("./Routes/Post"));
+    console.log("✅ Post route loaded");
+} catch (e) {
+    console.error("❌ Post route failed");
+    console.error(e);
+}
+
+try {
+    app.use("/api/places", require("./Routes/Place"));
+    console.log("✅ Place route loaded");
+} catch (e) {
+    console.error("❌ Place route failed");
+    console.error(e);
+}
+
+try {
+    app.use("/api/chats", require("./Routes/chat"));
+    console.log("✅ Chat route loaded");
+} catch (e) {
+    console.error("❌ Chat route failed");
+    console.error(e);
+}
+
+try {
+    app.use("/api/trips", require("./Routes/Trip"));
+    console.log("✅ Trip route loaded");
+} catch (e) {
+    console.error("❌ Trip route failed");
+    console.error(e);
+}
+
+try {
+    app.use("/api/tourguide-profiles", require("./Routes/tourGuideProfile"));
+    console.log("✅ TourGuide route loaded");
+} catch (e) {
+    console.error("❌ TourGuide route failed");
+    console.error(e);
+}
+
+try {
+    app.use("/api/bookings", require("./Routes/Booking"));
+    console.log("✅ Booking route loaded");
+} catch (e) {
+    console.error("❌ Booking route failed");
+    console.error(e);
+}
+
+try {
+    app.use("/api/reviews", require("./Routes/Review"));
+    console.log("✅ Review route loaded");
+} catch (e) {
+    console.error("❌ Review route failed");
+    console.error(e);
+}
+
+try {
+    app.use("/api/reports", require("./Routes/Report"));
+    console.log("✅ Report route loaded");
+} catch (e) {
+    console.error("❌ Report route failed");
+    console.error(e);
+}
+
+try {
+    app.use("/api/admin", require("./Routes/Admin"));
+    console.log("✅ Admin route loaded");
+} catch (e) {
+    console.error("❌ Admin route failed");
+    console.error(e);
+}
+
+app.get("/api", (req, res) => {
+    res.json({ status: "Backend running" });
+});
+
+app.use((err, req, res, next) => {
+    console.error(err);
+    res.status(500).json({
+        success: false,
+        message: err.message
+    });
+});
 
 if (process.env.NODE_ENV !== "production") {
-  const PORT = process.env.PORT || 5000;
-
-  app.listen(PORT, () => {
-    console.log(`🚀 Server running on port ${PORT}`);
-  });
+    app.listen(process.env.PORT || 5000, () => {
+        console.log("Local server started");
+    });
 }
 
 module.exports = app;

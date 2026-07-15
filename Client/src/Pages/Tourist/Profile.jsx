@@ -4,11 +4,11 @@ import { MapPin, MessageCircle, Globe, PlusCircle } from "lucide-react";
 
 import Navbar from "../../Components/Layout/TouristNav";
 import ProfileHeader from "../../Components/Tourist/ProfileHeader";
-import Sidebar from "../../Components/Tourist/sidebar";
+import Sidebar from "../../Components/Tourist/sidebartourist";
 import Feed from "../../Components/Tourist/Feed";
 import ChatWidget from "../../Features/chat/index";
 import CreateProfileModal from "../../Components/modals/CreateProfileModal";
-
+const API_BASE_URL = import.meta.env.VITE_API_URL|| "/api";
 export default function Profile() {
   const { userId } = useParams();
   const navigate = useNavigate();
@@ -27,7 +27,7 @@ export default function Profile() {
         setProfileNotFound(false);
 
         const response = await fetch(
-          `http://localhost:5000/api/profiles/${userId}`,
+          `${API_BASE_URL}/profiles/${userId}`,
           {
             signal,
           },

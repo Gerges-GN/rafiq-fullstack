@@ -1,0 +1,7 @@
+{
+  "name": "rafiq",
+  "private": true,
+  "scripts": {
+    "build": "cd Client && npm install && npm run build"
+  }
+}

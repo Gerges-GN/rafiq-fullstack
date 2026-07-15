@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const tourGuideProfileController = require('../controllers/TourGuideProfile');
+const tourGuideProfileController = require('../Controllers/TourGuideProfile');
 
 router.post('/', tourGuideProfileController.createTourGuideProfile);
 router.get('/', tourGuideProfileController.getTourGuideProfiles);

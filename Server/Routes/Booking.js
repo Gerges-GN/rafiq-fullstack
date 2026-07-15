@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const bookingController = require('../controllers/Booking');
+const bookingController = require('../Controllers/Booking');
 
 router.post('/', bookingController.createBooking);
 router.get('/', bookingController.getBookings);

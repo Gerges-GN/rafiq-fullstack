@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const placeController = require('../controllers/Place');
+const placeController = require('../Controllers/Place');
 
 router.post('/add', placeController.createPlace);
 router.put('/:id', placeController.updatePlace);

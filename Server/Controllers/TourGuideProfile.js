@@ -1,4 +1,4 @@
-const TourGuideProfile = require('../models/TourGuideProfile');
+const TourGuideProfile = require('../Models/TourGuideProfile');
 
 // POST /api/tourguide-profiles
 exports.createTourGuideProfile = async (req, res) => {

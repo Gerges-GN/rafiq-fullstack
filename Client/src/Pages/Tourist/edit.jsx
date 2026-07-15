@@ -4,7 +4,7 @@ import {
   Camera, X, Plus, Save, ArrowLeft, Loader2
 } from 'lucide-react';
 import Navbar from '../../Components/Layout/TouristNav';
-
+const API_BASE_URL = import.meta.env.VITE_API_URL|| "/api";
 export default function EditProfile() {
   const { userId } = useParams();
   const navigate = useNavigate();
@@ -30,7 +30,7 @@ export default function EditProfile() {
     const fetchProfile = async () => {
       try {
         setLoading(true);
-        const res = await fetch(`http://localhost:5000/api/profiles/${userId}`);
+        const res = await fetch(`${API_BASE_URL}/profiles/${userId}`);
         if (!res.ok) throw new Error('Failed to load profile');
         const data = await res.json();
 
@@ -80,7 +80,7 @@ export default function EditProfile() {
       setSaving(true);
       setError(null);
 
-      const res = await fetch(`http://localhost:5000/api/profiles/${userId}`, {
+      const res = await fetch(`${API_BASE_URL}/profiles/${userId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),

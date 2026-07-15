@@ -1,7 +1,7 @@
-const Report = require("../models/Report");
-const Review = require("../models/Review");
-const Booking = require("../models/Booking");
-const TourGuideProfile = require("../models/TourGuideProfile");
+const Report = require("../Models/Report");
+const Review = require("../Models/Review");
+const Booking = require("../Models/Booking");
+const TourGuideProfile = require("../Models/TourGuideProfile");
 
 function dayBounds(dateInput) {
   const start = new Date(dateInput);

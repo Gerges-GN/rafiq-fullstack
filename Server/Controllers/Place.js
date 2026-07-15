@@ -1,4 +1,4 @@
-const Place = require('../models/Place');
+const Place = require('../Models/Place');
 
 const ALLOWED_CATEGORIES = ['Touristic', 'Historical'];
 

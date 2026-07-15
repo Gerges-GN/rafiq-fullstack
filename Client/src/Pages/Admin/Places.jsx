@@ -1,20 +1,21 @@
 import React, { useState, useEffect } from "react";
 import { Plus, Eye } from "lucide-react";
-import DashboardLayout from "../../components/Layout/DashboardLayout.jsx";
-import PageHeader from "../../components/common/PageHeader.jsx";
-import Button from "../../components/common/Button.jsx";
-import SearchInput from "../../components/common/SearchInput.jsx";
-import FilterDropdown from "../../components/common/FilterDropdown.jsx";
-import PlaceCard from "../../components/common/PlaceCard.jsx";
-import AddPlaceCard from "../../components/common/AddPlaceCard.jsx";
-import Card from "../../components/common/Card.jsx";
-import DataTable from "../../components/common/DataTable.jsx";
-import Badge from "../../components/common/Badge.jsx";
+import DashboardLayout from "../../Components/Layout/DashboardLayout.jsx";
+import PageHeader from "../../Components/common/PageHeader.jsx";
+import Button from "../../Components/common/Button.jsx";
+import SearchInput from "../../Components/common/SearchInput.jsx";
+import FilterDropdown from "../../Components/common/FilterDropdown.jsx";
+import PlaceCard from "../../Components/common/PlaceCard.jsx";
+import AddPlaceCard from "../../Components/common/AddPlaceCard.jsx";
+import Card from "../../Components/common/Card.jsx";
+import DataTable from "../../Components/common/DataTable.jsx";
+import Badge from "../../Components/common/Badge.jsx";
 import { currentAdmin } from "../../data/mockData.js";
-import AddPlaceModal from "../../components/modals/AddPlaceModal.jsx";
-import PlaceDetailModal from "../../components/common/PlaceDetailModal.jsx";
-import EditPlaceModal from "../../components/modals/EditPlaceModal.jsx";
-import DeleteConfirmationModal from "../../components/modals/DeleteConfirmationModal.jsx";
+import AddPlaceModal from "../../Components/modals/AddPlaceModal.jsx";
+import PlaceDetailModal from "../../Components/common/PlaceDetailModal.jsx";
+import EditPlaceModal from "../../Components/modals/EditPlaceModal.jsx";
+import DeleteConfirmationModal from "../../Components/modals/DeleteConfirmationModal.jsx";
+const API_BASE_URL = import.meta.env.VITE_API_URL|| "/api";
 const getPaginationItems = (currentPage, totalPages) => {
   if (totalPages <= 10) {
     return Array.from({ length: totalPages }, (_, i) => i + 1);
@@ -96,7 +97,7 @@ export default function Places() {
       setIsLoading(true);
       setError(null);
       try {
-        const response = await fetch("http://localhost:5000/api/places");
+        const response = await fetch(`${API_BASE_URL}/places`);
         if (!response.ok) {
           throw new Error("Failed to load tourist places.");
         }
@@ -148,7 +149,7 @@ export default function Places() {
         category: newPlaceData.category,
         city: newPlaceData.location,
       };
-      const response = await fetch("http://localhost:5000/api/places/add", {
+      const response = await fetch(`${API_BASE_URL}/places/add`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -201,7 +202,7 @@ export default function Places() {
         description: updatedPlace.description,
       };
 
-      const response = await fetch(`http://localhost:5000/api/places/${updatedPlace.id}`, {
+      const response = await fetch(`${API_BASE_URL}/places/${updatedPlace.id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -245,7 +246,7 @@ export default function Places() {
   const handleDeletePlace = async (placeId) => {
     setError(null);
     try {
-      const response = await fetch(`http://localhost:5000/api/places/${placeId}`, {
+      const response = await fetch(`${API_BASE_URL}/places/${placeId}`, {
         method: "DELETE",
       });
 

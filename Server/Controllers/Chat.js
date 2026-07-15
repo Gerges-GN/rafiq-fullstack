@@ -1,4 +1,4 @@
-const Chat = require('../models/Chat');
+const Chat = require('../Models/Chat');
 
 // POST /api/chats
 // Creates a chat between a tourist and a tour guide (or returns the existing one)

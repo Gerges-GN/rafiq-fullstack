@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { Eye, Trash2 } from "lucide-react";
-import DashboardLayout from "../../components/Layout/DashboardLayout.jsx";
-import PageHeader from "../../components/common/PageHeader.jsx";
-import SearchInput from "../../components/common/SearchInput.jsx";
-import DataTable from "../../components/common/DataTable.jsx";
-import Badge from "../../components/common/Badge.jsx";
-import Avatar from "../../components/common/Avatar.jsx";
+import DashboardLayout from "../../Components/Layout/DashboardLayout.jsx";
+import PageHeader from "../../Components/common/PageHeader.jsx";
+import SearchInput from "../../Components/common/SearchInput.jsx";
+import DataTable from "../../Components/common/DataTable.jsx";
+import Badge from "../../Components/common/Badge.jsx";
+import Avatar from "../../Components/common/Avatar.jsx";
 import { currentAdmin } from "../../data/mockData.js";
-import DeleteConfirmationModal from "../../components/modals/DeleteConfirmationModal.jsx";
-import GuideDetailPanel from "../../components/common/GuideDetailPanel.jsx";
-import Pagination from "../../components/common/Pagination.jsx";
-
+import DeleteConfirmationModal from "../../Components/modals/DeleteConfirmationModal.jsx";
+import GuideDetailPanel from "../../Components/common/GuideDetailPanel.jsx";
+import Pagination from "../../Components/common/Pagination.jsx";
+const API_BASE_URL = import.meta.env.VITE_API_URL|| "/api";
 export default function Guides() {
   const [guides, setGuides] = useState([]);
   const [search, setSearch] = useState("");
@@ -38,7 +38,7 @@ export default function Guides() {
     const fetchGuides = async () => {
       try {
         const response = await fetch(
-          "http://localhost:5000/api/tourguide-profiles",
+          `${API_BASE_URL}/tourguide-profiles`,
         );
         if (!response.ok) {
           throw new Error("Network response was not ok");
@@ -73,7 +73,7 @@ export default function Guides() {
       }
 
       const response = await fetch(
-        `http://localhost:5000/api/tourguide-profiles/${guideData.id}`,
+        `${API_BASE_URL}/tourguide-profiles/${guideData.id}`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
@@ -99,7 +99,7 @@ export default function Guides() {
   const handleDeleteGuide = async (guideId) => {
     try {
       const response = await fetch(
-        `http://localhost:5000/api/tourguide-profiles/${guideId}`,
+        `${API_BASE_URL}/tourguide-profiles/${guideId}`,
         {
           method: "DELETE",
         },

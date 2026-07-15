@@ -1,4 +1,4 @@
-const Trip = require('../models/Trip');
+const Trip = require('../Models/Trip');
 
 // POST /api/trips
 exports.createTrip = async (req, res) => {

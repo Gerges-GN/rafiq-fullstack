@@ -1,4 +1,4 @@
-const Profile = require('../models/TouristProfile');
+const Profile = require('../Models/TouristProfile');
 
 // Create Profile
 exports.createProfile = async (req, res) => {

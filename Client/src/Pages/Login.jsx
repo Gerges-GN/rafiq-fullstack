@@ -2,6 +2,8 @@ import { useState } from "react";
 import { Mail, Lock, Eye, EyeOff, ArrowRight, ShieldCheck } from "lucide-react";
 import bgImage from "../assets/nile.png"; // ضع الصورة في src/assets وعدّل المسار لو مختلف
 import { useNavigate } from "react-router-dom";
+const API_BASE_URL = import.meta.env.VITE_API_URL|| "/api";
+
 export default function Login() {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
@@ -20,7 +22,7 @@ export default function Login() {
 
     try {
       // Matches: app.use('/api/users', userRoutes) + router.post('/login', ...)
-      const res = await fetch("http://localhost:5000/api/users/login", {
+      const res = await fetch(`${API_BASE_URL}/users/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),

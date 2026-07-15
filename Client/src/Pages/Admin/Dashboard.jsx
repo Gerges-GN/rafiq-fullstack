@@ -1,17 +1,17 @@
 import React, { useState, useEffect, useMemo } from "react";
-import DashboardLayout from "../../components/Layout/DashboardLayout.jsx";
-import PageHeader from "../../components/common/PageHeader.jsx";
-import StatCard from "../../components/common/StatCard.jsx";
-import Card from "../../components/common/Card.jsx";
-import BarChart from "../../components/common/BarChart.jsx";
-import RankedList from "../../components/common/RankedList.jsx";
-import ActivityTimeline from "../../components/common/ActivityTimeline.jsx";
-import DataTable from "../../components/common/DataTable.jsx";
-import Avatar from "../../components/common/Avatar.jsx";
-import Badge from "../../components/common/Badge.jsx";
+import DashboardLayout from "../../Components/Layout/DashboardLayout.jsx";
+import PageHeader from "../../Components/common/PageHeader.jsx";
+import StatCard from "../../Components/common/StatCard.jsx";
+import Card from "../../Components/common/Card.jsx";
+import BarChart from "../../Components/common/BarChart.jsx";
+import RankedList from "../../Components/common/RankedList.jsx";
+import ActivityTimeline from "../../Components/common/ActivityTimeline.jsx";
+import DataTable from "../../Components/common/DataTable.jsx";
+import Avatar from "../../Components/common/Avatar.jsx";
+import Badge from "../../Components/common/Badge.jsx";
 import { currentAdmin } from "../../data/mockData.js";
 import initialPlacesData from "../../data/places.js";
-
+const API_BASE_URL = import.meta.env.VITE_API_URL|| "/api";
 const getInitialPlaces = () =>
   initialPlacesData.map((p) => ({
     ...p,
@@ -110,7 +110,7 @@ export default function Dashboard() {
     const fetchPlaces = async () => {
       setIsLoadingPlaces(true);
       try {
-        const response = await fetch("http://localhost:5000/api/places");
+        const response = await fetch(`${API_BASE_URL}/places`);
         if (!response.ok) {
           throw new Error("Failed to fetch places");
         }
@@ -130,7 +130,7 @@ export default function Dashboard() {
       setIsLoadingGuides(true);
       try {
         const response = await fetch(
-          "http://localhost:5000/api/tourguide-profiles",
+          `${API_BASE_URL}/tourguide-profiles`,
         );
         if (!response.ok) {
           throw new Error("Failed to fetch guides");
@@ -153,7 +153,7 @@ export default function Dashboard() {
       setIsLoadingBookings(true);
       setIsLoadingTourists(true);
       try {
-        const response = await fetch("http://localhost:5000/api/bookings");
+        const response = await fetch(`${API_BASE_URL}/bookings`);
         if (!response.ok) {
           throw new Error("Failed to fetch bookings from the server.");
         }
