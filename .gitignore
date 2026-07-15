@@ -1,4 +1,8 @@
 .vercel
 .env*.local
-.env*
 .env
+.env.*
+Client/.env
+Client/.env.*
+Server/.env
+Server/.env.*
