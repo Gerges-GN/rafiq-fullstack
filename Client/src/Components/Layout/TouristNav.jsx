@@ -13,7 +13,9 @@ import {
 import logo from "../../../public/images/logo.png";
 import AddPostModal from "../Tourist/AddPostModal";
 import { Link } from "react-router-dom";
+
 const API_BASE_URL = import.meta.env.VITE_API_URL|| "/api";
+
 const Navbar = ({ className = "" }) => {
   // Read the logged-in user from storage once, synchronously, so `_id` is
   // available immediately (e.g. for AddPostModal's ownerId) without waiting
@@ -37,7 +39,7 @@ const Navbar = ({ className = "" }) => {
         // owner's User id — confirm that's how your backend resolves this,
         // since Profile._id and User._id are different values.
         const res = await fetch(
-          `{API_BASE_URL}/profiles/${authUser._id}`,
+          `${API_BASE_URL}/profiles/${authUser._id}`,
         );
         if (!res.ok) throw new Error("Failed to fetch profile");
         const data = await res.json();
