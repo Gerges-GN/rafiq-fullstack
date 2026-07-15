@@ -10,7 +10,9 @@ import { currentAdmin } from "../../data/mockData.js";
 import DeleteConfirmationModal from "../../Components/modals/DeleteConfirmationModal.jsx";
 import GuideDetailPanel from "../../Components/common/GuideDetailPanel.jsx";
 import Pagination from "../../Components/common/Pagination.jsx";
+
 const API_BASE_URL = import.meta.env.VITE_API_URL|| "/api";
+
 export default function Guides() {
   const [guides, setGuides] = useState([]);
   const [search, setSearch] = useState("");

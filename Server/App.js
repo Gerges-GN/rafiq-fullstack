@@ -76,7 +76,7 @@ try {
 }
 
 try {
-    app.use("/api/tourguide-profiles", require("./Routes/tourGuideProfile"));
+    app.use("/api/tourguide-profiles", require("./Routes/TourGuideProfile"));
     console.log("✅ TourGuide route loaded");
 } catch (e) {
     console.error("❌ TourGuide route failed");

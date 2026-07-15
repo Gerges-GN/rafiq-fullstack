@@ -15,7 +15,7 @@ import {
   Eye
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import DashboardLayout from "../../components/Layout/DashboardLayout.jsx";
+import DashboardLayout from "../../Components/Layout/DashboardLayout.jsx";
 import { currentAdmin } from "../../data/mockData.js";
 import { fetchChats, fetchChatDetails, deleteChat } from "../../services/api.js";
 import { Toast, useToast, fadeUp, scaleIn } from "./Adminshared.jsx";
