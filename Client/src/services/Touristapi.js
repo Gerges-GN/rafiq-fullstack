@@ -4,13 +4,15 @@
 //   1. Base URL — reads VITE_API_URL from your .env if set (e.g.
 //      VITE_API_URL=http://localhost:5000/api), otherwise falls back to the
 //      relative "/api" (only works if your dev server proxies it).
-//   2. Auth token is stored in localStorage under the key "token", and the
+//   2. Auth token is stored in sessionStorage under the key "token", and the
 //      backend's verifyToken middleware expects "Authorization: Bearer <token>".
+//   3. Logged-in user's info (id, name, etc.) is stored in sessionStorage
+//      under the key "user" as JSON, alongside "token".
 
 const API_BASE_URL = import.meta.env?.VITE_API_URL || "/api";
 
 export async function apiRequest(path, options = {}) {
-  const token = localStorage.getItem("token");
+  const token = sessionStorage.getItem("token");
 
   let res;
   try {
@@ -54,6 +56,44 @@ export const bookingApi = {
   getByTourist: (touristId) => apiRequest(`/bookings/tourist/${touristId}`),
 };
 
+export const reviewApi = {
+  create: (payload) =>
+    apiRequest(`/reviews`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+
+  getByTourGuideId: (tourGuideId) =>
+    apiRequest(`/reviews/tourguide/${tourGuideId}`),
+
+  getByPlaceId: (placeId) => apiRequest(`/reviews/place/${placeId}`),
+
+  getByReviewerId: (reviewerId) =>
+    apiRequest(`/reviews/reviewer/${reviewerId}`),
+
+  update: (id, payload) =>
+    apiRequest(`/reviews/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(payload),
+    }),
+
+  delete: (id) =>
+    apiRequest(`/reviews/${id}`, {
+      method: "DELETE",
+    }),
+};
+
 export function guideLanguages(guide) {
   return Array.isArray(guide.languages) ? guide.languages : [];
+}
+
+// Reads the logged-in user's info out of sessionStorage.
+// Change this if your login flow stores the user differently.
+export function getCurrentUser() {
+  try {
+    const raw = sessionStorage.getItem("user");
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
 }
