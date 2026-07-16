@@ -17,7 +17,10 @@ export default function ChatPanel({
   onBack,
   emptySelection,
 }) {
-  const participant_id = chat.touristId === currentUserId ? chat.tourGuideId : chat.touristId;
+  const participant_id =
+    chat[0]?.touristId === currentUserId
+      ? chat[0]?.tourGuideId
+      : chat[0]?.touristId;
   const participant = useParticipantProfile(participant_id, currentUserRole);
   if (emptySelection) {
     return (
@@ -31,6 +34,7 @@ export default function ChatPanel({
   return (
     <>
       <ChatHeader participant={participant} onClose={onClose} onBack={onBack} />
+      {console.log(participant, "par", participant_id, "id", chat, "chats", chat, "chat")}
       {error ? (
         <div className="flex-1 flex items-center justify-center px-6 text-center">
           <p className="text-sm text-red-500">

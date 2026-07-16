@@ -1,11 +1,11 @@
 const mongoose = require('mongoose');
 
 const profileSchema = new mongoose.Schema({
-  owner: { 
-    type: mongoose.Schema.Types.ObjectId, 
-    ref: 'User', 
-    required: true, 
-    unique: true 
+  owner: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true,
+    unique: true
   },
   ownerName: { type: String, default: "" },
   headline: { type: String, default: "" },    // tagline
@@ -33,4 +33,6 @@ const profileSchema = new mongoose.Schema({
   coverUrl: { type: String },
 }, { timestamps: true }); // adds createdAt (your joinedDate) and updatedAt
 
-module.exports = mongoose.model('Profile', profileSchema);
+module.exports =
+  mongoose.models.Profile ||
+  mongoose.model("Profile", profileSchema);

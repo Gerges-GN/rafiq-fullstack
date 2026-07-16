@@ -29,9 +29,13 @@ export default function GuideInbox({ guideId }) {
   });
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] border border-gray-200 rounded-xl overflow-hidden bg-white">
+    <div className="flex flex-col md:flex-row min-h-[50vh] md:min-h-[70vh] max-h-[calc(100vh-200px)] border border-gray-200 rounded-xl overflow-hidden bg-white">
       {/* Sidebar */}
-      <aside className="w-full max-w-xs border-r border-gray-200 flex flex-col">
+
+      <aside
+        className={` w-full md:max-w-xs md:border-r border-b border-gray-200 flex flex-col 
+                          ${activeChatId != null && "hidden md:block"}`}
+      >
         <div className="px-4 py-3 border-b border-gray-200">
           <h2 className="text-sm font-semibold text-gray-800">Messages</h2>
         </div>
@@ -44,8 +48,9 @@ export default function GuideInbox({ guideId }) {
       </aside>
 
       {/* Active chat */}
-      <section className="flex-1 flex flex-col">
+      <section className="flex-1 flex flex-col min-h-[50vh] md:min-h-[70vh] max-h-[calc(100vh-200px)]">
         <ChatPanel
+          chat={chats}
           participant={activeChat?.tourist} // ✅ Fixed: use 'participant' instead of 'tourist'
           messages={messages}
           currentUserId={guideId}
