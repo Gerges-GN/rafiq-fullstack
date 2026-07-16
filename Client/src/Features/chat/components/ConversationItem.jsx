@@ -55,7 +55,7 @@ export default function ConversationItem({
           >
             {name}
           </p>
-          <span className="text-[11px] text-gray-400 shrink-0">
+          <span className="text-sm text-gray-400 shrink-0">
             {formatRelativeTime(lastMessage?.createdAt)}
           </span>
         </div>

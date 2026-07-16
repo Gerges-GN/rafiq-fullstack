@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   MapPin,
   X,
@@ -11,13 +11,13 @@ import {
   Loader2,
   AlertTriangle,
 } from "lucide-react";
-import Navbar from "../../Components/Layout/TouristNav";
 import {
   profileApi,
   guideLanguages,
   reviewApi,
   getCurrentUser,
 } from "../../services/Touristapi";
+import { useChatContext } from "../../Features/chat/context/ChatContext";
 
 export default function GuidesPage() {
   const [selectedGuide, setSelectedGuide] = useState(null);
@@ -41,6 +41,8 @@ export default function GuidesPage() {
   const [reviewText, setReviewText] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
+
+  const { openChat } = useChatContext();
 
   const loadGuides = useCallback(async () => {
     setLoading(true);
@@ -72,10 +74,10 @@ export default function GuidesPage() {
     setReviewsError("");
     reviewApi
       .getByTourGuideId(selectedGuide.owner)
-    .then((data) => {
-    console.log("reviews from API:", data);
-    setGuideReviews(data);
-  })
+      .then((data) => {
+        console.log("reviews from API:", data);
+        setGuideReviews(data);
+      })
 
       .catch((err) => setReviewsError(err.message || "Failed to load reviews."))
       .finally(() => setReviewsLoading(false));
@@ -268,6 +270,7 @@ export default function GuidesPage() {
                   key={guide._id}
                   guide={guide}
                   onOpenDetails={(g) => setSelectedGuide(g)}
+                  onMessage={(g) => openChat({ guide: g, chatId: null })}
                 />
               ))}
             </div>
@@ -478,7 +481,7 @@ export default function GuidesPage() {
   );
 }
 
-function GuideCard({ guide, onOpenDetails }) {
+function GuideCard({ guide, onOpenDetails, onMessage }) {
   return (
     <div
       onClick={() => onOpenDetails(guide)}
@@ -525,15 +528,27 @@ function GuideCard({ guide, onOpenDetails }) {
         {guide.bio}
       </p>
 
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          onOpenDetails(guide);
-        }}
-        className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-2.5 px-4 rounded-xl transition-colors mt-3 text-xs uppercase tracking-wide cursor-pointer"
-      >
-        View Profile
-      </button>
+      {/* Updated button section with two buttons */}
+      <div className="flex gap-2 mt-3">
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onMessage?.(guide);
+          }}
+          className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2.5 px-4 rounded-xl transition-colors text-xs uppercase tracking-wide cursor-pointer shadow-sm"
+        >
+          Message
+        </button>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onOpenDetails(guide);
+          }}
+          className="flex-1 bg-slate-900 hover:bg-slate-800 text-white font-bold py-2.5 px-4 rounded-xl transition-colors text-xs uppercase tracking-wide cursor-pointer"
+        >
+          View Profile
+        </button>
+      </div>
     </div>
   );
 }

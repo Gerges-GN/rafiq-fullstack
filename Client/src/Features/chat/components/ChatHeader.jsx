@@ -9,7 +9,7 @@ import { X, ArrowLeft } from "lucide-react";
  */
 export default function ChatHeader({ participant, onClose, onBack }) {
   console.log(participant)
-  const { ownerName, avatarUrl } = participant || {};
+  const {name, ownerName, avatarUrl } = participant || {};
   
 
   return (
@@ -29,13 +29,13 @@ export default function ChatHeader({ participant, onClose, onBack }) {
         <div className="relative shrink-0">
           <img
             src={avatarUrl || "https://i.pravatar.cc/100?img=12"}
-            alt={ownerName || "Chat"}
+            alt={name || ownerName || "Chat"}
             className="w-9 h-9 rounded-full object-cover ring-2 ring-white/30"
           />
         </div>
         <div className="min-w-0">
           <p className="text-sm font-semibold text-white truncate">
-            {ownerName || "Chat"}
+            {name || ownerName || "Chat"}
           </p>
         </div>
       </div>

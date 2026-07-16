@@ -1,17 +1,14 @@
 import { useState, useEffect, useCallback } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { MapPin, MessageCircle, Globe, PlusCircle } from "lucide-react";
 
-import Navbar from "../../Components/Layout/TouristNav";
 import ProfileHeader from "../../Components/Tourist/ProfileHeader";
 import Sidebar from "../../Components/Tourist/sidebartourist";
 import Feed from "../../Components/Tourist/Feed";
-import ChatWidget from "../../Features/chat/index";
 import CreateProfileModal from "../../Components/modals/CreateProfileModal";
-const API_BASE_URL = import.meta.env.VITE_API_URL|| "/api";
+const API_BASE_URL = import.meta.env.VITE_API_URL || "/api";
 export default function Profile() {
   const { userId } = useParams();
-  const navigate = useNavigate();
 
   const [profileData, setProfileData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -26,12 +23,9 @@ export default function Profile() {
         setError("");
         setProfileNotFound(false);
 
-        const response = await fetch(
-          `${API_BASE_URL}/profiles/${userId}`,
-          {
-            signal,
-          },
-        );
+        const response = await fetch(`${API_BASE_URL}/profiles/${userId}`, {
+          signal,
+        });
 
         if (response.status === 404) {
           setProfileNotFound(true);
@@ -222,7 +216,6 @@ export default function Profile() {
   return (
     <div className="min-h-screen bg-[#fafafa] font-sans selection:bg-orange-100 selection:text-orange-900">
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-        <ChatWidget></ChatWidget>
         <ProfileHeader user={user} stats={stats} id={userId} />
 
         <div className="flex flex-col lg:flex-row gap-6 sm:gap-8">
