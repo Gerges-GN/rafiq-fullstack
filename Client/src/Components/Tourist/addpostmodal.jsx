@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { X, Plus, Image as ImageIcon, Loader2 } from "lucide-react";
+import { X, Plus, ImagePlus, Loader2 } from "lucide-react";
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || "/api";
 
 const AddPostModal = ({ onClose, ownerId, onPostCreated }) => {
   const [formData, setFormData] = useState({
@@ -9,7 +11,8 @@ const AddPostModal = ({ onClose, ownerId, onPostCreated }) => {
     description: "",
   });
 
-  const [imageUrls, setImageUrls] = useState([""]);
+  // Each item: { file, preview }
+  const [images, setImages] = useState([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
 
@@ -25,7 +28,10 @@ const AddPostModal = ({ onClose, ownerId, onPostCreated }) => {
     return () => {
       document.body.style.overflow = "";
       window.removeEventListener("keydown", handleKeyDown);
+      // Release object URLs to avoid memory leaks
+      images.forEach((img) => URL.revokeObjectURL(img.preview));
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [onClose]);
 
   const handleChange = (e) => {
@@ -37,18 +43,54 @@ const AddPostModal = ({ onClose, ownerId, onPostCreated }) => {
     }));
   };
 
-  const handleImageUrlChange = (index, value) => {
-    setImageUrls((prev) =>
-      prev.map((url, i) => (i === index ? value : url))
-    );
+  const handleFilesSelected = (e) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+
+    const validFiles = [];
+    for (const file of files) {
+      if (!file.type.startsWith("image/")) {
+        setError("Please select image files only.");
+        continue;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        setError("Each image must be under 5MB.");
+        continue;
+      }
+      validFiles.push({ file, preview: URL.createObjectURL(file) });
+    }
+
+    if (validFiles.length > 0) {
+      setError(null);
+      setImages((prev) => [...prev, ...validFiles]);
+    }
+
+    e.target.value = ""; // allow re-selecting the same file later
   };
 
-  const addImageField = () => {
-    setImageUrls((prev) => [...prev, ""]);
+  const removeImage = (index) => {
+    setImages((prev) => {
+      URL.revokeObjectURL(prev[index].preview);
+      return prev.filter((_, i) => i !== index);
+    });
   };
 
-  const removeImageField = (index) => {
-    setImageUrls((prev) => prev.filter((_, i) => i !== index));
+  const uploadImage = async (file) => {
+    const uploadData = new FormData();
+    uploadData.append("image", file);
+
+    const res = await fetch(`${API_BASE_URL}/upload/image`, {
+      method: "POST",
+      body: uploadData,
+    });
+
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData.message || "Image upload failed");
+    }
+
+    const data = await res.json();
+    return data.url;
   };
 
   const handleSubmit = async (e) => {
@@ -56,12 +98,8 @@ const AddPostModal = ({ onClose, ownerId, onPostCreated }) => {
 
     setError(null);
 
-    const cleanedImages = imageUrls
-      .map((url) => url.trim())
-      .filter(Boolean);
-
-    if (cleanedImages.length === 0) {
-      setError("Please add at least one image URL.");
+    if (images.length === 0) {
+      setError("Please add at least one image.");
       return;
     }
 
@@ -83,14 +121,18 @@ const AddPostModal = ({ onClose, ownerId, onPostCreated }) => {
     try {
       setSubmitting(true);
 
-      const res = await fetch("http://localhost:5000/api/posts", {
+      const uploadedUrls = await Promise.all(
+        images.map((img) => uploadImage(img.file))
+      );
+
+      const res = await fetch(`${API_BASE_URL}/posts`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
           owner: ownerId,
-          images: cleanedImages,
+          images: uploadedUrls,
           ...formData,
         }),
       });
@@ -100,7 +142,7 @@ const AddPostModal = ({ onClose, ownerId, onPostCreated }) => {
       }
 
       const newPost = await res.json();
-      
+
       onPostCreated?.(newPost);
       onClose();
     } catch (err) {
@@ -147,49 +189,42 @@ const AddPostModal = ({ onClose, ownerId, onPostCreated }) => {
           {/* Images */}
           <div>
             <label className="block text-sm font-medium mb-2">
-              Image URLs
+              Images
             </label>
 
-            <div className="space-y-3">
-              {imageUrls.map((url, index) => (
+            <div className="grid grid-cols-3 gap-3">
+              {images.map((img, index) => (
                 <div
                   key={index}
-                  className="flex items-center gap-2"
+                  className="relative aspect-square rounded-lg overflow-hidden border border-gray-200"
                 >
-                  <div className="flex-1 flex items-center border rounded-lg px-3 py-2">
-                    <ImageIcon className="w-4 h-4 text-gray-400 mr-2" />
-
-                    <input
-                      type="text"
-                      value={url}
-                      placeholder="https://..."
-                      onChange={(e) =>
-                        handleImageUrlChange(index, e.target.value)
-                      }
-                      className="flex-1 outline-none text-sm"
-                    />
-                  </div>
-
-                  {imageUrls.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={() => removeImageField(index)}
-                    >
-                      <X className="w-4 h-4 text-red-500" />
-                    </button>
-                  )}
+                  <img
+                    src={img.preview}
+                    alt={`Upload ${index + 1}`}
+                    className="w-full h-full object-cover"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeImage(index)}
+                    className="absolute top-1 right-1 p-1 bg-black/60 rounded-full hover:bg-black/80"
+                  >
+                    <X className="w-3 h-3 text-white" />
+                  </button>
                 </div>
               ))}
-            </div>
 
-            <button
-              type="button"
-              onClick={addImageField}
-              className="mt-3 flex items-center gap-2 text-orange-600 text-sm font-medium"
-            >
-              <Plus className="w-4 h-4" />
-              Add another image
-            </button>
+              <label className="aspect-square flex flex-col items-center justify-center gap-1 border-2 border-dashed border-gray-200 rounded-lg cursor-pointer hover:border-orange-400 transition-colors text-xs text-gray-500">
+                <ImagePlus className="w-5 h-5 text-gray-400" />
+                <span>Add</span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  className="hidden"
+                  onChange={handleFilesSelected}
+                />
+              </label>
+            </div>
           </div>
 
           {/* Trip */}

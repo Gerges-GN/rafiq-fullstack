@@ -16,9 +16,13 @@ export default function EditProfile() {
     location: '',
     website: '',
     languages: [],
-    avatarUrl: '',
-    coverUrl: '',
   });
+
+  const [avatarFile, setAvatarFile] = useState(null);
+  const [avatarPreview, setAvatarPreview] = useState('');
+  const [coverFile, setCoverFile] = useState(null);
+  const [coverPreview, setCoverPreview] = useState('');
+  const [fileError, setFileError] = useState({});
 
   const [languageInput, setLanguageInput] = useState('');
   const [loading, setLoading] = useState(true);
@@ -41,9 +45,9 @@ export default function EditProfile() {
           location: data.location || '',
           website: data.website || '',
           languages: data.languages || [],
-          avatarUrl: data.avatarUrl || '',
-          coverUrl: data.coverUrl || '',
         });
+        setAvatarPreview(data.avatarUrl || '');
+        setCoverPreview(data.coverUrl || '');
       } catch (err) {
         setError(err.message);
       } finally {
@@ -57,6 +61,30 @@ export default function EditProfile() {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleFileSelect = (e, type) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      setFileError((prev) => ({ ...prev, [type]: 'Please select an image file.' }));
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setFileError((prev) => ({ ...prev, [type]: 'Image must be under 5MB.' }));
+      return;
+    }
+
+    const previewUrl = URL.createObjectURL(file);
+    if (type === 'avatar') {
+      setAvatarFile(file);
+      setAvatarPreview(previewUrl);
+    } else {
+      setCoverFile(file);
+      setCoverPreview(previewUrl);
+    }
+    setFileError((prev) => ({ ...prev, [type]: null }));
   };
 
   const handleAddLanguage = () => {
@@ -74,16 +102,44 @@ export default function EditProfile() {
     }));
   };
 
+  const uploadImage = async (file) => {
+    const uploadData = new FormData();
+    uploadData.append('image', file);
+
+    const res = await fetch(`${API_BASE_URL}/upload/image`, {
+      method: 'POST',
+      body: uploadData,
+    });
+
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData.message || 'Image upload failed');
+    }
+
+    const data = await res.json();
+    return data.url;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       setSaving(true);
       setError(null);
 
+      let avatarUrl = avatarPreview;
+      let coverUrl = coverPreview;
+
+      if (avatarFile) {
+        avatarUrl = await uploadImage(avatarFile);
+      }
+      if (coverFile) {
+        coverUrl = await uploadImage(coverFile);
+      }
+
       const res = await fetch(`${API_BASE_URL}/profiles/${userId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({ ...formData, avatarUrl, coverUrl }),
       });
 
       if (!res.ok) throw new Error('Failed to update profile');
@@ -106,7 +162,6 @@ export default function EditProfile() {
 
   return (
     <div className="min-h-screen bg-[#fafafa] font-sans">
-      <Navbar userAvatar={formData.avatarUrl} />
 
       <main className="max-w-3xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
         <button
@@ -117,31 +172,37 @@ export default function EditProfile() {
         </button>
 
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-          {/* Cover + Avatar preview */}
+          {/* Cover + Avatar preview, both now clickable file inputs */}
           <div className="relative h-40 sm:h-56 w-full bg-gray-100">
-            {formData.coverUrl && (
-              <img src={formData.coverUrl} alt="Cover" className="w-full h-full object-cover" />
+            {coverPreview && (
+              <img src={coverPreview} alt="Cover" className="w-full h-full object-cover" />
             )}
-            <button
-              type="button"
-              className="absolute bottom-3 right-3 flex items-center gap-2 px-3 py-1.5 bg-white/90 backdrop-blur text-xs font-medium text-gray-700 rounded-lg shadow-sm hover:bg-white transition-colors"
-            >
+            <label className="absolute bottom-3 right-3 flex items-center gap-2 px-3 py-1.5 bg-white/90 backdrop-blur text-xs font-medium text-gray-700 rounded-lg shadow-sm hover:bg-white transition-colors cursor-pointer">
               <Camera className="w-3.5 h-3.5" /> Change Cover
-            </button>
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => handleFileSelect(e, 'cover')}
+              />
+            </label>
 
             <div className="absolute -bottom-10 left-6">
               <div className="relative">
                 <img
-                  src={formData.avatarUrl}
+                  src={avatarPreview}
                   alt="Avatar"
                   className="w-20 h-20 rounded-full border-4 border-white object-cover shadow-md bg-gray-200"
                 />
-                <button
-                  type="button"
-                  className="absolute bottom-0 right-0 p-1.5 bg-orange-500 text-white rounded-full shadow-sm hover:bg-orange-600 transition-colors"
-                >
+                <label className="absolute bottom-0 right-0 p-1.5 bg-orange-500 text-white rounded-full shadow-sm hover:bg-orange-600 transition-colors cursor-pointer">
                   <Camera className="w-3 h-3" />
-                </button>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => handleFileSelect(e, 'avatar')}
+                  />
+                </label>
               </div>
             </div>
           </div>
@@ -152,32 +213,11 @@ export default function EditProfile() {
                 {error}
               </div>
             )}
-
-            {/* Avatar/Cover URL inputs (swap for real upload later) */}
-            <div className="grid sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1">Avatar URL</label>
-                <input
-                  type="text"
-                  name="avatarUrl"
-                  value={formData.avatarUrl}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-orange-500"
-                  placeholder="https://..."
-                />
+            {(fileError.avatar || fileError.cover) && (
+              <div className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">
+                {fileError.avatar || fileError.cover}
               </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1">Cover URL</label>
-                <input
-                  type="text"
-                  name="coverUrl"
-                  value={formData.coverUrl}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-orange-500"
-                  placeholder="https://..."
-                />
-              </div>
-            </div>
+            )}
 
             <div>
               <label className="block text-xs font-medium text-gray-500 mb-1">Headline</label>

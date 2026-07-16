@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { X, Plus, Save, Loader2 } from "lucide-react";
-
+import { X, Plus, Save, Loader2, ImagePlus } from "lucide-react";
+const API_BASE_URL = import.meta.env.VITE_API_URL|| "/api";
 export default function CreateProfileModal({
   isOpen,
   onClose,
@@ -15,9 +15,11 @@ export default function CreateProfileModal({
     location: "",
     website: "",
     languages: [],
-    avatarUrl: "",
-    coverUrl: "",
   });
+  const [avatarFile, setAvatarFile] = useState(null);
+  const [avatarPreview, setAvatarPreview] = useState("");
+  const [coverFile, setCoverFile] = useState(null);
+  const [coverPreview, setCoverPreview] = useState("");
   const [languageInput, setLanguageInput] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
@@ -29,6 +31,30 @@ export default function CreateProfileModal({
     if (formErrors[name]) {
       setFormErrors((prev) => ({ ...prev, [name]: null }));
     }
+  };
+
+  const handleFileSelect = (e, type) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      setFormErrors((prev) => ({ ...prev, [type]: "Please select an image file." }));
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setFormErrors((prev) => ({ ...prev, [type]: "Image must be under 5MB." }));
+      return;
+    }
+
+    const previewUrl = URL.createObjectURL(file);
+    if (type === "avatarUrl") {
+      setAvatarFile(file);
+      setAvatarPreview(previewUrl);
+    } else {
+      setCoverFile(file);
+      setCoverPreview(previewUrl);
+    }
+    setFormErrors((prev) => ({ ...prev, [type]: null }));
   };
 
   const handleAddLanguage = () => {
@@ -59,16 +85,29 @@ export default function CreateProfileModal({
 
     const urlRegex =
       /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/;
-
     if (formData.website && !urlRegex.test(formData.website))
       newErrors.website = "Please enter a valid website URL.";
-    if (formData.avatarUrl && !urlRegex.test(formData.avatarUrl))
-      newErrors.avatarUrl = "Please enter a valid avatar URL.";
-    if (formData.coverUrl && !urlRegex.test(formData.coverUrl))
-      newErrors.coverUrl = "Please enter a valid cover URL.";
 
-    setFormErrors(newErrors);
+    setFormErrors((prev) => ({ ...prev, ...newErrors }));
     return Object.keys(newErrors).length === 0;
+  };
+
+  const uploadImage = async (file) => {
+    const uploadData = new FormData();
+    uploadData.append("image", file);
+
+    const res = await fetch(`${API_BASE_URL}/upload/image`, {
+      method: "POST",
+      body: uploadData,
+    });
+
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData.message || "Image upload failed");
+    }
+
+    const data = await res.json();
+    return data.url;
   };
 
   const handleSubmit = async (e) => {
@@ -80,12 +119,24 @@ export default function CreateProfileModal({
       setSaving(true);
       setError(null);
 
+      let avatarUrl = "";
+      let coverUrl = "";
+
+      if (avatarFile) {
+        avatarUrl = await uploadImage(avatarFile);
+      }
+      if (coverFile) {
+        coverUrl = await uploadImage(coverFile);
+      }
+
       const payload = {
         ...formData,
+        avatarUrl,
+        coverUrl,
         owner: userId,
       };
 
-      const res = await fetch(`http://localhost:5000/api/profiles`, {
+      const res = await fetch(`${API_BASE_URL}/profiles`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -159,20 +210,32 @@ export default function CreateProfileModal({
             <div className="grid sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-medium text-gray-500 mb-1">
-                  Avatar URL (Optional)
+                  Avatar (Optional)
                 </label>
-                <input
-                  type="text"
-                  name="avatarUrl"
-                  value={formData.avatarUrl}
-                  onChange={handleChange}
-                  className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none ${
-                    formErrors.avatarUrl
-                      ? "border-red-500 focus:border-red-500"
-                      : "border-gray-200 focus:border-orange-500"
+                <label
+                  className={`flex flex-col items-center justify-center gap-1 w-full h-24 border-2 border-dashed rounded-lg cursor-pointer text-xs text-gray-500 hover:border-orange-400 transition-colors overflow-hidden ${
+                    formErrors.avatarUrl ? "border-red-500" : "border-gray-200"
                   }`}
-                  placeholder="https://..."
-                />
+                >
+                  {avatarPreview ? (
+                    <img
+                      src={avatarPreview}
+                      alt="Avatar preview"
+                      className="w-full h-full object-cover rounded-lg"
+                    />
+                  ) : (
+                    <>
+                      <ImagePlus className="w-5 h-5 text-gray-400" />
+                      <span>Upload avatar</span>
+                    </>
+                  )}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => handleFileSelect(e, "avatarUrl")}
+                  />
+                </label>
                 {formErrors.avatarUrl && (
                   <p className="text-xs text-red-500 mt-1">
                     {formErrors.avatarUrl}
@@ -181,20 +244,32 @@ export default function CreateProfileModal({
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-500 mb-1">
-                  Cover URL (Optional)
+                  Cover (Optional)
                 </label>
-                <input
-                  type="text"
-                  name="coverUrl"
-                  value={formData.coverUrl}
-                  onChange={handleChange}
-                  className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none ${
-                    formErrors.coverUrl
-                      ? "border-red-500 focus:border-red-500"
-                      : "border-gray-200 focus:border-orange-500"
+                <label
+                  className={`flex flex-col items-center justify-center gap-1 w-full h-24 border-2 border-dashed rounded-lg cursor-pointer text-xs text-gray-500 hover:border-orange-400 transition-colors overflow-hidden ${
+                    formErrors.coverUrl ? "border-red-500" : "border-gray-200"
                   }`}
-                  placeholder="https://..."
-                />
+                >
+                  {coverPreview ? (
+                    <img
+                      src={coverPreview}
+                      alt="Cover preview"
+                      className="w-full h-full object-cover rounded-lg"
+                    />
+                  ) : (
+                    <>
+                      <ImagePlus className="w-5 h-5 text-gray-400" />
+                      <span>Upload cover</span>
+                    </>
+                  )}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => handleFileSelect(e, "coverUrl")}
+                  />
+                </label>
                 {formErrors.coverUrl && (
                   <p className="text-xs text-red-500 mt-1">
                     {formErrors.coverUrl}

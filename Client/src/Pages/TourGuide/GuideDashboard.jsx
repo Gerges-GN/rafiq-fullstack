@@ -20,6 +20,8 @@ import {
   Loader2,
   AlertTriangle,
   MessageCircle,
+  ImagePlus,
+  X,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import GuideInbox from "../../Features/chat/pages/GuideInbox";
@@ -30,7 +32,6 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || "/api";
 // Single source of truth for the token — checks both storages.
 function getToken() {
   const t = localStorage.getItem("token") || sessionStorage.getItem("token");
-  // console.log("[auth] getToken() ->", t ? t.slice(0, 20) + "..." : null);
   return t;
 }
 
@@ -42,7 +43,6 @@ function getCurrentUserId() {
   }
   try {
     const payload = JSON.parse(atob(token.split(".")[1]));
-    // console.log("[auth] decoded payload ->", payload);
     const id = payload.id || payload._id || payload.userId || payload.sub;
     if (!id)
       console.warn("[auth] payload has no id/_id/userId/sub field:", payload);
@@ -63,11 +63,7 @@ async function apiRequest(path, options = {}) {
     ...options,
   });
 
-  // console.log("Status:", res.status);
-
   const data = await res.json();
-
-  // console.log("Response from API:", data);
 
   if (!res.ok) {
     throw new Error(data?.message || `Request failed (${res.status})`);
@@ -75,6 +71,26 @@ async function apiRequest(path, options = {}) {
 
   return data;
 }
+
+// Uploads a single file to Cloudinary via the backend and returns its URL.
+async function uploadImage(file) {
+  const uploadData = new FormData();
+  uploadData.append("image", file);
+
+  const res = await fetch(`${API_BASE_URL}/upload/image`, {
+    method: "POST",
+    body: uploadData,
+  });
+
+  if (!res.ok) {
+    const errData = await res.json().catch(() => ({}));
+    throw new Error(errData.message || "Image upload failed");
+  }
+
+  const data = await res.json();
+  return data.url;
+}
+
 const profileApi = {
   getByOwnerId: (ownerId) => apiRequest(`/tourguide-profiles/owner/${ownerId}`),
   create: (payload) =>
@@ -228,29 +244,15 @@ const TripCard = ({ trip, onOpenDetails, onDeleteTrip }) => {
 const GuideDashboard = ({ user, onLogout }) => {
   const navigate = useNavigate();
   const handleLogout = () => {
-    // clear both, since "Remember me" decided which one Login.jsx used
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     sessionStorage.removeItem("token");
     sessionStorage.removeItem("user");
     navigate("/login");
   };
-  // console.log("GuideDashboard rendered");
   const [activeTab, setActiveTab] = useState("dashboard");
 
-  // The guide's id — comes from the `user` prop if provided (e.g. from an
-  // AuthContext / login response), falling back to decoding the stored JWT.
-  // ASSUMPTION: user._id (or user.id) is the Mongo ObjectId for this guide.
-  // console.log("GuideDashboard user:", user);
-  // console.log("Decoded token id:", getCurrentUserId());
   const tourGuideId = user?._id || user?.id || getCurrentUserId();
-  // console.log("Resolved guide id:", tourGuideId);
-  // console.log(
-  //   "[auth] tourGuideId resolved to ->",
-  //   tourGuideId,
-  //   "| user prop was:",
-  //   user,
-  // );
 
   const [profileInfo, setProfileInfo] = useState(null);
   const [trips, setTrips] = useState([]);
@@ -267,7 +269,8 @@ const GuideDashboard = ({ user, onLogout }) => {
   const [newTripLocation, setNewTripLocation] = useState("");
   const [newTripDays, setNewTripDays] = useState("");
   const [newTripDetails, setNewTripDetails] = useState("");
-  const [newTripImages, setNewTripImages] = useState("");
+  // Each item: { file, preview }
+  const [newTripImages, setNewTripImages] = useState([]);
   const [addingTrip, setAddingTrip] = useState(false);
 
   const [notification, setNotification] = useState("");
@@ -277,7 +280,8 @@ const GuideDashboard = ({ user, onLogout }) => {
   const [editCity, setEditCity] = useState("");
   const [editLanguages, setEditLanguages] = useState("");
   const [editRate, setEditRate] = useState("");
-  const [editAvatar, setEditAvatar] = useState("");
+  const [editAvatarFile, setEditAvatarFile] = useState(null);
+  const [editAvatarPreview, setEditAvatarPreview] = useState("");
   const [savingProfile, setSavingProfile] = useState(false);
 
   const showNotification = (node) => {
@@ -297,11 +301,9 @@ const GuideDashboard = ({ user, onLogout }) => {
     setLoadError("");
 
     try {
-      // Profile: fetch by owner, create a blank one on first login (404).
       let profile;
       try {
         profile = await profileApi.getByOwnerId(tourGuideId);
-        // console.log("Profile returned from API:", profile);
       } catch (err) {
         profile = await profileApi.create({
           owner: tourGuideId,
@@ -317,7 +319,7 @@ const GuideDashboard = ({ user, onLogout }) => {
         Array.isArray(profile.languages) ? profile.languages.join(", ") : "",
       );
       setEditRate(profile.rate || "");
-      setEditAvatar(profile.avatarUrl || "");
+      setEditAvatarPreview(profile.avatarUrl || "");
 
       const [tripsData, bookingsData] = await Promise.all([
         tripApi.getByTourGuideId(tourGuideId),
@@ -336,26 +338,42 @@ const GuideDashboard = ({ user, onLogout }) => {
     loadAll();
   }, [loadAll]);
 
-  // Availability is local-only UI state — there's no field for it on
-  // TourGuideProfile yet. Wire it to a real field (e.g. `isAvailable`) if you
-  // add one to the schema; for now it just toggles the badge on this screen.
   const handleToggleAvailability = (e) => {
     setIsAvailable(e.target.checked);
+  };
+
+  // --- Trip photo handlers ---
+  const handleTripImagesSelected = (e) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+
+    const validFiles = [];
+    for (const file of files) {
+      if (!file.type.startsWith("image/")) continue;
+      if (file.size > 5 * 1024 * 1024) continue;
+      validFiles.push({ file, preview: URL.createObjectURL(file) });
+    }
+
+    setNewTripImages((prev) => [...prev, ...validFiles]);
+    e.target.value = "";
+  };
+
+  const removeTripImage = (index) => {
+    setNewTripImages((prev) => {
+      URL.revokeObjectURL(prev[index].preview);
+      return prev.filter((_, i) => i !== index);
+    });
   };
 
   const handleAddTrip = async (e) => {
     e.preventDefault();
     setAddingTrip(true);
 
-    let uploadedImages = [];
-    if (newTripImages.trim()) {
-      uploadedImages = newTripImages
-        .split(",")
-        .map((url) => url.trim())
-        .filter((url) => url.length > 0);
-    }
-
     try {
+      const uploadedImages = await Promise.all(
+        newTripImages.map((img) => uploadImage(img.file)),
+      );
+
       const newTrip = await tripApi.create({
         title: newTripTitle,
         location: newTripLocation,
@@ -378,7 +396,8 @@ const GuideDashboard = ({ user, onLogout }) => {
       setNewTripLocation("");
       setNewTripDays("");
       setNewTripDetails("");
-      setNewTripImages("");
+      newTripImages.forEach((img) => URL.revokeObjectURL(img.preview));
+      setNewTripImages([]);
     } catch (err) {
       showNotification(
         <span className="flex items-center gap-1.5">
@@ -406,7 +425,7 @@ const GuideDashboard = ({ user, onLogout }) => {
         </span>,
       );
     } catch (err) {
-      setTrips(previousTrips); // roll back on failure
+      setTrips(previousTrips);
       showNotification(
         <span className="flex items-center gap-1.5">
           <AlertTriangle className="w-4 h-4" /> Couldn't delete trip:{" "}
@@ -425,8 +444,6 @@ const GuideDashboard = ({ user, onLogout }) => {
     );
 
     try {
-      // Model enum is Pending/Confirmed/Cancelled/Completed — there's no
-      // "Rejected" value, so a guide declining a request maps to "Cancelled".
       const apiStatus = newStatus === "Rejected" ? "Cancelled" : newStatus;
       await bookingApi.update(bookingId, { status: apiStatus });
 
@@ -444,7 +461,7 @@ const GuideDashboard = ({ user, onLogout }) => {
         );
       }
     } catch (err) {
-      setBookings(previousBookings); // roll back on failure
+      setBookings(previousBookings);
       showNotification(
         <span className="flex items-center gap-1.5">
           <AlertTriangle className="w-4 h-4" /> Couldn't update booking:{" "}
@@ -454,25 +471,56 @@ const GuideDashboard = ({ user, onLogout }) => {
     }
   };
 
+  // --- Avatar handler ---
+  const handleAvatarSelected = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      showNotification(
+        <span className="flex items-center gap-1.5">
+          <AlertTriangle className="w-4 h-4" /> Please select an image file.
+        </span>,
+      );
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      showNotification(
+        <span className="flex items-center gap-1.5">
+          <AlertTriangle className="w-4 h-4" /> Image must be under 5MB.
+        </span>,
+      );
+      return;
+    }
+
+    setEditAvatarFile(file);
+    setEditAvatarPreview(URL.createObjectURL(file));
+  };
+
   const handleSaveProfile = async (e) => {
     e.preventDefault();
     setSavingProfile(true);
 
-    const payload = {
-      name: editName,
-      bio: editBio,
-      city: editCity,
-      languages: editLanguages
-        .split(",")
-        .map((lang) => lang.trim())
-        .filter((lang) => lang.length > 0),
-      rate: editRate,
-      avatar: editAvatar || DEFAULT_AVATAR,
-    };
-
     try {
+      const avatarUrl = editAvatarFile
+        ? await uploadImage(editAvatarFile)
+        : editAvatarPreview || DEFAULT_AVATAR;
+
+      const payload = {
+        name: editName,
+        bio: editBio,
+        city: editCity,
+        languages: editLanguages
+          .split(",")
+          .map((lang) => lang.trim())
+          .filter((lang) => lang.length > 0),
+        rate: editRate,
+        avatarUrl,
+      };
+
       const updatedProfile = await profileApi.update(profileInfo._id, payload);
       setProfileInfo(updatedProfile);
+      setEditAvatarFile(null);
       showNotification(
         <span className="flex items-center gap-1.5">
           <Save className="w-4 h-4" /> Profile information updated successfully!
@@ -654,17 +702,42 @@ const GuideDashboard = ({ user, onLogout }) => {
 
                   <div>
                     <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">
-                      Trip Photo URLs (Optional)
+                      Trip Photos (Optional)
                     </label>
-                    <input
-                      type="text"
-                      value={newTripImages}
-                      onChange={(e) => setNewTripImages(e.target.value)}
-                      placeholder="URL 1, URL 2, URL 3"
-                      className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-orange-500"
-                    />
+                    <div className="grid grid-cols-4 gap-2">
+                      {newTripImages.map((img, index) => (
+                        <div
+                          key={index}
+                          className="relative aspect-square rounded-lg overflow-hidden border border-slate-200"
+                        >
+                          <img
+                            src={img.preview}
+                            alt={`Trip photo ${index + 1}`}
+                            className="w-full h-full object-cover"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => removeTripImage(index)}
+                            className="absolute top-1 right-1 p-0.5 bg-black/60 rounded-full hover:bg-black/80"
+                          >
+                            <X className="w-3 h-3 text-white" />
+                          </button>
+                        </div>
+                      ))}
+                      <label className="aspect-square flex flex-col items-center justify-center gap-1 border-2 border-dashed border-slate-200 rounded-lg cursor-pointer hover:border-orange-400 transition-colors text-[10px] text-slate-400">
+                        <ImagePlus className="w-4 h-4" />
+                        Add
+                        <input
+                          type="file"
+                          accept="image/*"
+                          multiple
+                          className="hidden"
+                          onChange={handleTripImagesSelected}
+                        />
+                      </label>
+                    </div>
                     <span className="text-[10px] text-slate-400 block mt-1 leading-tight">
-                      Leave empty for text-only, or separate links with commas.
+                      Leave empty for text-only, or select multiple photos.
                     </span>
                   </div>
 
@@ -878,20 +951,6 @@ const GuideDashboard = ({ user, onLogout }) => {
                   </div>
                 </div>
 
-                {/* Read-only contact info — not editable by the guide */}
-                <div className="text-left pt-2 border-t border-slate-50 space-y-1.5">
-                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider block mb-1">
-                    Contact Info
-                  </span>
-                  <p className="text-xs font-semibold text-slate-600 inline-flex items-center gap-1.5">
-                    <Phone className="w-3 h-3 text-slate-400" />{" "}
-                    {profileInfo.phone}
-                  </p>
-                  <p className="text-xs font-semibold text-slate-600 inline-flex items-center gap-1.5">
-                    <Mail className="w-3 h-3 text-slate-400" />{" "}
-                    {profileInfo.email}
-                  </p>
-                </div>
 
                 {/* Read-only application stats — completed trips + verification, set by the system/admin */}
                 <div className="grid grid-cols-2 gap-2 text-left pt-2 border-t border-slate-50">
@@ -993,15 +1052,24 @@ const GuideDashboard = ({ user, onLogout }) => {
 
                   <div>
                     <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">
-                      Profile Photo URL
+                      Profile Photo
                     </label>
-                    <input
-                      type="text"
-                      value={editAvatar}
-                      onChange={(e) => setEditAvatar(e.target.value)}
-                      placeholder="Web URL link to your photo picture image"
-                      className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-orange-500"
-                    />
+                    <label className="flex items-center gap-4 p-3 bg-slate-50 border border-slate-200 rounded-xl cursor-pointer hover:border-orange-400 transition-colors">
+                      <img
+                        src={editAvatarPreview || DEFAULT_AVATAR}
+                        alt="Avatar preview"
+                        className="w-12 h-12 rounded-full object-cover border border-slate-200"
+                      />
+                      <span className="text-xs font-semibold text-slate-500 inline-flex items-center gap-1.5">
+                        <ImagePlus className="w-4 h-4" /> Upload new photo
+                      </span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleAvatarSelected}
+                      />
+                    </label>
                   </div>
 
                   <div>
