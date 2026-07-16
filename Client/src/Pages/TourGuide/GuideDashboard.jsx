@@ -21,7 +21,7 @@ import ProfileView from "../../components/Tourguide/ProfileView";
 import ProfileEditForm from "../../components/Tourguide/ProfileEditForm";
 
 // --- MAIN PORTAL PAGE COMPONENT ---
-const GuideDashboard = ({ user, onLogout }) => {
+const GuideDashboard = () => {
   const navigate = useNavigate();
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -31,9 +31,10 @@ const GuideDashboard = ({ user, onLogout }) => {
     navigate("/login");
   };
   const [activeTab, setActiveTab] = useState("dashboard");
-
+  const [user] = useState(() =>
+        JSON.parse(localStorage.getItem("user") || sessionStorage.getItem("user") || "null")
+  );
   const tourGuideId = user?._id || user?.id || getCurrentUserId();
-
   const [profileInfo, setProfileInfo] = useState(null);
   const [trips, setTrips] = useState([]);
   const [bookings, setBookings] = useState([]);
@@ -355,7 +356,7 @@ const GuideDashboard = ({ user, onLogout }) => {
           </div>
         )}
 
-        {activeTab === "chat" && <GuideInbox guideId={tourGuideId} />}
+        {activeTab === "chat" && <GuideInbox guideId={tourGuideId} currentUserRole={user.role}/>}
       </div>
 
       <TripDetailsModal

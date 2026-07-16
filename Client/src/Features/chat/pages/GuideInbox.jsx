@@ -4,18 +4,19 @@ import ConversationList from "../components/ConversationList";
 import ChatPanel from "../components/ChatPanel";
 import useChatList from "../hooks/useChatList";
 import useChat from "../hooks/useChat";
+import useParticipantProfile from "../hooks/useParticipantProfile";
 
 /**
  * Full-page/dashboard-embedded inbox for a tour guide handling
  * multiple tourists. Two-pane layout: conversation list + active chat.
  */
-export default function GuideInbox({ guideId }) {
+export default function GuideInbox({ guideId , currentUserRole}) {
   const [activeChatId, setActiveChatId] = useState(null);
 
   const { chats, isLoading: isListLoading } = useChatList({ userId: guideId });
 
   const activeChat = chats.find((c) => c._id === activeChatId);
-
+  
   const {
     messages,
     isLoading: isChatLoading,
@@ -27,7 +28,6 @@ export default function GuideInbox({ guideId }) {
     userId: guideId,
     enabled: !!activeChatId, // only poll once a conversation is opened
   });
-
   return (
     <div className="flex flex-col md:flex-row min-h-[50vh] md:min-h-[70vh] max-h-[calc(100vh-200px)] border border-gray-200 rounded-xl overflow-hidden bg-white">
       {/* Sidebar */}
@@ -51,7 +51,6 @@ export default function GuideInbox({ guideId }) {
       <section className="flex-1 flex flex-col min-h-[50vh] md:min-h-[70vh] max-h-[calc(100vh-200px)]">
         <ChatPanel
           chat={chats}
-          participant={activeChat?.tourist} // ✅ Fixed: use 'participant' instead of 'tourist'
           messages={messages}
           currentUserId={guideId}
           isLoading={isChatLoading}
