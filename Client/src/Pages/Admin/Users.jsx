@@ -213,7 +213,7 @@ export default function Users() {
     <DashboardLayout
       sidebarProps={{ active: "/users", footer: "status", showLogo: false }}
       topbarProps={{
-        title: "Dashboard - Users Mgmt",
+        title: "Dashboard - Users Management",
         user: currentAdmin.users,
         showLogout: true,
         logoutVariant: "text",

@@ -19,16 +19,18 @@ import {
   CheckCircle,
   Loader2,
   AlertTriangle,
+  MessageCircle,
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-const API_BASE_URL = import.meta.env.VITE_API_URL|| "/api";
+import { Link, useNavigate } from "react-router-dom";
+import GuideInbox from "../../Features/chat/pages/GuideInbox";
+const API_BASE_URL = import.meta.env.VITE_API_URL || "/api";
 
-console.log("API_BASE_URL =", API_BASE_URL);
+// console.log("API_BASE_URL =", API_BASE_URL);
 
 // Single source of truth for the token — checks both storages.
 function getToken() {
   const t = localStorage.getItem("token") || sessionStorage.getItem("token");
-  console.log("[auth] getToken() ->", t ? t.slice(0, 20) + "..." : null);
+  // console.log("[auth] getToken() ->", t ? t.slice(0, 20) + "..." : null);
   return t;
 }
 
@@ -40,7 +42,7 @@ function getCurrentUserId() {
   }
   try {
     const payload = JSON.parse(atob(token.split(".")[1]));
-    console.log("[auth] decoded payload ->", payload);
+    // console.log("[auth] decoded payload ->", payload);
     const id = payload.id || payload._id || payload.userId || payload.sub;
     if (!id)
       console.warn("[auth] payload has no id/_id/userId/sub field:", payload);
@@ -61,11 +63,11 @@ async function apiRequest(path, options = {}) {
     ...options,
   });
 
-  console.log("Status:", res.status);
+  // console.log("Status:", res.status);
 
   const data = await res.json();
 
-  console.log("Response from API:", data);
+  // console.log("Response from API:", data);
 
   if (!res.ok) {
     throw new Error(data?.message || `Request failed (${res.status})`);
@@ -233,22 +235,22 @@ const GuideDashboard = ({ user, onLogout }) => {
     sessionStorage.removeItem("user");
     navigate("/login");
   };
-  console.log("GuideDashboard rendered");
+  // console.log("GuideDashboard rendered");
   const [activeTab, setActiveTab] = useState("dashboard");
 
   // The guide's id — comes from the `user` prop if provided (e.g. from an
   // AuthContext / login response), falling back to decoding the stored JWT.
   // ASSUMPTION: user._id (or user.id) is the Mongo ObjectId for this guide.
-  console.log("GuideDashboard user:", user);
-  console.log("Decoded token id:", getCurrentUserId());
+  // console.log("GuideDashboard user:", user);
+  // console.log("Decoded token id:", getCurrentUserId());
   const tourGuideId = user?._id || user?.id || getCurrentUserId();
-  console.log("Resolved guide id:", tourGuideId);
-  console.log(
-    "[auth] tourGuideId resolved to ->",
-    tourGuideId,
-    "| user prop was:",
-    user,
-  );
+  // console.log("Resolved guide id:", tourGuideId);
+  // console.log(
+  //   "[auth] tourGuideId resolved to ->",
+  //   tourGuideId,
+  //   "| user prop was:",
+  //   user,
+  // );
 
   const [profileInfo, setProfileInfo] = useState(null);
   const [trips, setTrips] = useState([]);
@@ -299,7 +301,7 @@ const GuideDashboard = ({ user, onLogout }) => {
       let profile;
       try {
         profile = await profileApi.getByOwnerId(tourGuideId);
-        console.log("Profile returned from API:", profile);
+        // console.log("Profile returned from API:", profile);
       } catch (err) {
         profile = await profileApi.create({
           owner: tourGuideId,
@@ -543,6 +545,13 @@ const GuideDashboard = ({ user, onLogout }) => {
             >
               <LayoutDashboard className="w-3.5 h-3.5" /> Dashboard
             </button>
+            <button
+              onClick={() => setActiveTab("chat")}
+              className={`font-bold text-xs uppercase tracking-wider py-2 px-4 rounded-xl transition-all cursor-pointer inline-flex items-center gap-1.5 ${activeTab === "chat" ? "bg-slate-900 text-white shadow-sm" : "bg-slate-50 text-slate-600 hover:bg-slate-100"}`}
+            >
+              <MessageCircle className="w-3.5 h-3.5" /> Messages
+            </button>
+
             <button
               onClick={() => setActiveTab("profile")}
               className={`font-bold text-xs uppercase tracking-wider py-2 px-4 rounded-xl transition-all cursor-pointer inline-flex items-center gap-1.5 ${activeTab === "profile" ? "bg-slate-900 text-white shadow-sm" : "bg-slate-50 text-slate-600 hover:bg-slate-100"}`}
@@ -1025,6 +1034,8 @@ const GuideDashboard = ({ user, onLogout }) => {
             </div>
           </div>
         )}
+
+        {activeTab === "chat" && <GuideInbox guideId={tourGuideId} />}
       </div>
 
       {selectedTrip && (

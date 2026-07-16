@@ -211,7 +211,7 @@ export default function Guides() {
     <DashboardLayout
       sidebarProps={{ active: "/guides", footer: "logout", showLogo: false }}
       topbarProps={{
-        title: "Dashboard - Guides Mgmt",
+        title: "Dashboard - Guides Management",
         user: currentAdmin.users,
         showLogout: true,
         logoutVariant: "text",
