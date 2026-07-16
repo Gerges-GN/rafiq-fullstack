@@ -1,7 +1,23 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { MapPin, X, Star, Phone, Mail, BadgeCheck, Languages, Briefcase, Loader2, AlertTriangle } from "lucide-react";
+import {
+  MapPin,
+  X,
+  Star,
+  Phone,
+  Mail,
+  BadgeCheck,
+  Languages,
+  Briefcase,
+  Loader2,
+  AlertTriangle,
+} from "lucide-react";
 import Navbar from "../../Components/Layout/TouristNav";
-import { profileApi, guideLanguages } from "../../services/Touristapi";
+import {
+  profileApi,
+  guideLanguages,
+  reviewApi,
+  getCurrentUser,
+} from "../../services/Touristapi";
 
 export default function GuidesPage() {
   const [selectedGuide, setSelectedGuide] = useState(null);
@@ -14,6 +30,17 @@ export default function GuidesPage() {
   const [guideMinRate, setGuideMinRate] = useState("");
   const [guideMaxRate, setGuideMaxRate] = useState("");
   const [guideMinTrips, setGuideMinTrips] = useState("");
+
+  // --- Reviews state (for whichever guide is currently open in the modal) ---
+  const [guideReviews, setGuideReviews] = useState([]);
+  const [reviewsLoading, setReviewsLoading] = useState(false);
+  const [reviewsError, setReviewsError] = useState("");
+
+  const [reviewRating, setReviewRating] = useState(0);
+  const [reviewHoverRating, setReviewHoverRating] = useState(0);
+  const [reviewText, setReviewText] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
 
   const loadGuides = useCallback(async () => {
     setLoading(true);
@@ -32,6 +59,69 @@ export default function GuidesPage() {
     loadGuides();
   }, [loadGuides]);
 
+  // Load reviews + reset the review form whenever a different guide is opened
+  useEffect(() => {
+    if (!selectedGuide) return;
+
+    setReviewRating(0);
+    setReviewHoverRating(0);
+    setReviewText("");
+    setSubmitError("");
+
+    setReviewsLoading(true);
+    setReviewsError("");
+    reviewApi
+      .getByTourGuideId(selectedGuide.owner)
+    .then((data) => {
+    console.log("reviews from API:", data);
+    setGuideReviews(data);
+  })
+
+      .catch((err) => setReviewsError(err.message || "Failed to load reviews."))
+      .finally(() => setReviewsLoading(false));
+  }, [selectedGuide]);
+
+  const handleSubmitReview = async () => {
+    setSubmitError("");
+
+    const user = getCurrentUser();
+    if (!user?._id) {
+      setSubmitError("You need to be logged in to leave a review.");
+      return;
+    }
+    if (reviewRating < 1) {
+      setSubmitError("Please select a star rating.");
+      return;
+    }
+    if (!reviewText.trim()) {
+      setSubmitError("Please write a short review.");
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const newReview = await reviewApi.create({
+        reviewerId: user._id,
+        reviewerName: user.name,
+        reviewerAvatarUrl: user.avatarUrl || "",
+        entityType: "Guide",
+        tourGuideId: selectedGuide._id,
+        entityName: selectedGuide.name,
+        entityAvatarUrl: selectedGuide.avatarUrl || "",
+        rating: reviewRating,
+        text: reviewText.trim(),
+      });
+
+      setGuideReviews((prev) => [newReview, ...prev]);
+      setReviewRating(0);
+      setReviewText("");
+    } catch (err) {
+      setSubmitError(err.message || "Failed to submit review.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const uniqueLanguages = [
     "All",
     ...Array.from(new Set(guides.flatMap((g) => guideLanguages(g)))).sort(),
@@ -46,7 +136,9 @@ export default function GuidesPage() {
     const matchesMaxRate = guideMaxRate === "" || rate <= Number(guideMaxRate);
     const matchesMinTrips =
       guideMinTrips === "" || (g.completedTrips || 0) >= Number(guideMinTrips);
-    return matchesLanguage && matchesMinRate && matchesMaxRate && matchesMinTrips;
+    return (
+      matchesLanguage && matchesMinRate && matchesMaxRate && matchesMinTrips
+    );
   });
 
   const guideFiltersActive =
@@ -202,8 +294,12 @@ export default function GuidesPage() {
                 />
               </div>
               <div className="flex items-center gap-1.5 mt-3">
-                <h2 className="text-xl font-black text-slate-900">{selectedGuide.name}</h2>
-                {selectedGuide.verified && <BadgeCheck className="w-5 h-5 text-orange-500" />}
+                <h2 className="text-xl font-black text-slate-900">
+                  {selectedGuide.name}
+                </h2>
+                {selectedGuide.verified && (
+                  <BadgeCheck className="w-5 h-5 text-orange-500" />
+                )}
               </div>
               <span className="text-xs font-semibold text-slate-400 inline-flex items-center gap-1 mt-1">
                 <MapPin className="w-3 h-3" /> {selectedGuide.city}
@@ -245,7 +341,9 @@ export default function GuidesPage() {
                   <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1">
                     <Phone className="w-3 h-3" /> Phone
                   </span>
-                  <p className="text-sm font-semibold text-slate-800 mt-1">{selectedGuide.phone}</p>
+                  <p className="text-sm font-semibold text-slate-800 mt-1">
+                    {selectedGuide.phone}
+                  </p>
                 </div>
                 <div className="bg-slate-50 border border-slate-100 rounded-xl p-3">
                   <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1">
@@ -255,6 +353,106 @@ export default function GuidesPage() {
                     {selectedGuide.email}
                   </p>
                 </div>
+              </div>
+            </div>
+
+            {/* --- Reviews section --- */}
+            <div className="px-6 pb-4 space-y-4 border-t border-slate-100 pt-4">
+              <h3 className="text-sm font-bold text-slate-900">
+                Leave a Review
+              </h3>
+
+              <div className="flex items-center gap-1">
+                {[1, 2, 3, 4, 5].map((n) => (
+                  <button
+                    key={n}
+                    type="button"
+                    onClick={() => setReviewRating(n)}
+                    onMouseEnter={() => setReviewHoverRating(n)}
+                    onMouseLeave={() => setReviewHoverRating(0)}
+                    className="cursor-pointer"
+                  >
+                    <Star
+                      className={`w-6 h-6 ${
+                        n <= (reviewHoverRating || reviewRating)
+                          ? "text-orange-500 fill-orange-500"
+                          : "text-slate-200 fill-slate-200"
+                      }`}
+                    />
+                  </button>
+                ))}
+              </div>
+
+              <textarea
+                value={reviewText}
+                onChange={(e) => setReviewText(e.target.value)}
+                placeholder="Share how your trip with this guide went..."
+                rows={3}
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-orange-200 resize-none"
+              />
+
+              {submitError && (
+                <p className="text-xs font-semibold text-red-500">
+                  {submitError}
+                </p>
+              )}
+
+              <button
+                onClick={handleSubmitReview}
+                disabled={submitting}
+                className="bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white font-bold px-4 py-2 rounded-xl text-xs uppercase tracking-wide cursor-pointer"
+              >
+                {submitting ? "Submitting..." : "Submit Review"}
+              </button>
+
+              <div className="space-y-3 pt-2">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                  Reviews ({guideReviews.length})
+                </h4>
+
+                {reviewsLoading && (
+                  <p className="text-xs text-slate-400">Loading reviews...</p>
+                )}
+                {reviewsError && (
+                  <p className="text-xs font-semibold text-red-500">
+                    {reviewsError}
+                  </p>
+                )}
+                {!reviewsLoading &&
+                  !reviewsError &&
+                  guideReviews.length === 0 && (
+                    <p className="text-xs text-slate-400">
+                      No reviews yet — be the first!
+                    </p>
+                  )}
+
+                {guideReviews.map((r) => (
+                  <div
+                    key={r._id}
+                    className="bg-slate-50 border border-slate-100 rounded-xl p-3 space-y-1"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-slate-800">
+                        {r.reviewerName}
+                      </span>
+                      <div className="flex items-center gap-0.5">
+                        {[1, 2, 3, 4, 5].map((n) => (
+                          <Star
+                            key={n}
+                            className={`w-3 h-3 ${
+                              n <= r.rating
+                                ? "text-orange-500 fill-orange-500"
+                                : "text-slate-200 fill-slate-200"
+                            }`}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                    <p className="text-xs text-slate-600 leading-relaxed">
+                      {r.text}
+                    </p>
+                  </div>
+                ))}
               </div>
             </div>
 
@@ -289,7 +487,11 @@ function GuideCard({ guide, onOpenDetails }) {
       <div className="flex items-start gap-3">
         <div className="relative shrink-0">
           <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-orange-100 shadow-sm">
-            <img src={guide.avatarUrl} alt={guide.name} className="w-full h-full object-cover" />
+            <img
+              src={guide.avatarUrl}
+              alt={guide.name}
+              className="w-full h-full object-cover"
+            />
           </div>
           {guide.verified && (
             <BadgeCheck className="w-4.5 h-4.5 text-orange-500 bg-white rounded-full absolute -bottom-0.5 -right-0.5 shadow-sm" />
@@ -308,7 +510,9 @@ function GuideCard({ guide, onOpenDetails }) {
             <span className="text-xs font-bold text-slate-700">
               {(guide.rating || 0).toFixed(1)}
             </span>
-            <span className="text-xs text-slate-400">({guide.reviews || 0} reviews)</span>
+            <span className="text-xs text-slate-400">
+              ({guide.reviews || 0} reviews)
+            </span>
           </div>
         </div>
 
