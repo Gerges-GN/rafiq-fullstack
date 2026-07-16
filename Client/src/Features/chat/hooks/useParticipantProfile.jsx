@@ -9,13 +9,11 @@ export default function useParticipantProfile(participantId, currentUserRole) {
 
   useEffect(() => {
     if (!participantId) return;
-
     // currentUserRole is *my* role — the participant is the opposite side.
     const endpoint =
       currentUserRole === "tourist"
         ? `${BASE_URL}/tourguide-profiles/owner/${participantId}`
         : `${BASE_URL}/profiles/${participantId}`;
-
     let cancelled = false;
 
     const fetchProfile = () => {

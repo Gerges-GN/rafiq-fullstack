@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { MapPin, Calendar, SlidersHorizontal, Cpu, ChevronRight, CalendarRange, Clock, ExternalLink } from 'lucide-react';
+import { MapPin, Calendar, SlidersHorizontal, Cpu, ChevronRight, CalendarRange, Clock, ExternalLink, Sparkles, Loader2, Send } from 'lucide-react';
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || "/api";
 
 function TripPlanner() {
   const [city, setCity] = useState('cairo');
@@ -8,6 +10,12 @@ function TripPlanner() {
   const [activeDayIndex, setActiveDayIndex] = useState(0);
   const [generatedPlan, setGeneratedPlan] = useState(null);
   const [loading, setLoading] = useState(false);
+
+  // ---------- AI PLACE RECOMMENDER STATE ----------
+  const [aiDescription, setAiDescription] = useState('');
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState(null);
+  const [aiRecommendations, setAiRecommendations] = useState(null);
 
   // ---------- HERO CINEMATIC ENGINE STATE ----------
   const heroRef = useRef(null);
@@ -282,6 +290,39 @@ function TripPlanner() {
     }, 800);
   };
 
+  // ---------- AI PLACE RECOMMENDER HANDLER ----------
+  const handleAIRecommend = async (e) => {
+    e.preventDefault();
+    if (!aiDescription.trim()) {
+      setAiError('Tell us a bit about what you\'re looking for.');
+      return;
+    }
+
+    setAiLoading(true);
+    setAiError(null);
+    setAiRecommendations(null);
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/ai/recommend-places`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ description: aiDescription }),
+      });
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.message || 'Failed to get recommendations');
+      }
+
+      const data = await res.json();
+      setAiRecommendations(data.recommendations || []);
+    } catch (err) {
+      setAiError(err.message);
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
   const destinations = [
     { id: 'cairo', label: 'Cairo', img: 'https://images.unsplash.com/photo-1539650116574-8efeb43e2750?q=80&w=200' },
     { id: 'alexandria', label: 'Alexandria', img: 'https://images.unsplash.com/photo-1628135111195-20703c94f57c?q=80&w=200' },
@@ -527,6 +568,111 @@ function TripPlanner() {
             </div>
           )
         )}
+      </section>
+
+      {/* 2.5 AI PLACE RECOMMENDER — powered by Groq / gpt-oss-120b */}
+      <section className="py-12 max-w-7xl mx-auto px-4">
+        <div
+          className="p-6 md:p-10 rounded-[2rem] shadow-lg"
+          style={{ background: 'linear-gradient(145deg, #161614 0%, #26261f 100%)' }}
+        >
+          <div className="flex items-center gap-2 mb-3">
+            <Sparkles className="w-5 h-5" style={{ color: '#ff6f3c' }} />
+            <span
+              className="inline-block px-3 py-1.5 rounded-lg text-[0.65rem] uppercase tracking-wider"
+              style={{ backgroundColor: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.7)' }}
+            >
+              AI Place Finder
+            </span>
+          </div>
+          <h2
+            className="text-3xl md:text-4xl font-bold mb-3 text-white"
+            style={{ letterSpacing: '-1px', fontFamily: "'Playfair Display', serif" }}
+          >
+            Tell us what you're after
+          </h2>
+          <p className="text-white/60 text-sm mb-6 max-w-2xl leading-relaxed">
+            Describe the kind of places you want to visit history, nature, food, nightlife,
+            anything and our AI will match you with real places from Rafiq's database.
+          </p>
+
+          <form onSubmit={handleAIRecommend} className="space-y-3">
+            <textarea
+              value={aiDescription}
+              onChange={(e) => setAiDescription(e.target.value)}
+              rows={3}
+              placeholder="e.g. I love ancient history and quiet places away from crowds, and I want somewhere with good local food nearby..."
+              className="w-full rounded-2xl p-4 text-sm text-white placeholder-white/30 focus:outline-none resize-none"
+              style={{
+                background: 'rgba(255,255,255,0.06)',
+                border: '1px solid rgba(255,255,255,0.15)',
+              }}
+            />
+            <button
+              type="submit"
+              disabled={aiLoading}
+              className="rounded-full text-white font-bold px-6 py-2.5 flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+              style={{ backgroundColor: '#ff6f3c' }}
+            >
+              {aiLoading ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Send className="w-4 h-4" />
+              )}
+              {aiLoading ? 'Thinking...' : 'Find my places'}
+            </button>
+          </form>
+
+          {aiError && (
+            <div className="mt-4 rounded-xl px-4 py-3 text-sm text-red-200" style={{ background: 'rgba(220,38,38,0.15)' }}>
+              {aiError}
+            </div>
+          )}
+
+          {aiRecommendations && (
+            <div className="mt-8">
+              {aiRecommendations.length === 0 ? (
+                <p className="text-white/50 text-sm">
+                  No strong matches found — try describing your interests a bit differently.
+                </p>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {aiRecommendations.map((place) => (
+                    <div
+                      key={place._id}
+                      className="rounded-2xl overflow-hidden bg-white/5 border border-white/10 flex flex-col"
+                    >
+                      {place.imageUrl && (
+                        <div className="h-32 w-full overflow-hidden">
+                          <img
+                            src={place.imageUrl}
+                            alt={place.name}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      )}
+                      <div className="p-4 flex-1 flex flex-col gap-1.5">
+                        <span
+                          className="text-[10px] font-bold uppercase tracking-wider w-fit px-2 py-0.5 rounded-md"
+                          style={{ backgroundColor: 'rgba(255,111,60,0.15)', color: '#ff6f3c' }}
+                        >
+                          {place.category}
+                        </span>
+                        <h4 className="text-white font-bold text-sm">{place.name}</h4>
+                        <p className="text-white/40 text-xs flex items-center gap-1">
+                          <MapPin className="w-3 h-3" /> {place.city}
+                        </p>
+                        <p className="text-white/60 text-xs mt-1 leading-relaxed italic">
+                          "{place.reason}"
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </section>
 
       {/* 3. DYNAMIC MAP SYNC SECTION */}

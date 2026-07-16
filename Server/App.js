@@ -60,6 +60,22 @@ try {
 }
 
 try {
+    app.use("/api/upload", require("./Routes/Upload"));
+    console.log("✅ Upload route loaded");
+} catch (e) {
+    console.error("❌ Upload route failed");
+    console.error(e);
+}
+
+try {
+    app.use("/api/ai", require("./Routes/Recommendation"));
+    console.log("✅ Recommendation route loaded");
+} catch (e) {
+    console.error("❌ Recommendation route failed");
+    console.error(e);
+}
+
+try {
     app.use("/api/chats", require("./Routes/Chat"));
     console.log("✅ Chat route loaded");
 } catch (e) {

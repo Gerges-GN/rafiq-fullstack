@@ -8,8 +8,8 @@ import { X, ArrowLeft } from "lucide-react";
  * from the list, and can return to it).
  */
 export default function ChatHeader({ participant, onClose, onBack }) {
+  console.log(participant)
   const { ownerName, avatarUrl } = participant || {};
-  console.log(ownerName, avatarUrl, "=======");
   
 
   return (

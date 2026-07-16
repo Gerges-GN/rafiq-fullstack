@@ -1,40 +1,97 @@
 import React, { useState, useEffect } from "react";
-import { X } from "lucide-react";
+import { X, ImagePlus, Loader2 } from "lucide-react";
 import Button from "../common/Button.jsx";
 import Input from "../common/Input.jsx";
 import FilterDropdown from "../common/FilterDropdown.jsx";
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || "/api";
 
 export default function EditPlaceModal({ isOpen, onClose, onUpdate, place }) {
   const [name, setName] = useState("");
   const [location, setLocation] = useState("");
   const [category, setCategory] = useState("");
-  const [image, setImage] = useState("");
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState("");
   const [description, setDescription] = useState("");
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     if (place) {
       setName(place.name || "");
       setLocation(place.location || "");
       setCategory(place.category || "");
-      setImage(place.image || "");
+      setImageFile(null);
+      setImagePreview(place.image || "");
       setDescription(place.description || "");
+      setError(null);
     }
   }, [place]);
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (!name || !location || !category || !image || !description) {
-      alert("Please fill all fields");
+  const handleImageSelect = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      setError("Please select an image file.");
       return;
     }
-    onUpdate({
-      ...place,
-      name,
-      location,
-      category,
-      image,
-      description,
+    if (file.size > 5 * 1024 * 1024) {
+      setError("Image must be under 5MB.");
+      return;
+    }
+
+    setImageFile(file);
+    setImagePreview(URL.createObjectURL(file));
+    setError(null);
+  };
+
+  const uploadImage = async (file) => {
+    const uploadData = new FormData();
+    uploadData.append("image", file);
+
+    const res = await fetch(`${API_BASE_URL}/upload/image`, {
+      method: "POST",
+      body: uploadData,
     });
+
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData.message || "Image upload failed");
+    }
+
+    const data = await res.json();
+    return data.url;
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError(null);
+
+    if (!name || !location || !category || !imagePreview || !description) {
+      setError("Please fill all fields");
+      return;
+    }
+
+    try {
+      setUploading(true);
+
+      // Only upload if a new file was picked, otherwise keep the existing URL
+      const imageUrl = imageFile ? await uploadImage(imageFile) : imagePreview;
+
+      onUpdate({
+        ...place,
+        name,
+        location,
+        category,
+        image: imageUrl,
+        description,
+      });
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setUploading(false);
+    }
   };
 
   if (!isOpen || !place) return null;
@@ -57,6 +114,12 @@ export default function EditPlaceModal({ isOpen, onClose, onUpdate, place }) {
         <div className="p-6">
           <h2 className="text-xl font-bold text-ink-900 mb-6">Edit Place</h2>
           <form onSubmit={handleSubmit} className="space-y-4">
+            {error && (
+              <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-red-600 text-sm">
+                {error}
+              </div>
+            )}
+
             <div>
               <label
                 htmlFor="edit-place-name"
@@ -108,15 +171,32 @@ export default function EditPlaceModal({ isOpen, onClose, onUpdate, place }) {
                 htmlFor="edit-place-image"
                 className="block text-sm font-medium text-ink-700 mb-1"
               >
-                Image URL
+                Image
               </label>
-              <Input
-                id="edit-place-image"
-                type="text"
-                value={image}
-                onChange={(e) => setImage(e.target.value)}
-                placeholder="https://example.com/image.jpg"
-              />
+              <label
+                htmlFor="edit-place-image"
+                className="flex flex-col items-center justify-center gap-1 w-full h-32 border-2 border-dashed border-gray-200 rounded-lg cursor-pointer hover:border-brand-500 transition-colors text-xs text-gray-500 overflow-hidden"
+              >
+                {imagePreview ? (
+                  <img
+                    src={imagePreview}
+                    alt="Place preview"
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <>
+                    <ImagePlus className="w-5 h-5 text-gray-400" />
+                    <span>Upload image</span>
+                  </>
+                )}
+                <input
+                  id="edit-place-image"
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleImageSelect}
+                />
+              </label>
             </div>
             <div>
               <label
@@ -138,8 +218,14 @@ export default function EditPlaceModal({ isOpen, onClose, onUpdate, place }) {
               <Button type="button" variant="outline" onClick={onClose}>
                 Cancel
               </Button>
-              <Button type="submit" variant="primary">
-                Update Place
+              <Button type="submit" variant="primary" disabled={uploading}>
+                {uploading ? (
+                  <span className="flex items-center gap-2">
+                    <Loader2 className="w-4 h-4 animate-spin" /> Updating...
+                  </span>
+                ) : (
+                  "Update Place"
+                )}
               </Button>
             </div>
           </form>

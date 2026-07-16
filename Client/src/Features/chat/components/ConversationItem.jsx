@@ -20,26 +20,13 @@ export default function ConversationItem({
   currentUserId,
   currentUserRole,
 }) {
-  // Real shape: { _id, touristId, tourGuideId, messages: [{ writerId, content, createdAt, edited, _id }], createdAt, updatedAt }
+  
   const { touristId, tourGuideId, messages = [] } = chat;
 
-  // The other side of the conversation, by id only — there's no populated
-  // tourist/guide object on this document, just raw ObjectId strings.
   const participantId = touristId === currentUserId ? tourGuideId : touristId;
 
-  // Derive "last message" from the messages array — the schema doesn't
-  // store it separately. Messages appear oldest-first, so the last item
-  // in the array is the most recent one. This updates automatically
-  // whenever the parent re-renders with a fresh `chat` object (e.g. from
-  // useChatList's polling), since it's derived directly from the prop
-  // rather than copied into local state.
   const lastMessage = messages[messages.length - 1];
 
-  // NOTE: this schema has no unread-tracking field at all (no `readBy`,
-  // no `unreadCount`). If you want an unread badge, that needs to be added
-  // to the backend (e.g. a `readBy: [userId]` array per message, or a
-  // per-participant `lastReadAt` timestamp on the chat) — there's currently
-  // nothing here to compute it from, so this is left at 0 for now.
   const unreadCount = 0;
 
   const fetchedProfile = useParticipantProfile(participantId, currentUserRole);
