@@ -100,7 +100,7 @@ const AddPostModal = ({ onClose, ownerId, onPostCreated }) => {
       }
 
       const newPost = await res.json();
-
+      
       onPostCreated?.(newPost);
       onClose();
     } catch (err) {

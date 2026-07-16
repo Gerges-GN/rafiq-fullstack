@@ -7,7 +7,7 @@ const ROLES = [
   { key: "tourist", label: "Tourist", icon: User },
   { key: "tourguide", label: "Tour Guide", icon: User },
 ];
-const API_BASE_URL = "/api";
+const API_BASE_URL = import.meta.env.VITE_API_URL || "/api";
 export default function Register() {
   const navigate = useNavigate();
   const [role, setRole] = useState("tourist");

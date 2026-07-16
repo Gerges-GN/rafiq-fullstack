@@ -62,7 +62,7 @@ function TripPlanner() {
         { day: "Day 4", title: "Sahara Desert Quad Safari", img: "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?q=80&w=600", desc: "Racing cross-country dunes on powerful ATVs to reach a remote star-gazing Bedouin valley.", time: "03:00 PM" },
         { day: "Day 5", title: "Sindbad Submarine Deep Node", img: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?q=80&w=600", desc: "Real underwater dive to 22 meters depth to monitor pristine Red Sea maritime eco-systems.", time: "10:00 AM" },
         { day: "Day 6", title: "El Gouna Lagoon Architecture", img: "https://images.unsplash.com/photo-1519046904884-53103b34b206?q=80&w=600", desc: "Day trip investigating upscale eco-resort layouts, golf courses, and marina designs.", time: "09:30 AM" },
-        { day: "Day 7", title: "Grand Aquarium Tech Tour", img: "https://images.unsplash.com/photo-1472214222541-d510753a4707?q=80&w=600", desc: "Walking through mega indoor shark tunnels before customized luxury farewell gala events.", time: "11:00 AM" }
+        { day: "Day 7", title: "Grand Aquarium Tech Tour", img: "https://tripventura.com/cdn/shop/files/10_83f945b2-e248-40c5-8d90-a68d38528cb5.jpg?v=1748413384&width=1920", desc: "Walking through mega indoor shark tunnels before customized luxury farewell gala events.", time: "11:00 AM" }
       ]
     },
     dahab: {
@@ -73,7 +73,7 @@ function TripPlanner() {
       itinerary: [
         { day: "Day 1", title: "Lighthouse Coral Reef Check", img: "https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?q=80&w=600", desc: "Easy beach-entry snorkeling along the vibrant artsy seaside walking promenade.", time: "10:00 AM" },
         { day: "Day 2", title: "Blue Hole Subterranean Rift", img: "https://images.unsplash.com/photo-1682687220063-4742bd7fd538?q=80&w=600", desc: "Witnessing the world-renowned 120m deep blue marine chasm and reef fringes.", time: "08:00 AM" },
-        { day: "Day 3", title: "Ras Abu Galum Boat Safari", img: "https://images.unsplash.com/photo-1522083165195-342750297f05?q=80&w=600", desc: "Cruising by speed-vessel to an isolated national park protected settlement node.", time: "07:30 AM" },
+        { day: "Day 3", title: "Ras Abu Galum Boat Safari", img: "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWkn5zlQoauoowjUj0man7WbMwikIUlbiFnMLnLxfa3Bv5RuXG0U1z1MgZFM-LumVrz5lPBTTVaMDqni6NAEHlUQRQ9ZVej0EYo43hNg_WjL1wcjsCOmoIucizi7nR8tr9ZYFWmB=s1360-w1360-h1020-rw", desc: "Cruising by speed-vessel to an isolated national park protected settlement node.", time: "07:30 AM" },
         { day: "Day 4", title: "Blue Lagoon Turquoise Spit", img: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=600", desc: "Relaxing within minimalist bamboo eco-structures inside ultra-flat windsurfing lagoons.", time: "09:00 AM" },
         { day: "Day 5", title: "Wadi Gnai Granite Canyons", img: "https://images.unsplash.com/photo-1447752875215-b2761acb3c5d?q=80&w=600", desc: "Adventurous rock bouldering tour through narrow multi-colored desert stone valleys.", time: "03:00 PM" },
         { day: "Day 6", title: "Laguna Beach Sunset Session", img: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=600", desc: "Strolling the sandy dynamic spit capturing standard panoramic Sinai mountain vistas.", time: "05:00 PM" },
@@ -89,7 +89,7 @@ function TripPlanner() {
         { day: "Day 1", title: "Maagana Bay Check-In Node", img: "https://images.unsplash.com/photo-1495954484750-af469f2f9be5?q=80&w=600", desc: "Setting up basecamp inside high-end wooden beach cottages over looking Saudi borders.", time: "02:00 PM" },
         { day: "Day 2", title: "Colored Canyon Labyrinth", img: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?q=80&w=600", desc: "Deep multi-mile hike inside stone corridors displaying vibrant oxidized mineral bands.", time: "07:00 AM" },
         { day: "Day 3", title: "Castle Zaman Stone Luxury", img: "https://images.unsplash.com/photo-1533105079780-92b9be482077?q=80&w=600", desc: "Premium day-pass swimming in hillside stone pools with organic slow-cooked meats.", time: "11:30 AM" },
-        { day: "Day 4", title: "Ain Khudra Isolated Oasis", img: "https://images.unsplash.com/photo-1472214222541-d510753a4707?q=80&w=600", desc: "Off-road 4x4 expedition to a remote freshwater spring feeding huge date palm groves.", time: "08:00 AM" },
+        { day: "Day 4", title: "Ain Khudra Isolated Oasis", img: "https://images.dailynewsegypt.com/2020/06/FB_IMG_1591695286089.jpg", desc: "Off-road 4x4 expedition to a remote freshwater spring feeding huge date palm groves.", time: "08:00 AM" },
         { day: "Day 5", title: "Wishwashi Hidden Canyon Pool", img: "https://images.unsplash.com/photo-1505118380757-91f5f5632de0?q=80&w=600", desc: "Climbing through narrow granite crevices to cliff-jump into a emerald rainwater reservoir.", time: "09:00 AM" },
         { day: "Day 6", title: "Tarabin Beach Bedouin Night", img: "https://images.unsplash.com/photo-1519046904884-53103b34b206?q=80&w=600", desc: "Traditional slow-roasted campfire dinner backed by ancient string instrument metrics.", time: "06:30 PM" },
         { day: "Day 7", title: "Ras Shaitan Coastal Farewell", img: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=600", desc: "Sunrise deep snorkeling round intricate shallow anemone fields before check-out flows.", time: "06:00 AM" }
@@ -158,16 +158,16 @@ function TripPlanner() {
     matrouh: {
       title: "Marsa Matrouh Riviera Escape",
       subtitle: "A breezy Mediterranean week of powder-white coves and turquoise lagoons.",
-      heroImg: wiki("Marsa Matruh beach, Egypt.jpg"),
+      heroImg: 'https://betamedia.experienceegypt.eg/media/experienceegypt/img/Original/2022/9/27/2022_9_27_19_40_57_462.png',
       googleMapUrl: mapEmbed("Marsa Matrouh, Egypt"),
       itinerary: [
-        { day: "Day 1", title: "Rommel's Beach Arrival", img: wiki("Marsa Matruh beach, Egypt.jpg", 600), desc: "Settling onto the historic wartime shoreline now lined with beach clubs.", time: "04:00 PM" },
-        { day: "Day 2", title: "Cleopatra's Bath Rock Pools", img: wiki("Marsa Matruh beach, Egypt.jpg", 600), desc: "Swimming through natural rock formations said to be the queen's private bathing spot.", time: "10:00 AM" },
-        { day: "Day 3", title: "Agiba Beach Cliffside Cove", img: wiki("Marsa Matruh beach, Egypt.jpg", 600), desc: "Descending dramatic limestone cliffs to a hidden turquoise inlet.", time: "11:00 AM" },
-        { day: "Day 4", title: "Ubayyad Lagoon Sandbar", img: wiki("Marsa Matruh beach, Egypt.jpg", 600), desc: "A shallow, glass-clear lagoon perfect for a slow floating afternoon.", time: "01:00 PM" },
-        { day: "Day 5", title: "Siwa Road Desert Detour", img: wiki("Marsa Matruh beach, Egypt.jpg", 600), desc: "A scenic inland drive through white-rock desert formations south of the coast.", time: "09:00 AM" },
-        { day: "Day 6", title: "Rommel's Cave War Museum", img: wiki("Marsa Matruh beach, Egypt.jpg", 600), desc: "Tracing WWII desert campaign history inside a coastal cave headquarters.", time: "12:00 PM" },
-        { day: "Day 7", title: "Sunset Corniche Promenade", img: wiki("Marsa Matruh beach, Egypt.jpg", 600), desc: "A relaxed farewell stroll along the bay as fishing boats return at dusk.", time: "06:00 PM" }
+        { day: "Day 1", title: "Rommel's Beach Arrival", img: "https://d2kihw5e8drjh5.cloudfront.net/eyJidWNrZXQiOiJ1dGEtaW1hZ2VzIiwia2V5IjoicGxhY2VfaW1nLzc5NjYyNjM1MzhlMjRkM2Q5NjQ0ZGJjZWQ2ZTdjMzMwIiwiZWRpdHMiOnsicmVzaXplIjp7IndpZHRoIjo2NDAsImhlaWdodCI6NjQwLCJmaXQiOiJpbnNpZGUifSwicm90YXRlIjpudWxsLCJ0b0Zvcm1hdCI6ICJ3ZWJwIn19", desc: "Settling onto the historic wartime shoreline now lined with beach clubs.", time: "04:00 PM" },
+        { day: "Day 2", title: "Cleopatra's Bath Rock Pools", img: "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/2e/e6/27/99/caption.jpg?w=1400&h=800&s=1", desc: "Swimming through natural rock formations said to be the queen's private bathing spot.", time: "10:00 AM" },
+        { day: "Day 3", title: "Agiba Beach Cliffside Cove", img: "https://cdn.sanity.io/images/we0tdimr/production/d62b9324632e5988b344d07f31ec78e2353470d2-1920x1245.jpg?rect=0,83,1920,1080&w=640&h=360&q=70&auto=format", desc: "Descending dramatic limestone cliffs to a hidden turquoise inlet.", time: "11:00 AM" },
+        { day: "Day 4", title: "Ubayyad Lagoon Sandbar", img: "https://gasparillaboattours.com/wp-content/uploads/2025/06/tour-sandbar-private-1024x683.jpg", desc: "A shallow, glass-clear lagoon perfect for a slow floating afternoon.", time: "01:00 PM" },
+        { day: "Day 5", title: "Siwa Road Desert Detour", img: "https://www.travelistia.com/wp-content/uploads/2026/03/IMG_6429-scaled.jpg", desc: "A scenic inland drive through white-rock desert formations south of the coast.", time: "09:00 AM" },
+        { day: "Day 6", title: "Rommel's Cave War Museum", img: "https://amayei.nyc3.digitaloceanspaces.com/2018/09/577839_0.jpg", desc: "Tracing WWII desert campaign history inside a coastal cave headquarters.", time: "12:00 PM" },
+        { day: "Day 7", title: "Sunset Corniche Promenade", img: "https://www.asergeev.com/pictures/archives/2014/1406/jpeg/01.jpg", desc: "A relaxed farewell stroll along the bay as fishing boats return at dusk.", time: "06:00 PM" }
       ]
     },
     fayoum: {
@@ -292,7 +292,7 @@ function TripPlanner() {
     { id: 'dahab', label: 'Dahab', img: 'https://images.unsplash.com/photo-1544735716-392fe2489ffa?q=80&w=200' },
     { id: 'nuweiba', label: 'Nuweiba', img: 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?q=80&w=200' },
     { id: 'siwa', label: 'Siwa Oasis', img: wiki("Siwa Oasis, Houses in the desert, Egypt.jpg", 200) },
-    { id: 'matrouh', label: 'Marsa Matrouh', img: wiki("Marsa Matruh beach, Egypt.jpg", 200) },
+    { id: 'matrouh', label: 'Marsa Matrouh', img: 'https://betamedia.experienceegypt.eg/media/experienceegypt/img/Original/2022/9/27/2022_9_27_19_40_57_462.png'},
     { id: 'fayoum', label: 'Fayoum', img: wiki("MadinatFayyumWaterWheel.jpg", 200) },
     { id: 'portsaid', label: 'Port Said', img: wiki("Evergreen container ship in Suez Canal (4171874814).jpg", 200) },
     { id: 'ismailia', label: 'Ismailia', img: wiki("Evergreen container ship in Suez Canal (4171874814).jpg", 200) },
