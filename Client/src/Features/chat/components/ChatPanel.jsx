@@ -4,6 +4,7 @@ import MessageList from "./MessageList";
 import ChatInput from "./ChatInput";
 import { MessageCircle } from "lucide-react";
 import useParticipantProfile from "../hooks/useParticipantProfile";
+
 export default function ChatPanel({
   messages,
   currentUserId,
@@ -17,11 +18,6 @@ export default function ChatPanel({
   onBack,
   emptySelection,
 }) {
-  const participant_id =
-    chat[0]?.touristId === currentUserId
-      ? chat[0]?.tourGuideId
-      : chat[0]?.touristId;
-  const participant = useParticipantProfile(participant_id, currentUserRole);
   if (emptySelection) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center gap-2 text-gray-400">
@@ -31,10 +27,15 @@ export default function ChatPanel({
     );
   }
 
+  const participantId =
+    chat?.touristId === currentUserId ? chat?.tourGuideId : chat?.touristId;
+
+  const participant = useParticipantProfile(participantId, currentUserRole);
+
   return (
     <>
       <ChatHeader participant={participant} onClose={onClose} onBack={onBack} />
-      {console.log(participant, "par", participant_id, "id", chat, "chats", chat, "chat")}
+
       {error ? (
         <div className="flex-1 flex items-center justify-center px-6 text-center">
           <p className="text-sm text-red-500">
@@ -48,6 +49,7 @@ export default function ChatPanel({
           isLoading={isLoading}
         />
       )}
+
       <ChatInput onSend={onSend} disabled={isLoading || isSending} />
     </>
   );
