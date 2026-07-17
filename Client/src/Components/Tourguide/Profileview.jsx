@@ -2,7 +2,7 @@ import React from "react";
 import { BadgeCheck, MapPin, Star, CheckCircle } from "lucide-react";
 import { DEFAULT_AVATAR } from "../../services/Guideapi";
 
-const ProfileView = ({ profile }) => {
+const ProfileView = ({ profile, averageRating = 0, reviewCount = 0 }) => {
   return (
     <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm text-center space-y-4">
       <div className="relative w-28 h-28 mx-auto">
@@ -29,26 +29,37 @@ const ProfileView = ({ profile }) => {
           <MapPin className="w-3 h-3" /> {profile.city}
         </p>
 
-        {/* Rating */}
+        {/* TEMPORARY DEBUG LINE — remove once the rating issue is confirmed fixed */}
+        <p style={{ color: "red", fontWeight: "bold" }}>
+          DEBUG: averageRating={String(averageRating)} | reviewCount=
+          {String(reviewCount)}
+        </p>
+
+        {/* Rating — driven by real published reviews, not a static profile field */}
         <div className="flex items-center justify-center gap-1 mt-3">
           {[1, 2, 3, 4, 5].map((star) => (
             <Star
               key={star}
               className={`w-4 h-4 ${
-                star <= Math.round(profile.rating)
+                star <= Math.round(averageRating)
                   ? "fill-yellow-400 text-yellow-400"
                   : "text-gray-300"
               }`}
             />
           ))}
 
-          <span className="text-sm font-semibold text-slate-700 ml-1">
-            {profile.rating}
-          </span>
-
-          <span className="text-xs text-slate-500">
-            ({profile.reviews} reviews)
-          </span>
+          {reviewCount > 0 ? (
+            <>
+              <span className="text-sm font-semibold text-slate-700 ml-1">
+                {averageRating.toFixed(1)}
+              </span>
+              <span className="text-xs text-slate-500">
+                ({reviewCount} review{reviewCount === 1 ? "" : "s"})
+              </span>
+            </>
+          ) : (
+            <span className="text-xs text-slate-400 ml-1">No reviews yet</span>
+          )}
         </div>
       </div>
 
@@ -56,9 +67,7 @@ const ProfileView = ({ profile }) => {
         <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
           Bio Presentation
         </span>
-        <p className="text-xs text-slate-600 leading-relaxed">
-          {profile.bio}
-        </p>
+        <p className="text-xs text-slate-600 leading-relaxed">{profile.bio}</p>
       </div>
 
       <div className="grid grid-cols-2 gap-2 text-left pt-2 border-t border-slate-50">
@@ -67,7 +76,9 @@ const ProfileView = ({ profile }) => {
             Languages
           </span>
           <span className="text-xs font-bold text-slate-700 line-clamp-1">
-            {Array.isArray(profile.languages) ? profile.languages.join(", ") : ""}
+            {Array.isArray(profile.languages)
+              ? profile.languages.join(", ")
+              : ""}
           </span>
         </div>
         <div>
