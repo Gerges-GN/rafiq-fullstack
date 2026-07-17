@@ -1,17 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import {
-  LayoutDashboard,
-  User,
-  MessageCircle,
-  Loader2,
-  AlertTriangle,
-  Sparkles,
-  Trash2,
-  CheckCircle2,
-  XCircle,
-  Save,
-  Star,
-} from "lucide-react";
+import { LayoutDashboard, User, MessageCircle, Loader2, AlertTriangle, Sparkles, Trash2, CheckCircle2, XCircle, Save, PlusCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import GuideInbox from "../../Features/chat/pages/GuideInbox";
 
@@ -19,7 +7,6 @@ import {
   profileApi,
   tripApi,
   bookingApi,
-  reviewApi,
   uploadImage,
   getCurrentUserId,
   DEFAULT_AVATAR,
@@ -32,44 +19,7 @@ import TripPackagesList from "../../components/Tourguide/TripPackagesList";
 import TripDetailsModal from "../../components/Tourguide/TripDetailsModal";
 import ProfileView from "../../components/Tourguide/ProfileView";
 import ProfileEditForm from "../../components/Tourguide/ProfileEditForm";
-import ReviewsList from "../../components/Tourguide/ReviewsList";
-
-// --- STAR RATING DISPLAY ---
-const StarRating = ({ average, count, size = "sm" }) => {
-  const starSize = size === "lg" ? "w-5 h-5" : "w-3.5 h-3.5";
-  const textSize = size === "lg" ? "text-sm" : "text-xs";
-
-  if (count === 0) {
-    return (
-      <span className={`text-slate-400 font-medium ${textSize}`}>
-        No reviews yet
-      </span>
-    );
-  }
-
-  return (
-    <span className="flex items-center gap-1">
-      <span className="flex items-center">
-        {[1, 2, 3, 4, 5].map((n) => (
-          <Star
-            key={n}
-            className={`${starSize} ${
-              n <= Math.round(average)
-                ? "fill-amber-400 text-amber-400"
-                : "fill-slate-200 text-slate-200"
-            }`}
-          />
-        ))}
-      </span>
-      <span className={`font-bold text-slate-700 ${textSize}`}>
-        {average.toFixed(1)}
-      </span>
-      <span className={`text-slate-400 font-medium ${textSize}`}>
-        ({count} review{count === 1 ? "" : "s"})
-      </span>
-    </span>
-  );
-};
+import CreateGuideProfileModal from "../../components/Tourguide/CreateGuideProfileModal";
 
 // --- MAIN PORTAL PAGE COMPONENT ---
 const GuideDashboard = () => {
@@ -91,7 +41,6 @@ const GuideDashboard = () => {
   const [isCreateModalOpen, setCreateModalOpen] = useState(false);
   const [trips, setTrips] = useState([]);
   const [bookings, setBookings] = useState([]);
-  const [reviews, setReviews] = useState([]);
 
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
@@ -107,7 +56,7 @@ const GuideDashboard = () => {
     setTimeout(() => setNotification(""), 3000);
   };
 
-  // --- Initial load: profile, trips, bookings, reviews ---
+  // --- Initial load: profile, trips, bookings ---
   const loadAll = useCallback(async () => {
     if (!tourGuideId) {
       setLoadError("No logged-in guide id found — can't load dashboard data.");
@@ -136,16 +85,12 @@ const GuideDashboard = () => {
       setProfileNotFound(false);
       setProfileInfo(profile);
 
-      const guideOwnerId = profile.owner || tourGuideId;
-
-      const [tripsData, bookingsData, reviewsData] = await Promise.all([
-        tripApi.getByTourGuideId(guideOwnerId),
-        bookingApi.getByTourGuideId(guideOwnerId),
-        reviewApi.getByTourGuideId(guideOwnerId),
+      const [tripsData, bookingsData] = await Promise.all([
+        tripApi.getByTourGuideId(tourGuideId),
+        bookingApi.getByTourGuideId(tourGuideId),
       ]);
       setTrips(tripsData);
       setBookings(bookingsData);
-      setReviews(reviewsData);
     } catch (err) {
       setLoadError(err.message || "Failed to load dashboard data.");
     } finally {
@@ -165,13 +110,7 @@ const GuideDashboard = () => {
   };
 
   // --- Trip handlers ---
-  const handleAddTrip = async ({
-    title,
-    location,
-    days,
-    details,
-    imageFiles,
-  }) => {
+  const handleAddTrip = async ({ title, location, days, details, imageFiles }) => {
     try {
       const uploadedImages = await Promise.all(imageFiles.map(uploadImage));
 
@@ -181,7 +120,7 @@ const GuideDashboard = () => {
         days,
         details,
         images: uploadedImages,
-        tourGuideId: profileInfo?.owner || tourGuideId,
+        tourGuideId,
       });
 
       setTrips((prev) => [newTrip, ...prev]);
@@ -335,13 +274,40 @@ const GuideDashboard = () => {
     );
   }
 
-  // --- Review stats (published reviews only) ---
-  const publishedReviews = reviews.filter((r) => r.status === "PUBLISHED");
-  const reviewCount = publishedReviews.length;
-  const averageRating =
-    reviewCount === 0
-      ? 0
-      : publishedReviews.reduce((sum, r) => sum + r.rating, 0) / reviewCount;
+  if (profileNotFound) {
+    return (
+      <>
+        <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4">
+          <div className="bg-white rounded-3xl shadow-xl p-10 max-w-md w-full text-center">
+            <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-orange-100 flex items-center justify-center">
+              <PlusCircle className="w-12 h-12 text-orange-500" />
+            </div>
+
+            <h2 className="text-3xl font-bold text-gray-900">No Profile Yet</h2>
+
+            <p className="text-gray-500 mt-3">
+              Create your guide profile so tourists can find and book you on
+              Rafiq.
+            </p>
+
+            <button
+              onClick={() => setCreateModalOpen(true)}
+              className="mt-8 bg-orange-500 hover:bg-orange-600 transition text-white px-8 py-3 rounded-xl font-semibold"
+            >
+              Create Profile
+            </button>
+          </div>
+        </div>
+        <CreateGuideProfileModal
+          isOpen={isCreateModalOpen}
+          onClose={() => setCreateModalOpen(false)}
+          tourGuideId={tourGuideId}
+          defaultName={user?.name || ""}
+          onProfileCreated={handleProfileCreated}
+        />
+      </>
+    );
+  }
 
   return (
     <div className="bg-slate-50 min-h-screen py-10 px-4 sm:px-6 lg:px-8 relative">
@@ -361,9 +327,6 @@ const GuideDashboard = () => {
               <h1 className="text-2xl font-black text-slate-900 mt-0.5">
                 Welcome back, {profileInfo.name}!
               </h1>
-              <div className="mt-1">
-                <StarRating average={averageRating} count={reviewCount} />
-              </div>
             </div>
           </div>
 
@@ -386,12 +349,6 @@ const GuideDashboard = () => {
               className={`font-bold text-xs uppercase tracking-wider py-2 px-4 rounded-xl transition-all cursor-pointer inline-flex items-center gap-1.5 ${activeTab === "profile" ? "bg-slate-900 text-white shadow-sm" : "bg-slate-50 text-slate-600 hover:bg-slate-100"}`}
             >
               <User className="w-3.5 h-3.5" /> My Profile
-            </button>
-            <button
-              onClick={() => setActiveTab("reviews")}
-              className={`font-bold text-xs uppercase tracking-wider py-2 px-4 rounded-xl transition-all cursor-pointer inline-flex items-center gap-1.5 ${activeTab === "reviews" ? "bg-slate-900 text-white shadow-sm" : "bg-slate-50 text-slate-600 hover:bg-slate-100"}`}
-            >
-              <Star className="w-3.5 h-3.5" /> Reviews
             </button>
             <div className="w-px h-6 bg-slate-200 mx-1 hidden sm:block" />
             <button
@@ -436,11 +393,7 @@ const GuideDashboard = () => {
         {activeTab === "profile" && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-1 space-y-4">
-              <ProfileView
-                profile={profileInfo}
-                averageRating={averageRating}
-                reviewCount={reviewCount}
-              />
+              <ProfileView profile={profileInfo} />
             </div>
 
             <div className="lg:col-span-2">
@@ -453,15 +406,7 @@ const GuideDashboard = () => {
           </div>
         )}
 
-        {activeTab === "reviews" && (
-          <ReviewsList
-            reviews={publishedReviews}
-            averageRating={averageRating}
-            reviewCount={reviewCount}
-          />
-        )}
-
-        {activeTab === "chat" && <GuideInbox guideId={tourGuideId} />}
+        {activeTab === "chat" && <GuideInbox guideId={tourGuideId} currentUserRole={user.role}/>}
       </div>
 
       <TripDetailsModal
