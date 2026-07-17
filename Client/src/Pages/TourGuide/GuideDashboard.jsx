@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { LayoutDashboard, User, MessageCircle, Loader2, AlertTriangle, Sparkles, Trash2, CheckCircle2, XCircle, Save } from "lucide-react";
+import { LayoutDashboard, User, MessageCircle, Loader2, AlertTriangle, Sparkles, Trash2, CheckCircle2, XCircle, Save, PlusCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import GuideInbox from "../../Features/chat/pages/GuideInbox";
 
@@ -19,6 +19,7 @@ import TripPackagesList from "../../components/Tourguide/TripPackagesList";
 import TripDetailsModal from "../../components/Tourguide/TripDetailsModal";
 import ProfileView from "../../components/Tourguide/ProfileView";
 import ProfileEditForm from "../../components/Tourguide/ProfileEditForm";
+import CreateGuideProfileModal from "../../components/Tourguide/CreateGuideProfileModal";
 
 // --- MAIN PORTAL PAGE COMPONENT ---
 const GuideDashboard = () => {
@@ -36,6 +37,8 @@ const GuideDashboard = () => {
   );
   const tourGuideId = user?._id || user?.id || getCurrentUserId();
   const [profileInfo, setProfileInfo] = useState(null);
+  const [profileNotFound, setProfileNotFound] = useState(false);
+  const [isCreateModalOpen, setCreateModalOpen] = useState(false);
   const [trips, setTrips] = useState([]);
   const [bookings, setBookings] = useState([]);
 
@@ -69,12 +72,17 @@ const GuideDashboard = () => {
       try {
         profile = await profileApi.getByOwnerId(tourGuideId);
       } catch (err) {
-        profile = await profileApi.create({
-          owner: tourGuideId,
-          name: user?.name || "New Guide",
-          languages: [],
-        });
+        // No profile created yet — prompt the guide to set one up instead of
+        // silently seeding a placeholder.
+        if (err.status === 404) {
+          setProfileNotFound(true);
+          setProfileInfo(null);
+          return;
+        }
+        throw err;
       }
+
+      setProfileNotFound(false);
       setProfileInfo(profile);
 
       const [tripsData, bookingsData] = await Promise.all([
@@ -88,11 +96,18 @@ const GuideDashboard = () => {
     } finally {
       setLoading(false);
     }
-  }, [tourGuideId, user?.name]);
+  }, [tourGuideId]);
 
   useEffect(() => {
     loadAll();
   }, [loadAll]);
+
+  const handleProfileCreated = (newProfile) => {
+    setProfileInfo(newProfile);
+    setProfileNotFound(false);
+    setCreateModalOpen(false);
+    loadAll();
+  };
 
   // --- Trip handlers ---
   const handleAddTrip = async ({ title, location, days, details, imageFiles }) => {
@@ -256,6 +271,41 @@ const GuideDashboard = () => {
           </button>
         </div>
       </div>
+    );
+  }
+
+  if (profileNotFound) {
+    return (
+      <>
+        <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4">
+          <div className="bg-white rounded-3xl shadow-xl p-10 max-w-md w-full text-center">
+            <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-orange-100 flex items-center justify-center">
+              <PlusCircle className="w-12 h-12 text-orange-500" />
+            </div>
+
+            <h2 className="text-3xl font-bold text-gray-900">No Profile Yet</h2>
+
+            <p className="text-gray-500 mt-3">
+              Create your guide profile so tourists can find and book you on
+              Rafiq.
+            </p>
+
+            <button
+              onClick={() => setCreateModalOpen(true)}
+              className="mt-8 bg-orange-500 hover:bg-orange-600 transition text-white px-8 py-3 rounded-xl font-semibold"
+            >
+              Create Profile
+            </button>
+          </div>
+        </div>
+        <CreateGuideProfileModal
+          isOpen={isCreateModalOpen}
+          onClose={() => setCreateModalOpen(false)}
+          tourGuideId={tourGuideId}
+          defaultName={user?.name || ""}
+          onProfileCreated={handleProfileCreated}
+        />
+      </>
     );
   }
 

@@ -38,7 +38,11 @@ export async function apiRequest(path, options = {}) {
   const data = await res.json();
 
   if (!res.ok) {
-    throw new Error(data?.message || `Request failed (${res.status})`);
+    const error = new Error(data?.message || `Request failed (${res.status})`);
+    // Attach the status so callers can branch on it (e.g. 404 = "not found yet"
+    // vs. a genuine failure) without re-parsing the message string.
+    error.status = res.status;
+    throw error;
   }
 
   return data;
@@ -56,7 +60,9 @@ export async function uploadImage(file) {
 
   if (!res.ok) {
     const errData = await res.json().catch(() => ({}));
-    throw new Error(errData.message || "Image upload failed");
+    const error = new Error(errData.message || "Image upload failed");
+    error.status = res.status;
+    throw error;
   }
 
   const data = await res.json();
