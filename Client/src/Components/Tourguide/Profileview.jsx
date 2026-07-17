@@ -29,12 +29,6 @@ const ProfileView = ({ profile, averageRating = 0, reviewCount = 0 }) => {
           <MapPin className="w-3 h-3" /> {profile.city}
         </p>
 
-        {/* TEMPORARY DEBUG LINE — remove once the rating issue is confirmed fixed */}
-        <p style={{ color: "red", fontWeight: "bold" }}>
-          DEBUG: averageRating={String(averageRating)} | reviewCount=
-          {String(reviewCount)}
-        </p>
-
         {/* Rating — driven by real published reviews, not a static profile field */}
         <div className="flex items-center justify-center gap-1 mt-3">
           {[1, 2, 3, 4, 5].map((star) => (
