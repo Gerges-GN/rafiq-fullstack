@@ -50,6 +50,8 @@ export const tripApi = {
 
 export const profileApi = {
   getAll: () => apiRequest(`/tourguide-profiles`),
+  getGuideByOwnerId: (ownerId) => apiRequest(`/tourguide-profiles/owner/${ownerId}`),
+
 };
 
 export const bookingApi = {
@@ -87,11 +89,11 @@ export function guideLanguages(guide) {
   return Array.isArray(guide.languages) ? guide.languages : [];
 }
 
-// Reads the logged-in user's info out of sessionStorage.
+// Reads the logged-in user's info out of localStorage.
 // Change this if your login flow stores the user differently.
 export function getCurrentUser() {
   try {
-    const raw = sessionStorage.getItem("user");
+    const raw = localStorage.getItem("tourist");
     return raw ? JSON.parse(raw) : null;
   } catch {
     return null;

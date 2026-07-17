@@ -21,7 +21,6 @@ import { useChatContext } from "../../Features/chat/context/ChatContext";
 
 export default function GuidesPage() {
   const [selectedGuide, setSelectedGuide] = useState(null);
-
   const [guides, setGuides] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
@@ -72,12 +71,10 @@ export default function GuidesPage() {
 
     setReviewsLoading(true);
     setReviewsError("");
-    reviewApi
-      .getByTourGuideId(selectedGuide.owner)
-      .then((data) => {
-        console.log("reviews from API:", data);
-        setGuideReviews(data);
-      })
+    reviewApi.getByTourGuideId(selectedGuide.owner).then((data) => {
+      setGuideReviews(data);
+      setReviewsLoading(false);
+    })
 
       .catch((err) => setReviewsError(err.message || "Failed to load reviews."))
       .finally(() => setReviewsLoading(false));
@@ -104,10 +101,10 @@ export default function GuidesPage() {
     try {
       const newReview = await reviewApi.create({
         reviewerId: user._id,
-        reviewerName: user.name,
+        reviewerName: user.ownerName,
         reviewerAvatarUrl: user.avatarUrl || "",
         entityType: "Guide",
-        tourGuideId: selectedGuide._id,
+        tourGuideId: selectedGuide.owner,
         entityName: selectedGuide.name,
         entityAvatarUrl: selectedGuide.avatarUrl || "",
         rating: reviewRating,
@@ -287,7 +284,6 @@ export default function GuidesPage() {
             >
               <X className="w-4 h-4" />
             </button>
-
             <div className="p-6 pb-2 flex flex-col items-center text-center">
               <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-orange-100 shadow-sm">
                 <img
@@ -310,10 +306,16 @@ export default function GuidesPage() {
               <div className="flex items-center gap-1 mt-2 bg-orange-50 px-3 py-1 rounded-full">
                 <Star className="w-3.5 h-3.5 text-orange-500 fill-orange-500" />
                 <span className="text-xs font-bold text-orange-700">
-                  {(selectedGuide.rating || 0).toFixed(1)}
+                  {/* Average rating */}
+
+                  {(
+                    guideReviews
+                      .map((r) => r.rating)
+                      .reduce((a, b) => a + b, 0) / guideReviews.length || 0
+                  ).toFixed(1)}
                 </span>
                 <span className="text-xs text-orange-400">
-                  ({selectedGuide.reviews || 0} reviews)
+                  ({guideReviews.length || 0} reviews)
                 </span>
               </div>
             </div>
@@ -482,6 +484,16 @@ export default function GuidesPage() {
 }
 
 function GuideCard({ guide, onOpenDetails, onMessage }) {
+  // --- Reviews state (for whichever guide is currently open in the modal) ---
+  const [guideReviews, setGuideReviews] = useState([]);
+  useEffect(() => {
+    if (!guide) return;
+
+    reviewApi.getByTourGuideId(guide.owner).then((data) => {
+      setGuideReviews(data);
+    });
+  }, [guide, onOpenDetails]);
+
   return (
     <div
       onClick={() => onOpenDetails(guide)}
@@ -511,10 +523,14 @@ function GuideCard({ guide, onOpenDetails, onMessage }) {
           <div className="flex items-center gap-1 mt-1">
             <Star className="w-3.5 h-3.5 text-orange-500 fill-orange-500" />
             <span className="text-xs font-bold text-slate-700">
-              {(guide.rating || 0).toFixed(1)}
+              {/* Average rating */}
+              {(
+                guideReviews.map((r) => r.rating).reduce((a, b) => a + b, 0) /
+                  guideReviews.length || 0
+              ).toFixed(1)}
             </span>
             <span className="text-xs text-slate-400">
-              ({guide.reviews || 0} reviews)
+              ({guideReviews.length || 0} reviews)
             </span>
           </div>
         </div>

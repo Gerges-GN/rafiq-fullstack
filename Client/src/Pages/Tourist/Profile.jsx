@@ -40,6 +40,7 @@ export default function Profile() {
         const data = await response.json();
 
         setProfileData(data);
+        localStorage.setItem("tourist", JSON.stringify(data));
       } catch (err) {
         if (err.name !== "AbortError") {
           console.error(err);
@@ -121,6 +122,8 @@ export default function Profile() {
   if (!profileData) {
     return null;
   }
+  console.log(profileData, "profiledata");
+  
 
   const user = {
     // Uses owner.username if populated; falls back to ownerName if present
