@@ -104,6 +104,11 @@ export const bookingApi = {
     }),
 };
 
+export const reviewApi = {
+  getByTourGuideId: (tourGuideId) =>
+    apiRequest(`/reviews/tourguide/${tourGuideId}`),
+};
+
 // Fallback avatar used only if the profile has none yet (e.g. brand-new guide,
 // profile not created in the DB). Nothing else here is static seed data anymore.
 export const DEFAULT_AVATAR =
