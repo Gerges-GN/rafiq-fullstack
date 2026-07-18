@@ -41,51 +41,59 @@ export default function PlaceCard({
 
   if (variant === "default") {
     return (
-      <Card className="p-0 overflow-hidden flex flex-col">
-        <img
-          src={image}
-          alt={name}
-          className="w-full h-48 object-cover"
-          loading="lazy"
-        />
-        <div className="p-4 flex flex-col">
-          <div className="cursor-pointer" onClick={onClick}>
-            <h3 className="font-semibold text-lg text-ink-900 light:text-gray-200">
-              {name}
-            </h3>
-            <p className="text-sm text-ink-600 light:text-gray-400 mb-2">
-              {location}
-            </p>
-            {description && (
-              <p className="text-sm text-ink-700 light:text-gray-300">
-                {description.substring(0, 100)}...
-              </p>
-            )}
-          </div>
-          <div className="flex items-center justify-end gap-2 mt-4 pt-4 border-t light:border-gray-700">
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={(e) => {
-                e.stopPropagation();
-                onEdit();
-              }}
-            >
-              <Edit size={18} className="m-1" />
-            </Button>
-            <Button
-              variant="danger-outline"
-              size="icon"
-              onClick={(e) => {
-                e.stopPropagation();
-                onDelete();
-              }}
-            >
-              <Trash2 size={18} />
-            </Button>
+      <div className="relative group mt-8 cursor-pointer" onClick={onClick}>
+        <div className="relative z-10 transition-transform duration-300 ease-in-out group-hover:scale-101 group-hover:-translate-y-2">
+          <img
+            src={image}
+            alt={name}
+            className="w-full h-48 object-cover rounded-t-xl shadow-lg"
+            loading="lazy"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent rounded-xl" />
+          <div className="absolute bottom-0 left-0 p-4 text-white">
+            <h3 className="font-semibold text-lg leading-tight">{name}</h3>
+            <div className="flex items-center text-sm opacity-80 mt-1">
+              <MapPin size={12} className="mr-1" />
+              <span>{location}</span>
+            </div>
           </div>
         </div>
-      </Card>
+
+        <Card noPadding className="relative -mt-10 pt-14 px-4 pb-4">
+          {description ? (
+            <p className="text-sm text-ink-700 light:text-gray-300 line-clamp-2">
+              {description}
+            </p>
+          ) : (
+            <div className="h-8" /> /* Placeholder to maintain height */
+          )}
+        </Card>
+
+        <div className="absolute top-2 right-2 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20">
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={(e) => {
+              e.stopPropagation();
+              onEdit();
+            }}
+            className="!p-2 bg-white/80 backdrop-blur-sm hover:bg-white text-ink-700"
+          >
+            <Edit size={16} />
+          </Button>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete();
+            }}
+            className="!p-2 bg-white/80 backdrop-blur-sm text-status-red hover:bg-status-red hover:text-white"
+          >
+            <Trash2 size={16} />
+          </Button>
+        </div>
+      </div>
     );
   }
 

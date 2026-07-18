@@ -562,7 +562,7 @@ export default function ReviewsPage({ onNavigate }) {
                 {activeTab === tab.id && (
                   <motion.div
                     layoutId="review-tab"
-                    className="absolute inset-0 bg-brand rounded-full shadow-lg shadow-brand/20"
+                    className="absolute inset-0 bg-[#fe6800] rounded-full shadow-lg shadow-[#fe6800]/20"
                     transition={{ type: "spring", stiffness: 400, damping: 30 }}
                   />
                 )}
@@ -1038,7 +1038,7 @@ export default function ReviewsPage({ onNavigate }) {
                       }}
                       whileTap={{ scale: 0.96 }}
                       onClick={() => handleGuideAction(guide)}
-                      className={`flex-1 text-white text-sm font-semibold py-2.5 rounded-lg shadow-md ${guide.primaryColor}`}
+                      className={`flex-1 text-[##767676] text-sm font-semibold py-2.5 rounded-lg shadow-md ${guide.primaryColor}`}
                     >
                       {guide.primaryAction}
                     </motion.button>
