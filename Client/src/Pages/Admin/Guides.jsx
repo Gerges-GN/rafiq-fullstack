@@ -11,7 +11,7 @@ import DeleteConfirmationModal from "../../Components/modals/DeleteConfirmationM
 import GuideDetailPanel from "../../Components/common/GuideDetailPanel.jsx";
 import Pagination from "../../Components/common/Pagination.jsx";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL|| "/api";
+const API_BASE_URL = import.meta.env.VITE_API_URL || "/api";
 
 export default function Guides() {
   const [guides, setGuides] = useState([]);
@@ -39,16 +39,60 @@ export default function Guides() {
   useEffect(() => {
     const fetchGuides = async () => {
       try {
-        const response = await fetch(
+        const guidesResponse = await fetch(
           `${API_BASE_URL}/tourguide-profiles`,
         );
-        if (!response.ok) {
+        if (!guidesResponse.ok) {
           throw new Error("Network response was not ok");
         }
-        const data = await response.json();
-        setGuides(data.map((guide) => prepareGuideForState(guide)));
+        const guidesData = await guidesResponse.json();
+
+        const reviewsResponse = await fetch(
+          `${API_BASE_URL}/reviews?filter=guides`,
+        );
+        const reviewsData = reviewsResponse.ok
+          ? await reviewsResponse.json()
+          : [];
+
+        const reviewsByOwner = reviewsData.reduce((acc, review) => {
+          if (review.tourGuideId) {
+            const ownerId =
+              typeof review.tourGuideId === "object" &&
+              review.tourGuideId !== null
+                ? review.tourGuideId._id
+                : review.tourGuideId;
+            if (!acc[ownerId]) {
+              acc[ownerId] = [];
+            }
+            acc[ownerId].push(review);
+          }
+          return acc;
+        }, {});
+
+        const guidesWithRatings = guidesData.map((guide) => {
+          const ownerId =
+            typeof guide.owner === "object" && guide.owner !== null
+              ? guide.owner._id
+              : guide.owner;
+          const guideReviews = reviewsByOwner[ownerId] || [];
+          const totalRating = guideReviews.reduce(
+            (sum, r) => sum + r.rating,
+            0,
+          );
+          const avgRating =
+            guideReviews.length > 0 ? totalRating / guideReviews.length : 0;
+
+          return {
+            ...guide,
+            rating: avgRating.toFixed(1),
+          };
+        });
+
+        setGuides(
+          guidesWithRatings.map((guide) => prepareGuideForState(guide)),
+        );
       } catch (error) {
-        console.error("Failed to fetch guides:", error);
+        console.error("Failed to fetch guides and ratings:", error);
       }
     };
     fetchGuides();
