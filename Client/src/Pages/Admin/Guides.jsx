@@ -37,7 +37,7 @@ export default function Guides() {
   };
 
   useEffect(() => {
-    const fetchGuides = async () => {
+    const fetchGuidesAndData = async () => {
       try {
         const guidesResponse = await fetch(
           `${API_BASE_URL}/tourguide-profiles`,
@@ -52,6 +52,11 @@ export default function Guides() {
         );
         const reviewsData = reviewsResponse.ok
           ? await reviewsResponse.json()
+          : [];
+
+        const bookingsResponse = await fetch(`${API_BASE_URL}/bookings`);
+        const bookingsData = bookingsResponse.ok
+          ? await bookingsResponse.json()
           : [];
 
         const reviewsByOwner = reviewsData.reduce((acc, review) => {
@@ -69,7 +74,28 @@ export default function Guides() {
           return acc;
         }, {});
 
-        const guidesWithRatings = guidesData.map((guide) => {
+        const guideStats = bookingsData.reduce((acc, booking) => {
+          if (booking.tourGuideId) {
+            const guideId =
+              typeof booking.tourGuideId === "object" &&
+              booking.tourGuideId !== null
+                ? booking.tourGuideId._id
+                : booking.tourGuideId;
+            if (!acc[guideId]) {
+              acc[guideId] = { bookings: 0, completedTrips: 0 };
+            }
+            acc[guideId].bookings += 1;
+            if (
+              booking.status &&
+              booking.status.toLowerCase() === "completed"
+            ) {
+              acc[guideId].completedTrips += 1;
+            }
+          }
+          return acc;
+        }, {});
+
+        const guidesWithDetails = guidesData.map((guide) => {
           const ownerId =
             typeof guide.owner === "object" && guide.owner !== null
               ? guide.owner._id
@@ -81,21 +107,27 @@ export default function Guides() {
           );
           const avgRating =
             guideReviews.length > 0 ? totalRating / guideReviews.length : 0;
+          const stats = guideStats[ownerId] || {
+            bookings: 0,
+            completedTrips: 0,
+          };
 
           return {
             ...guide,
             rating: avgRating.toFixed(1),
+            bookings: stats.bookings,
+            completedTrips: stats.completedTrips,
           };
         });
 
         setGuides(
-          guidesWithRatings.map((guide) => prepareGuideForState(guide)),
+          guidesWithDetails.map((guide) => prepareGuideForState(guide)),
         );
       } catch (error) {
-        console.error("Failed to fetch guides and ratings:", error);
+        console.error("Failed to fetch guides and related data:", error);
       }
     };
-    fetchGuides();
+    fetchGuidesAndData();
   }, []);
 
   const handleUpdateGuide = async (guideData) => {
