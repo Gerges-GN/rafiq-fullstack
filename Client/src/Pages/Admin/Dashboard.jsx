@@ -10,56 +10,11 @@ import ActivityTimeline from "../../Components/common/ActivityTimeline.jsx";
 import DataTable from "../../Components/common/DataTable.jsx";
 import Avatar from "../../Components/common/Avatar.jsx";
 import Badge from "../../Components/common/Badge.jsx";
-import { currentAdmin } from "../../data/mockData.js";
-import initialPlacesData from "../../data/places.js";
+import { authFetch } from '../../services/authFetch';
+import { useAuth } from '../../auth/AuthContext';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "/api";
-const getInitialPlaces = () =>
-  initialPlacesData.map((p) => ({
-    ...p,
-    location: p.governorate,
-    googleMapEmbed: `https://maps.google.com/maps?q=${p.coordinates.lat},${p.coordinates.lng}&z=14&output=embed`,
-  }));
-
-const getDynamicTrend = (currentValue, key) => {
-  const seed =
-    key.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0) +
-    currentValue;
-
-  const pseudoRandom = (s) => {
-    const x = Math.sin(s) * 10000;
-    return x - Math.floor(x);
-  };
-
-  const randomFactor = pseudoRandom(seed) * 0.3 - 0.15;
-
-  let previousValue;
-  if (currentValue === 0) {
-    previousValue = Math.floor(pseudoRandom(seed + 1) * 5);
-  } else {
-    previousValue = Math.max(1, Math.round(currentValue / (1 + randomFactor)));
-  }
-
-  const difference = currentValue - previousValue;
-
-  if (difference === 0) {
-    return "No change from last month";
-  }
-
-  const sign = difference > 0 ? "+" : "";
-
-  if (currentValue < 20 || Math.abs(difference) < 5) {
-    return `${sign}${difference} from last month`;
-  }
-
-  const percentageChange = Math.round((difference / previousValue) * 100);
-  if (percentageChange === 0 && difference !== 0) {
-    return `${sign}${difference} from last month`;
-  }
-  return `${sign}${percentageChange}% from last month`;
-};
-
-const getMostSearchedCities = (places) => {
+const getPlacesByCity = (places) => {
   if (!places || places.length === 0) {
     return [];
   }
@@ -77,23 +32,23 @@ const getMostSearchedCities = (places) => {
 
   const citiesArray = Object.keys(cityCounts).map((city) => ({
     name: city,
-    searches: cityCounts[city].count,
+    count: cityCounts[city].count,
     image: cityCounts[city].image,
   }));
 
-  // Sort by searches descending and take top 3
-  citiesArray.sort((a, b) => b.searches - a.searches);
+  // Sort by number of stored Places and take the three largest groups.
+  citiesArray.sort((a, b) => b.count - a.count);
   const topCities = citiesArray.slice(0, 3);
 
   if (topCities.length === 0) {
     return [];
   }
 
-  const maxSearches = topCities[0].searches;
+  const maxCount = topCities[0].count;
 
   return topCities.map((city) => ({
     ...city,
-    max: maxSearches,
+    max: maxCount,
   }));
 };
 
@@ -136,6 +91,7 @@ function StatCardSkeleton() {
 }
 
 export default function Dashboard() {
+  const { user } = useAuth();
   const [places, setPlaces] = useState([]);
   const [isLoadingPlaces, setIsLoadingPlaces] = useState(true);
   const [totalTourists, setTotalTourists] = useState(0);
@@ -150,7 +106,7 @@ export default function Dashboard() {
     const fetchPlaces = async () => {
       setIsLoadingPlaces(true);
       try {
-        const response = await fetch(`${API_BASE_URL}/places`);
+        const response = await authFetch(`${API_BASE_URL}/places`);
         if (!response.ok) {
           throw new Error("Failed to fetch places");
         }
@@ -169,7 +125,7 @@ export default function Dashboard() {
     const fetchGuides = async () => {
       setIsLoadingGuides(true);
       try {
-        const response = await fetch(`${API_BASE_URL}/tourguide-profiles`);
+        const response = await authFetch(`${API_BASE_URL}/tourguide-profiles`);
         if (!response.ok) {
           throw new Error("Failed to fetch guides");
         }
@@ -191,7 +147,7 @@ export default function Dashboard() {
       setIsLoadingBookings(true);
       setIsLoadingTourists(true);
       try {
-        const response = await fetch(`${API_BASE_URL}/bookings`);
+        const response = await authFetch(`${API_BASE_URL}/bookings`);
         if (!response.ok) {
           throw new Error("Failed to fetch bookings from the server.");
         }
@@ -244,38 +200,23 @@ export default function Dashboard() {
 
   const generateBookingsChartData = (bookings) => {
     const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-
-    if (!bookings || bookings.length === 0) {
-      const today = new Date();
-      return Array.from({ length: 7 }, (_, i) => {
-        const date = new Date();
-        date.setDate(today.getDate() - (6 - i));
-        return { day: daysOfWeek[date.getDay()], value: 0 };
-      });
-    }
-
-    const latestDate = bookings.reduce((latest, booking) => {
-      const bookingDate = new Date(booking.date);
-      return bookingDate > latest ? bookingDate : latest;
-    }, new Date(0));
-
-    const last7DaysData = Array.from({ length: 7 }, (_, i) => {
-      const date = new Date(latestDate);
-      date.setDate(latestDate.getDate() - i);
-      return {
-        date: date.toISOString().split("T")[0],
-        day: daysOfWeek[date.getDay()],
-        value: 0,
-      };
-    }).reverse();
-
-    bookings.forEach((booking) => {
-      const bookingDateStr = new Date(booking.date).toISOString().split("T")[0];
-      const dayData = last7DaysData.find((d) => d.date === bookingDateStr);
-      if (dayData) {
-        dayData.value += 1;
-      }
+    const today = new Date();
+    const last7DaysData = Array.from({ length: 7 }, (_, index) => {
+      const date = new Date(today);
+      date.setHours(0, 0, 0, 0);
+      date.setDate(today.getDate() - (6 - index));
+      const dateKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+      return { date: dateKey, day: daysOfWeek[date.getDay()], value: 0 };
     });
+
+    for (const booking of bookings || []) {
+      const timestamp = booking.createdAt || booking.updatedAt || booking.date;
+      const bookingDate = timestamp ? new Date(timestamp) : null;
+      if (!bookingDate || Number.isNaN(bookingDate.getTime())) continue;
+      const dateKey = `${bookingDate.getFullYear()}-${String(bookingDate.getMonth() + 1).padStart(2, "0")}-${String(bookingDate.getDate()).padStart(2, "0")}`;
+      const dayData = last7DaysData.find((entry) => entry.date === dateKey);
+      if (dayData) dayData.value += 1;
+    }
 
     return last7DaysData.map(({ day, value }) => ({ day, value }));
   };
@@ -285,7 +226,7 @@ export default function Dashboard() {
   const totalBookings = bookings.length;
 
   const mostSearchedCities = useMemo(
-    () => getMostSearchedCities(places),
+    () => getPlacesByCity(places),
     [places],
   );
 
@@ -313,7 +254,6 @@ export default function Dashboard() {
     {
       label: "Total Tourists",
       value: totalTourists,
-      trend: getDynamicTrend(totalTourists, "totalTourists"),
       isLoading: isLoadingTourists,
       icon: statIcons["Total Tourists"],
       iconColor: statIconColors["Total Tourists"],
@@ -321,7 +261,6 @@ export default function Dashboard() {
     {
       label: "Active Guides",
       value: activeGuides,
-      trend: getDynamicTrend(activeGuides, "activeGuides"),
       isLoading: isLoadingGuides,
       icon: statIcons["Active Guides"],
       iconColor: statIconColors["Active Guides"],
@@ -329,7 +268,6 @@ export default function Dashboard() {
     {
       label: "Total Places",
       value: totalPlaces,
-      trend: getDynamicTrend(totalPlaces, "totalPlaces"),
       isLoading: isLoadingPlaces,
       icon: statIcons["Total Places"],
       iconColor: statIconColors["Total Places"],
@@ -337,7 +275,6 @@ export default function Dashboard() {
     {
       label: "Bookings",
       value: totalBookings,
-      trend: getDynamicTrend(totalBookings, "bookings"),
       isLoading: isLoadingBookings,
       icon: statIcons["Bookings"],
       iconColor: statIconColors["Bookings"],
@@ -383,7 +320,7 @@ export default function Dashboard() {
       }}
     >
       <PageHeader
-        title={`Welcome back, ${currentAdmin.dashboard.name}!`}
+        title={`Welcome back, ${user?.name || 'Admin'}!`}
         description="Here's a summary of your tourism platform's activity."
       />
 
@@ -420,13 +357,7 @@ export default function Dashboard() {
               </div>
               <div className="flex items-end justify-between">
                 <AnimatedCounter value={s.value} delay={0.2 + i * 0.1} />
-                <motion.span
-                  className={`text-xs font-semibold px-2 py-1 rounded-full ${getBadgeColor(
-                    s.trend,
-                  )}`}
-                >
-                  {s.trend}
-                </motion.span>
+                <span className="rounded-full bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-600">Current total</span>
               </div>
             </motion.div>
           ),
@@ -443,12 +374,12 @@ export default function Dashboard() {
         <div>
           <Card>
             <h3 className="font-semibold text-ink-900 mb-4">
-              Most Searched Cities
+              Places by City
             </h3>
             {isLoadingPlaces ? (
               <div className="text-center p-4">Loading...</div>
             ) : (
-              <RankedList items={mostSearchedCities} />
+              <RankedList items={mostSearchedCities} unitLabel="places" />
             )}
           </Card>
         </div>

@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useNavigate } from 'react-router-dom';
 import {
   MapPin,
   X,
@@ -15,12 +16,13 @@ import {
   profileApi,
   guideLanguages,
   reviewApi,
-  getCurrentUser,
 } from "../../services/Touristapi";
 import { useChatContext } from "../../Features/chat/context/ChatContext";
 import { DEFAULT_AVATAR } from "../../services/Guideapi";
+import { useAuth } from "../../auth/AuthContext";
 
 export default function GuidesPage() {
+  const navigate = useNavigate();
   const [selectedGuide, setSelectedGuide] = useState(null);
   const [guides, setGuides] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -43,6 +45,7 @@ export default function GuidesPage() {
   const [submitError, setSubmitError] = useState("");
 
   const { openChat } = useChatContext();
+  const { user: signedInUser } = useAuth();
 
   const formatDate = (dateString) => {
     if (!dateString) return "";
@@ -94,7 +97,12 @@ export default function GuidesPage() {
   const handleSubmitReview = async () => {
     setSubmitError("");
 
-    const user = getCurrentUser();
+    if (!signedInUser) {
+      navigate('/login');
+      return;
+    }
+
+    const user = signedInUser;
     if (!user?._id) {
       setSubmitError("You need to be logged in to leave a review.");
       return;
@@ -278,7 +286,13 @@ export default function GuidesPage() {
                   key={guide._id}
                   guide={guide}
                   onOpenDetails={(g) => setSelectedGuide(g)}
-                  onMessage={(g) => openChat({ guide: g, chatId: null })}
+                  onMessage={(g) => {
+                    if (!signedInUser) {
+                      navigate('/login');
+                      return;
+                    }
+                    openChat({ guide: g, chatId: null });
+                  }}
                 />
               ))}
             </div>
@@ -315,21 +329,15 @@ export default function GuidesPage() {
                 <span className="text-xs font-semibold text-slate-400 inline-flex items-center gap-1 mt-1">
                   <MapPin className="w-3 h-3" /> {selectedGuide.city}
                 </span>
-                <div className="flex items-center gap-1 mt-2 bg-orange-50 px-3 py-1 rounded-full">
-                  <Star className="w-3.5 h-3.5 text-orange-500 fill-orange-500" />
-                  <span className="text-xs font-bold text-orange-700">
-                    {/* Average rating */}
-
-                    {(
-                      guideReviews
-                        .map((r) => r.rating)
-                        .reduce((a, b) => a + b, 0) / guideReviews.length || 0
-                    ).toFixed(1)}
-                  </span>
-                  <span className="text-xs text-orange-400">
-                    ({guideReviews.length || 0} reviews)
-                  </span>
-                </div>
+                {guideReviews.length > 0 ? (
+                  <div className="flex items-center gap-1 mt-2 bg-orange-50 px-3 py-1 rounded-full">
+                    <Star className="w-3.5 h-3.5 text-orange-500 fill-orange-500" />
+                    <span className="text-xs font-bold text-orange-700">
+                      {(guideReviews.reduce((sum, review) => sum + review.rating, 0) / guideReviews.length).toFixed(1)}
+                    </span>
+                    <span className="text-xs text-orange-400">({guideReviews.length} reviews)</span>
+                  </div>
+                ) : <span className="mt-2 text-xs text-slate-500">No published reviews yet</span>}
               </div>
 
               <div className="p-6 space-y-4">
@@ -354,22 +362,14 @@ export default function GuidesPage() {
                       {selectedGuide.completedTrips || 0}
                     </p>
                   </div>
-                  <div className="bg-slate-50 border border-slate-100 rounded-xl p-3">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1">
-                      <Phone className="w-3 h-3" /> Phone
-                    </span>
-                    <p className="text-sm font-semibold text-slate-800 mt-1">
-                      {selectedGuide.phone}
-                    </p>
-                  </div>
-                  <div className="bg-slate-50 border border-slate-100 rounded-xl p-3">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1">
-                      <Mail className="w-3 h-3" /> Email
-                    </span>
-                    <p className="text-sm font-semibold text-slate-800 mt-1 truncate">
-                      {selectedGuide.email}
-                    </p>
-                  </div>
+                  {selectedGuide.phone && <div className="bg-slate-50 border border-slate-100 rounded-xl p-3">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1"><Phone className="w-3 h-3" /> Phone</span>
+                    <p className="text-sm font-semibold text-slate-800 mt-1">{selectedGuide.phone}</p>
+                  </div>}
+                  {selectedGuide.email && <div className="bg-slate-50 border border-slate-100 rounded-xl p-3">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1"><Mail className="w-3 h-3" /> Email</span>
+                    <p className="text-sm font-semibold text-slate-800 mt-1 truncate">{selectedGuide.email}</p>
+                  </div>}
                 </div>
               </div>
 
@@ -544,23 +544,19 @@ function GuideCard({ guide, onOpenDetails, onMessage }) {
           <span className="text-xs font-semibold text-slate-400 block mt-0.5 inline-flex items-center gap-1">
             <MapPin className="w-3 h-3" /> {guide.city}
           </span>
-          <div className="flex items-center gap-1 mt-1">
-            <Star className="w-3.5 h-3.5 text-orange-500 fill-orange-500" />
-            <span className="text-xs font-bold text-slate-700">
-              {/* Average rating */}
-              {(
-                guideReviews.map((r) => r.rating).reduce((a, b) => a + b, 0) /
-                  guideReviews.length || 0
-              ).toFixed(1)}
-            </span>
-            <span className="text-xs text-slate-400">
-              ({guideReviews.length || 0} reviews)
-            </span>
-          </div>
+          {guideReviews.length > 0 ? (
+            <div className="flex items-center gap-1 mt-1">
+              <Star className="w-3.5 h-3.5 text-orange-500 fill-orange-500" />
+              <span className="text-xs font-bold text-slate-700">
+                {(guideReviews.reduce((sum, review) => sum + review.rating, 0) / guideReviews.length).toFixed(1)}
+              </span>
+              <span className="text-xs text-slate-400">({guideReviews.length} reviews)</span>
+            </div>
+          ) : <p className="mt-1 text-xs text-slate-500">No published reviews yet</p>}
         </div>
 
         <span className="text-xs font-bold text-orange-600 bg-orange-50 px-2.5 py-1 rounded-md whitespace-nowrap">
-          ${guide.rate}/day
+          {guide.rate ? `$${guide.rate}/day` : 'Rate on request'}
         </span>
       </div>
 

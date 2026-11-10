@@ -1,12 +1,12 @@
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Compass, MapPin, Calendar, ArrowRight, ArrowUpRight, ShieldCheck,
+  Compass, MapPin, Calendar, ArrowRight, ShieldCheck,
   Route, Sparkles, Star, Quote, ChevronLeft, ChevronRight,
-  PlaneTakeoff, BadgeCheck, Users2, Menu, User
+  PlaneTakeoff, BadgeCheck
 } from "lucide-react";
-import logo from '../../public/images/logo.png';
 import Footer from "../Components/Layout/Footer";
+import TouristNav from "../Components/Layout/TouristNav";
 
 /* =========================================================================
    RAFIQ — Home (Ultimate Mix v5)
@@ -131,6 +131,7 @@ function Eyebrow({ children, center = false }) {
 /* ========================================================================= */
 
 const serif = { fontFamily: "'Playfair Display', serif" };
+const API_BASE_URL = import.meta.env.VITE_API_URL || "/api";
 
 const IMG = {
   pyramids: "https://images.unsplash.com/photo-1539650116574-75c0c6d73f6e?w=1200&q=80&auto=format&fit=crop",
@@ -152,16 +153,7 @@ const IMG = {
 const FEATURES = [
   { icon: Route, title: "Lots of Choices", text: "Handpicked routes across Egypt from desert oases to Red Sea shores." },
   { icon: ShieldCheck, title: "Best Tour Guide", text: "Local experts who know the stories behind every temple and trail." },
-  { icon: Sparkles, title: "Easy Booking", text: "Clear plans, flexible dates, and one calm place to manage your trip." },
-];
-
-const DESTINATIONS = [
-  { name: "Cairo & Giza", tag: "Greater Cairo", img: IMG.pyramids, rating: "4.9", price: "$320" },
-  { name: "Luxor", tag: "Upper Egypt", img: IMG.karnak, rating: "4.8", price: "$280" },
-  { name: "Aswan", tag: "Nubian South", img: IMG.sphinx, rating: "4.9", price: "$260" },
-  { name: "Sharm El Sheikh", tag: "Red Sea", img: IMG.sea, rating: "4.7", price: "$340" },
-  { name: "Siwa Oasis", tag: "Western Desert", img: IMG.dunes, rating: "4.8", price: "$300" },
-  { name: "Marsa Matrouh", tag: "Mediterranean", img: IMG.beach, rating: "4.6", price: "$250" },
+  { icon: Sparkles, title: "Easy Booking", text: "Build an itinerary, book a guide, and keep your trip details in one place." },
 ];
 
 const STOPS = [
@@ -171,25 +163,48 @@ const STOPS = [
   { no: "STOP 04", title: "Sharm El Sheikh", desc: "Coral reefs where the desert meets the sea.", img: IMG.sea },
 ];
 
-const VOICES = [
-  { name: "Maya Ibrahim", trip: "Travel Enthusiast", quote: "This platform made our Egypt trip feel calm, clear, and warm. The destinations were beautifully organized, and the whole journey felt personal from start to finish." },
-  { name: "Omar T.", trip: "Sinai Coast, 4 days", quote: "The pacing was the whole thing nothing felt rushed, nothing felt wasted, and we never opened another app." },
-  { name: "Laila R.", trip: "Cairo, 3 days", quote: "Told it we had toddlers and it quietly rebuilt the whole day around nap time. Didn't expect that." },
-];
-
 /* ========================================================================= */
 
 export default function Home() {
   const navigate = useNavigate();
+  const [places, setPlaces] = useState([]);
+  const [guides, setGuides] = useState([]);
+  const [voices, setVoices] = useState([]);
 
-  /* navbar scrolled state */
-  const [scrolled, setScrolled] = useState(false);
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 40);
-    window.addEventListener("scroll", onScroll);
-    onScroll();
-    return () => window.removeEventListener("scroll", onScroll);
+    const controller = new AbortController();
+    Promise.all([
+      fetch(`${API_BASE_URL}/places`, { signal: controller.signal }).then((res) => res.ok ? res.json() : []),
+      fetch(`${API_BASE_URL}/tourguide-profiles`, { signal: controller.signal }).then((res) => res.ok ? res.json() : []),
+      fetch(`${API_BASE_URL}/reviews`, { signal: controller.signal }).then((res) => res.ok ? res.json() : []),
+    ]).then(([placeRows, guideRows, reviewRows]) => {
+      setPlaces(Array.isArray(placeRows) ? placeRows : []);
+      setGuides(Array.isArray(guideRows) ? guideRows : []);
+      setVoices(Array.isArray(reviewRows) ? reviewRows.slice(0, 3).map((review) => ({
+        name: review.reviewerName || "Demo traveler",
+        trip: `${review.entityType === "Guide" ? "Guide" : "Place"}: ${review.entityName || "Egypt experience"}`,
+        quote: review.text,
+        rating: review.rating,
+      })) : []);
+    }).catch((error) => {
+      if (error.name !== "AbortError") console.error("Home page content could not be loaded.");
+    });
+    return () => controller.abort();
   }, []);
+
+  const cityCount = new Set(places.map((place) => place.city).filter(Boolean)).size;
+  const routeGroups = [
+    { name: "Cairo & Giza", tag: "Greater Cairo", cities: ["Cairo", "Giza"] },
+    { name: "Luxor", tag: "Upper Egypt", cities: ["Luxor"] },
+    { name: "Aswan", tag: "Nubian South", cities: ["Aswan"] },
+    { name: "Alexandria", tag: "Mediterranean", cities: ["Alexandria"] },
+    { name: "Hurghada", tag: "Red Sea", cities: ["Hurghada"] },
+    { name: "Sharm El Sheikh", tag: "Red Sea", cities: ["Sharm El Sheikh"] },
+  ];
+  const destinationCards = routeGroups.map((group) => {
+    const groupPlaces = places.filter((place) => group.cities.includes(place.city));
+    return { ...group, image: groupPlaces[0]?.imageUrl, count: groupPlaces.length };
+  }).filter((destination) => destination.image);
 
   /* hero collage parallax */
   const collageRef = useRef(null);
@@ -212,9 +227,10 @@ export default function Home() {
   /* testimonials auto-rotate */
   const [voiceIndex, setVoiceIndex] = useState(0);
   useEffect(() => {
-    const t = setInterval(() => setVoiceIndex((i) => (i + 1) % VOICES.length), 5500);
+    if (voices.length < 2) return undefined;
+    const t = setInterval(() => setVoiceIndex((i) => (i + 1) % voices.length), 5500);
     return () => clearInterval(t);
-  }, []);
+  }, [voices.length]);
 
   /* hero collage images — نفس ترتيب الصورة المرجعية */
   const heroImgs = [
@@ -247,59 +263,7 @@ export default function Home() {
         }
       `}</style>
 
-      {/* =====================  NAVBAR (زي الصورة بالظبط) ===================== */}
-      <header
-        className={`sticky top-0 z-50  transition-all duration-300 ${
-          scrolled ? "bg-white/95 backdrop-blur-sm shadow-[0_4px_24px_rgba(0,0,0,0.06)] border-b border-gray-100" : "bg-white"
-        }`}
-      >
-        <div className="mx-auto flex max-w-7xl border-b border-gray-200 items-center justify-between px-6 py-4 lg:px-10">
-          <div className="flex items-center gap-2 font-bold text-xl text-gray-900 z-10">
-                    <img
-                      src={logo}
-                      alt="Rafiq Logo"
-                      className="w-16 h-16 object-contain"
-                      onError={(e) => {
-                        e.target.style.display = 'none';
-                        e.target.nextSibling.style.display = 'flex';
-                      }}
-                    />
-                    <span>Rafiq</span>
-                  </div>
-
-          <nav className="hidden items-center gap-8 text-sm font-medium text-gray-800 md:flex">
-            {[
-              { l: "Home", to: "/" },
-              { l: "Destinations", to: "/explore" },
-              { l: "Experiences", to: "/trip-planner" },
-              { l: "Journal", to: "/journal" },
-              { l: "Contact", to: "/contact" },
-            ].map((n) => (
-              <button key={n.l} onClick={() => navigate(n.to)} className="transition-colors hover:text-[#FF6A2C]">
-                {n.l}
-              </button>
-            ))}
-          </nav>
-
-          <div className="flex items-center gap-6">
-            <button
-              onClick={() => navigate("/login")}
-              className="flex items-center gap-3 rounded-full  py-2 pl-5 pr-2 text-sm font-medium text-[#FF6A2C] transition-transform hover:scale-[1.04]"
-            >
-              Sign In
-            </button>
-            <button
-              onClick={() => navigate("/trip-planner")}
-              className="flex items-center gap-3 rounded-full bg-black py-2 pl-5 pr-2 text-sm font-medium text-white transition-transform hover:scale-[1.04]"
-            >
-              Plan Trip
-              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#FF6A2C]">
-                <ArrowUpRight className="h-4 w-4" />
-              </span>
-            </button>
-          </div>
-        </div>
-      </header>
+      <TouristNav />
 
       {/* =====================  HERO ===================== */}
       <section className="mx-auto max-w-7xl px-6 pb-16 pt-10 lg:px-10">
@@ -339,15 +303,15 @@ export default function Home() {
                   <Calendar className="h-4 w-4 text-[#FF6A2C]" />
                 </span>
                 <div className="min-w-0">
-                  <p className="text-[9px] uppercase tracking-wider text-gray-400">Select Date</p>
-                  <p className="truncate text-[13px] font-medium">03 August 2026</p>
+                  <p className="text-[9px] uppercase tracking-wider text-gray-400">Trip Length</p>
+                  <p className="truncate text-[13px] font-medium">Choose in AI Planner</p>
                 </div>
               </div>
               <button
-                onClick={() => navigate("/trip-planner")}
+                onClick={() => navigate("/trip-planner#ai-plan-maker")}
                 className="shrink-0 rounded-full bg-[#FF6A2C] px-7 py-3.5 text-sm font-semibold text-white transition-all hover:-translate-y-0.5 hover:bg-[#e85a20]"
               >
-                Get Started
+                AI Planner
               </button>
             </div>
           </Reveal>
@@ -368,7 +332,7 @@ export default function Home() {
                   style={{ transform: `translate(${tilt.x * h.depth}px, ${tilt.y * h.depth}px)` }}
                 >
                   <div className={`h-full w-full ${h.anim}`}>
-                    <Img src={h.src} seed={h.seed} alt="Egypt" className="h-full w-full object-cover" />
+                    <Img src={h.src} seed={h.seed} alt="Egypt" className="h-full w-full object-cover scale-130 " />
                   </div>
                 </div>
               ))}
@@ -379,8 +343,8 @@ export default function Home() {
                   <Compass className="h-4 w-4 text-[#FF6A2C]" />
                 </span>
                 <div>
-                  <div className="text-sm font-extrabold leading-none">27+ Destinations</div>
-                  <div className="text-[10px] text-gray-500">Trusted by 15,000+ travelers</div>
+                  <div className="text-sm font-extrabold leading-none">{places.length} Egypt places</div>
+                  <div className="text-[10px] text-gray-500">{guides.length} approved local guides</div>
                 </div>
               </div>
             </div>
@@ -391,10 +355,9 @@ export default function Home() {
         <Reveal delay={200}>
           <div className="mt-16 flex flex-wrap items-center justify-center gap-12 border-t border-gray-100 pt-10 sm:justify-between">
             {[
-              { v: 27, s: "+", l: "Destinations" },
-              { v: 15000, s: "+", l: "Explorers" },
-              { v: 5, s: "+", l: "Years Experience" },
-              { v: 98, s: "%", l: "Happy Travelers" },
+              { v: places.length, s: "", l: "Egypt places" },
+              { v: guides.length, s: "", l: "Approved guides" },
+              { v: cityCount, s: "", l: "Egyptian cities" },
             ].map((s) => (
               <div key={s.l} className="text-center">
                 <div className="text-3xl font-extrabold text-[#FF6A2C] sm:text-4xl" style={serif}>
@@ -441,9 +404,9 @@ export default function Home() {
             </p>
             <div className="grid grid-cols-3 gap-4 max-w-[440px]">
               {[
-                { n: "2000+", l: "Our Explorers" },
-                { n: "100+", l: "Destinations" },
-                { n: "20+", l: "Years Experience" },
+                { n: places.length, l: "Egypt places" },
+                { n: guides.length, l: "Approved guides" },
+                { n: cityCount, l: "Egyptian cities" },
               ].map((s) => (
                 <div key={s.l} className="rounded-2xl border border-gray-100 bg-white p-5 text-center shadow-sm transition hover:-translate-y-1">
                   <p className="mb-1 text-2xl text-[#FF6A2C]" style={{ ...serif, fontWeight: 600 }}>{s.n}</p>
@@ -543,29 +506,26 @@ export default function Home() {
 
           <Reveal delay={100}>
             <div ref={trackRef} className="flex gap-5 overflow-x-auto pb-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-              {DESTINATIONS.map((d) => (
+              {destinationCards.map((d) => (
                 <div
                   key={d.name}
-                  onClick={() => navigate("/trip-planner")}
+                  onClick={() => navigate("/trip-planner#ai-plan-maker")}
                   className="group relative h-[360px] w-[280px] shrink-0 cursor-pointer overflow-hidden rounded-[24px] bg-black shadow-lg"
                 >
-                  <Img src={d.img} seed={30 + d.name.length} alt={d.name} className="absolute inset-0 h-full w-full object-cover opacity-90 transition-transform duration-500 group-hover:scale-[1.08]" />
+                  <Img src={d.image} seed={30 + d.name.length} alt={d.name} className="absolute inset-0 h-full w-full object-cover opacity-90 transition-transform duration-500 group-hover:scale-[1.08]" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/10 to-transparent" />
 
-                  <span className="absolute right-4 top-4 flex items-center gap-1 rounded-full bg-white/95 px-3 py-1 text-xs font-bold shadow">
-                    <Star className="h-3 w-3 text-[#FF6A2C]" fill="currentColor" /> {d.rating}
-                  </span>
                   <span className="absolute left-4 top-4 rounded-full bg-white/95 px-3 py-1 text-[10px] font-bold">{d.tag}</span>
 
                   <div className="absolute inset-x-0 bottom-0 flex items-end justify-between p-5">
                     <div>
                       <h4 className="mb-1 text-xl font-bold text-white" style={serif}>{d.name}</h4>
                       <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[#FFB27A] opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-                        Plan this route <ArrowRight className="h-3 w-3" />
+                        Open AI Planner <ArrowRight className="h-3 w-3" />
                       </span>
                     </div>
-                    <span className="rounded-full border border-[#FF6A2C] bg-white/90 px-4 py-1.5 text-sm font-semibold text-[#FF6A2C]">
-                      {d.price}
+                    <span className="rounded-full border border-[#FF6A2C] bg-white/90 px-4 py-1.5 text-xs font-semibold text-[#FF6A2C]">
+                      {d.count} {d.count === 1 ? "place" : "places"}
                     </span>
                   </div>
                 </div>
@@ -574,7 +534,7 @@ export default function Home() {
           </Reveal>
 
           <Reveal className="mt-10 text-center">
-            <button onClick={() => navigate("/explore")} className="rounded-full bg-[#FF6A2C] px-8 py-3 text-sm font-semibold text-white transition-all hover:-translate-y-0.5 hover:bg-[#e85a20]">
+            <button onClick={() => navigate("/places")} className="rounded-full bg-[#FF6A2C] px-8 py-3 text-sm font-semibold text-white transition-all hover:-translate-y-0.5 hover:bg-[#e85a20]">
               View More
             </button>
           </Reveal>
@@ -587,14 +547,15 @@ export default function Home() {
           <Reveal>
             <Eyebrow>What They Say</Eyebrow>
             <h2 className="mb-10 max-w-[480px] text-4xl leading-[1.15] sm:text-5xl" style={{ ...serif, fontWeight: 600 }}>
-              What Our Customer Say About Us
+              Recent traveler reviews
             </h2>
 
             <div className="relative min-h-[210px] rounded-[24px] border border-gray-100 bg-white p-7 shadow-[0_20px_45px_-30px_rgba(20,22,26,0.2)]">
               <Quote className="mb-3 h-6 w-6 text-[#FF6A2C]/50" />
-              {VOICES.map((v, idx) => (
+              {voices.length === 0 && <p className="py-8 text-sm text-gray-500">Traveler reviews will appear here as visitors share their Egypt experiences.</p>}
+              {voices.map((v, idx) => (
                 <div key={v.name} className={`transition-all duration-500 ${idx === voiceIndex ? "block opacity-100" : "hidden opacity-0"}`}>
-                  <p className="mb-5 leading-relaxed text-[#14161A]/85">"{v.quote}"</p>
+                  <p className="mb-5 leading-relaxed text-[#14161A]/85">{v.quote}</p>
                   <div className="flex items-center gap-3">
                     <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#FDEADD] text-sm font-extrabold text-[#FF6A2C]">
                       {v.name[0]}
@@ -605,14 +566,14 @@ export default function Home() {
                     </div>
                     <div className="ml-auto flex gap-0.5 text-[#FFB800]">
                       {Array.from({ length: 5 }).map((_, i) => (
-                        <Star key={i} className="h-3.5 w-3.5" fill="currentColor" />
+                        <Star key={i} className={`h-3.5 w-3.5 ${i < v.rating ? "" : "text-gray-200"}`} fill={i < v.rating ? "currentColor" : "none"} />
                       ))}
                     </div>
                   </div>
                 </div>
               ))}
-              <div className="mt-6 flex gap-2">
-                {VOICES.map((v, idx) => (
+              {voices.length > 1 && <div className="mt-6 flex gap-2">
+                {voices.map((v, idx) => (
                   <button
                     key={v.name}
                     onClick={() => setVoiceIndex(idx)}
@@ -620,7 +581,7 @@ export default function Home() {
                     className={`h-1.5 rounded-full transition-all duration-300 ${idx === voiceIndex ? "w-6 bg-[#FF6A2C]" : "w-1.5 bg-gray-200"}`}
                   />
                 ))}
-              </div>
+              </div>}
             </div>
           </Reveal>
 
@@ -651,13 +612,13 @@ export default function Home() {
               Let's Not Miss Your Route & Explore The <span className="text-[#FF6A2C]">Beauty</span> of Egypt
             </h3>
             <p className="mb-8 max-w-[420px] text-sm leading-relaxed text-gray-500">
-              Tell Rafiq how many days you have the route builds itself, paced and ready.
+              Choose a destination, trip length, and budget to build a suggested itinerary.
             </p>
             <button
-              onClick={() => navigate("/trip-planner")}
+              onClick={() => navigate("/trip-planner#ai-plan-maker")}
               className="rounded-full bg-[#FF6A2C] px-8 py-3.5 text-sm font-bold text-white shadow-[0_16px_34px_rgba(255,106,44,0.35)] transition-all hover:-translate-y-0.5 hover:bg-[#e85a20]"
             >
-              Get Started
+              AI Planner
             </button>
           </div>
         </Reveal>

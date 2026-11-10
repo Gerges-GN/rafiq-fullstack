@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { X, ImagePlus, Loader2 } from "lucide-react";
+import { authFetch } from '../../services/authFetch';
 import Button from "../common/Button.jsx";
 import Input from "../common/Input.jsx";
 import FilterDropdown from "../common/FilterDropdown.jsx";
@@ -50,7 +51,7 @@ export default function EditPlaceModal({ isOpen, onClose, onUpdate, place }) {
     const uploadData = new FormData();
     uploadData.append("image", file);
 
-    const res = await fetch(`${API_BASE_URL}/upload/image`, {
+    const res = await authFetch(`${API_BASE_URL}/upload/image`, {
       method: "POST",
       body: uploadData,
     });

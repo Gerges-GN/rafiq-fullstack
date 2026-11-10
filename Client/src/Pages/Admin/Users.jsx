@@ -6,10 +6,10 @@ import SearchInput from "../../Components/common/SearchInput.jsx";
 import DataTable from "../../Components/common/DataTable.jsx";
 import Badge from "../../Components/common/Badge.jsx";
 import Avatar from "../../Components/common/Avatar.jsx";
-import { currentAdmin } from "../../data/mockData.js";
 import DeleteConfirmationModal from "../../Components/modals/DeleteConfirmationModal.jsx";
 import UserDetailPanel from "../../Components/common/UserDetailPanel.jsx";
 import Pagination from "../../Components/common/Pagination.jsx";
+import { authFetch } from '../../services/authFetch';
 const API_BASE_URL = import.meta.env.VITE_API_URL|| "/api";
 /**
  * @typedef {object} User
@@ -37,8 +37,8 @@ export default function Users() {
     const userId = isOwnerPopulated ? profile.owner._id : profile.owner;
 
     const ownerName =
-      isOwnerPopulated && profile.owner.userName
-        ? profile.owner.userName
+      isOwnerPopulated && profile.owner.name
+        ? profile.owner.name
         : profile.ownerName;
     const avatarUrl =
       isOwnerPopulated && profile.owner.avatarUrl
@@ -58,7 +58,7 @@ export default function Users() {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/profiles`);
+        const response = await authFetch(`${API_BASE_URL}/profiles`);
         if (!response.ok) {
           throw new Error("Network response was not ok");
         }
@@ -73,7 +73,7 @@ export default function Users() {
 
   const handleUpdateUser = async (updatedUser) => {
   try {
-    const response = await fetch(
+    const response = await authFetch(
       `${API_BASE_URL}/profiles/${updatedUser.userId}/status`,
       {
         method: "PATCH",
@@ -111,16 +111,16 @@ export default function Users() {
   }
 };
 
-  const handleDeleteUser = async (profileId) => {
+  const handleDeleteUser = async (user) => {
     try {
-      const response = await fetch(
-        `${API_BASE_URL}/profiles/${profileId}`,
+      const response = await authFetch(
+        `${API_BASE_URL}/profiles/${user.userId}`,
         {
           method: "DELETE",
         },
       );
       if (!response.ok) throw new Error("Failed to delete user");
-      setUsers(users.filter((u) => u.id !== profileId));
+      setUsers((current) => current.filter((u) => u.id !== user.id));
       setUserToDelete(null);
     } catch (error) {
       console.error("Failed to delete user:", error);
@@ -214,7 +214,6 @@ export default function Users() {
       sidebarProps={{ active: "/users", footer: "status", showLogo: false }}
       topbarProps={{
         title: "Dashboard - Users Management",
-        user: currentAdmin.users,
         showLogout: true,
         logoutVariant: "text",
       }}
@@ -267,7 +266,7 @@ export default function Users() {
       <DeleteConfirmationModal
         isOpen={!!userToDelete}
         onClose={() => setUserToDelete(null)}
-        onConfirm={() => handleDeleteUser(userToDelete.id)}
+        onConfirm={() => handleDeleteUser(userToDelete)}
         itemName={userToDelete?.ownerName}
       />
     </DashboardLayout>

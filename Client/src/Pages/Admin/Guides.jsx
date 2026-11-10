@@ -6,10 +6,10 @@ import SearchInput from "../../Components/common/SearchInput.jsx";
 import DataTable from "../../Components/common/DataTable.jsx";
 import Badge from "../../Components/common/Badge.jsx";
 import Avatar from "../../Components/common/Avatar.jsx";
-import { currentAdmin } from "../../data/mockData.js";
 import DeleteConfirmationModal from "../../Components/modals/DeleteConfirmationModal.jsx";
 import GuideDetailPanel from "../../Components/common/GuideDetailPanel.jsx";
 import Pagination from "../../Components/common/Pagination.jsx";
+import { authFetch } from '../../services/authFetch';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "/api";
 
@@ -23,10 +23,8 @@ export default function Guides() {
   const ITEMS_PER_PAGE = 5;
 
   const prepareGuideForState = (guide, intendedStatus) => {
-    const status =
-      intendedStatus ||
-      guide.status ||
-      (guide.verified ? "Approved" : "Pending");
+    const rawStatus = intendedStatus || guide.status || (guide.verified ? "approved" : "pending");
+    const status = String(rawStatus).charAt(0).toUpperCase() + String(rawStatus).slice(1).toLowerCase();
     return {
       ...guide,
       id: guide._id,
@@ -39,22 +37,22 @@ export default function Guides() {
   useEffect(() => {
     const fetchGuidesAndData = async () => {
       try {
-        const guidesResponse = await fetch(
-          `${API_BASE_URL}/tourguide-profiles`,
+        const guidesResponse = await authFetch(
+          `${API_BASE_URL}/tourguide-profiles/admin/all`,
         );
         if (!guidesResponse.ok) {
           throw new Error("Network response was not ok");
         }
         const guidesData = await guidesResponse.json();
 
-        const reviewsResponse = await fetch(
+        const reviewsResponse = await authFetch(
           `${API_BASE_URL}/reviews?filter=guides`,
         );
         const reviewsData = reviewsResponse.ok
           ? await reviewsResponse.json()
           : [];
 
-        const bookingsResponse = await fetch(`${API_BASE_URL}/bookings`);
+        const bookingsResponse = await authFetch(`${API_BASE_URL}/bookings`);
         const bookingsData = bookingsResponse.ok
           ? await bookingsResponse.json()
           : [];
@@ -134,7 +132,7 @@ export default function Guides() {
     try {
       const payload = {
         name: guideData.name,
-        avatar: guideData.avatarUrl,
+        avatarUrl: guideData.avatarUrl,
         bio: guideData.bio,
         city: guideData.city,
         rate: guideData.rate,
@@ -150,7 +148,7 @@ export default function Guides() {
         payload.verified = guideData.verified;
       }
 
-      const response = await fetch(
+      const response = await authFetch(
         `${API_BASE_URL}/tourguide-profiles/${guideData.id}`,
         {
           method: "PUT",
@@ -176,7 +174,7 @@ export default function Guides() {
 
   const handleDeleteGuide = async (guideId) => {
     try {
-      const response = await fetch(
+      const response = await authFetch(
         `${API_BASE_URL}/tourguide-profiles/${guideId}`,
         {
           method: "DELETE",
@@ -288,7 +286,6 @@ export default function Guides() {
       sidebarProps={{ active: "/guides", footer: "logout", showLogo: false }}
       topbarProps={{
         title: "Dashboard - Guides Management",
-        user: currentAdmin.users,
         showLogout: true,
         logoutVariant: "text",
       }}
@@ -327,6 +324,9 @@ export default function Guides() {
               onClose={() => setViewingGuide(null)}
               onApprove={() =>
                 handleUpdateGuideStatus(viewingGuide.id, "Approved")
+              }
+              onReject={() =>
+                handleUpdateGuideStatus(viewingGuide.id, "Rejected")
               }
               onSuspend={() =>
                 handleUpdateGuideStatus(viewingGuide.id, "Suspended")

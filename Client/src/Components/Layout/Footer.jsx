@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import {
   FaFacebookF,
   FaInstagram,
@@ -8,7 +9,6 @@ import {
   FaPhone,
   FaEarthAfrica,
 } from "react-icons/fa6";
-
 const Footer = () => {
   return (
     <footer className="relative overflow-hidden bg-[#071320] text-white">
@@ -81,27 +81,27 @@ const Footer = () => {
             <ul className="space-y-3 text-gray-400">
 
               <li>
-                <a href="/" className="hover:text-orange-400 transition">
+                <Link to="/" className="hover:text-orange-400 transition">
                   Home
-                </a>
+                </Link>
               </li>
 
               <li>
-                <a href="/places" className="hover:text-orange-400 transition">
+                <Link to="/places" className="hover:text-orange-400 transition">
                   Explore Places
-                </a>
+                </Link>
               </li>
 
               <li>
-                <a href="/guides" className="hover:text-orange-400 transition">
+                <Link to="/guides" className="hover:text-orange-400 transition">
                   Tour Guides
-                </a>
+                </Link>
               </li>
 
               <li>
-                <a href="/community" className="hover:text-orange-400 transition">
-                  Community
-                </a>
+                <Link to="/trip-planner#ai-plan-maker" className="hover:text-orange-400 transition">
+                  AI Planner
+                </Link>
               </li>
 
             </ul>
@@ -170,31 +170,6 @@ const Footer = () => {
           <p className="text-sm text-gray-500">
             © {new Date().getFullYear()} Rafiq. All Rights Reserved.
           </p>
-
-          <div className="flex gap-8">
-
-            <a
-              href="#"
-              className="text-sm text-gray-400 hover:text-orange-400 transition"
-            >
-              Privacy Policy
-            </a>
-
-            <a
-              href="#"
-              className="text-sm text-gray-400 hover:text-orange-400 transition"
-            >
-              Terms & Conditions
-            </a>
-
-            <a
-              href="#"
-              className="text-sm text-gray-400 hover:text-orange-400 transition"
-            >
-              Cookies
-            </a>
-
-          </div>
 
         </div>
 

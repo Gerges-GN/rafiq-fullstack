@@ -8,7 +8,6 @@ export default function ConversationList({
   onSelect,
   isLoading,
   currentUserId,
-  currentUserRole // 👈 جديد
 }) {
   if (isLoading) {
     return (
@@ -35,8 +34,7 @@ export default function ConversationList({
           chat={chat}
           isActive={chat._id === activeChatId}
           onClick={() => onSelect(chat._id)}
-          currentUserId={currentUserId} 
-          currentUserRole={currentUserRole}// 👈 مرّرها هنا
+          currentUserId={currentUserId}
         />
       ))}
     </div>

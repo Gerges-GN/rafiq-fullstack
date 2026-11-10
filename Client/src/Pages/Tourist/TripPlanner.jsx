@@ -341,33 +341,47 @@ function TripPlanner() {
   ];
 
   return (
-    <div className="relative" style={{ backgroundColor: '#fdfcf7', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-
+    <div
+      className="relative"
+      style={{
+        backgroundColor: "#fdfcf7",
+        fontFamily: "'Plus Jakarta Sans', sans-serif",
+      }}
+    >
       {/* 1. CINEMATIC HERO DESIGN BLOCK */}
       <section
         ref={heroRef}
         onMouseMove={handleHeroMouseMove}
         onMouseLeave={handleHeroMouseLeave}
         className="relative overflow-hidden flex flex-col justify-between pt-12"
-        style={{ minHeight: '90vh' }}>
-
+        style={{ minHeight: "90vh" }}
+      >
         {/* PARALLAX + KEN BURNS + CROSSFADE BACKGROUND LAYERS */}
         <div
           className="hero-parallax-wrapper"
-          style={{ transform: `translate3d(${parallax.x}px, ${parallax.y}px, 0)` }}>
+          style={{
+            transform: `translate3d(${parallax.x}px, ${parallax.y}px, 0)`,
+          }}
+        >
           <div
             className="hero-bg-animated"
-            style={{ backgroundImage: `url(${layerImages[0]})`, opacity: activeLayer === 0 ? 1 : 0 }}
+            style={{
+              backgroundImage: `url(${layerImages[0]})`,
+              opacity: activeLayer === 0 ? 1 : 0,
+            }}
           ></div>
           <div
             className="hero-bg-animated hero-bg-animated--alt"
-            style={{ backgroundImage: `url(${layerImages[1]})`, opacity: activeLayer === 1 ? 1 : 0 }}
+            style={{
+              backgroundImage: `url(${layerImages[1]})`,
+              opacity: activeLayer === 1 ? 1 : 0,
+            }}
           ></div>
         </div>
 
         {/* FLOATING AMBIENT PARTICLES */}
         <div className="hero-particles-layer">
-          {heroParticles.map(p => (
+          {heroParticles.map((p) => (
             <span
               key={p.id}
               className="hero-particle"
@@ -377,55 +391,104 @@ function TripPlanner() {
                 height: `${p.size}px`,
                 animationDuration: `${p.duration}s`,
                 animationDelay: `${p.delay}s`,
-                '--drift': `${p.drift}px`
+                "--drift": `${p.drift}px`,
               }}
             ></span>
           ))}
         </div>
 
-        <div className="absolute top-0 left-0 w-full h-full z-[2]" style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.2) 50%, rgba(15,20,25,0.95) 100%)' }}></div>
+        <div
+          className="absolute top-0 left-0 w-full h-full z-[2]"
+          style={{
+            background:
+              "linear-gradient(to bottom, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.2) 50%, rgba(15,20,25,0.95) 100%)",
+          }}
+        ></div>
 
         <div className="relative text-center text-white my-auto pt-8 z-[3] max-w-7xl mx-auto px-4 w-full">
-          <h1 className="text-5xl md:text-7xl font-bold mb-3 italic" style={{ letterSpacing: '-1.5px', fontFamily: "'Playfair Display', serif" }}>
+          <h1
+            className="text-5xl md:text-7xl font-bold mb-3 italic"
+            style={{
+              letterSpacing: "-1.5px",
+              fontFamily: "'Playfair Display', serif",
+            }}
+          >
             Design Your Perfect Stay
           </h1>
           <p className="text-lg opacity-75 max-w-[600px] mx-auto font-light mb-6 text-white/50">
-            Tell us your duration. We formulate tailored structural digital itineraries automatically.
+            Tell us your duration. We formulate tailored structural digital
+            itineraries automatically.
           </p>
 
           {/* GLASSMORPHISM FILTER PANEL */}
-          <div className="mx-auto" style={{ maxWidth: '950px' }}>
-            <form onSubmit={handleGeneratePlan}
+          <div className="mx-auto" style={{ maxWidth: "950px" }}>
+            <form
+              onSubmit={handleGeneratePlan}
               className="p-4 rounded-[2rem] border shadow-lg flex flex-col md:flex-row items-center gap-4"
               style={{
-                background: 'rgba(255, 255, 255, 0.08)',
-                backdropFilter: 'blur(30px)',
-                WebkitBackdropFilter: 'blur(30px)',
-                borderColor: 'rgba(255, 255, 255, 0.18)'
-              }}>
-
+                background: "rgba(255, 255, 255, 0.08)",
+                backdropFilter: "blur(30px)",
+                WebkitBackdropFilter: "blur(30px)",
+                borderColor: "rgba(255, 255, 255, 0.18)",
+              }}
+            >
               {/* Selector 1: Destination */}
               <div className="flex items-center text-left px-4 py-1 flex-1 w-full border-white/20 md:border-r border-b md:border-b-0 pb-3 md:pb-1">
                 <MapPin className="text-white opacity-60 w-5 h-5 mr-2.5 shrink-0" />
                 <div className="flex-1">
-                  <label className="block text-white/50 font-bold tracking-wider mb-0 text-[0.65rem]">DESTINATION</label>
-                  <select className="w-full bg-transparent text-white border-0 p-0 font-semibold shadow-none focus:outline-none focus:ring-0 text-sm cursor-pointer"
+                  <label className="block text-white/50 font-bold tracking-wider mb-0 text-[0.65rem]">
+                    DESTINATION
+                  </label>
+                  <select
+                    className="w-full bg-transparent text-white border-0 p-0 font-semibold shadow-none focus:outline-none focus:ring-0 text-sm cursor-pointer"
                     value={city}
-                    onChange={(e) => { setCity(e.target.value); setGeneratedPlan(null); }}>
-                    <option value="cairo" className="text-gray-900">Cairo Region</option>
-                    <option value="alexandria" className="text-gray-900">Alexandria Coast</option>
-                    <option value="luxor" className="text-gray-900">Luxor Monuments</option>
-                    <option value="aswan" className="text-gray-900">Aswan Nile South</option>
-                    <option value="hurghada" className="text-gray-900">Hurghada Riviera</option>
-                    <option value="sharm" className="text-gray-900">Sharm El Sheikh</option>
-                    <option value="dahab" className="text-gray-900">Dahab Paradise</option>
-                    <option value="nuweiba" className="text-gray-900">Nuweiba Camps</option>
-                    <option value="siwa" className="text-gray-900">Siwa Oasis</option>
-                    <option value="matrouh" className="text-gray-900">Marsa Matrouh</option>
-                    <option value="fayoum" className="text-gray-900">Fayoum Lakes</option>
-                    <option value="portsaid" className="text-gray-900">Port Said Canal</option>
-                    <option value="ismailia" className="text-gray-900">Ismailia Garden City</option>
-                    <option value="suez" className="text-gray-900">Suez Gateway</option>
+                    onChange={(e) => {
+                      setCity(e.target.value);
+                      setGeneratedPlan(null);
+                    }}
+                  >
+                    <option value="cairo" className="text-gray-900">
+                      Cairo Region
+                    </option>
+                    <option value="alexandria" className="text-gray-900">
+                      Alexandria Coast
+                    </option>
+                    <option value="luxor" className="text-gray-900">
+                      Luxor Monuments
+                    </option>
+                    <option value="aswan" className="text-gray-900">
+                      Aswan Nile South
+                    </option>
+                    <option value="hurghada" className="text-gray-900">
+                      Hurghada Riviera
+                    </option>
+                    <option value="sharm" className="text-gray-900">
+                      Sharm El Sheikh
+                    </option>
+                    <option value="dahab" className="text-gray-900">
+                      Dahab Paradise
+                    </option>
+                    <option value="nuweiba" className="text-gray-900">
+                      Nuweiba Camps
+                    </option>
+                    <option value="siwa" className="text-gray-900">
+                      Siwa Oasis
+                    </option>
+                    <option value="matrouh" className="text-gray-900">
+                      Marsa Matrouh
+                    </option>
+                    <option value="fayoum" className="text-gray-900">
+                      Fayoum Lakes
+                    </option>
+                    <option value="portsaid" className="text-gray-900">
+                      Port Said Canal
+                    </option>
+                    <option value="ismailia" className="text-gray-900">
+                      Ismailia Garden City
+                    </option>
+                    <option value="suez" className="text-gray-900">
+                      Suez Gateway
+                    </option>
                   </select>
                 </div>
               </div>
@@ -434,17 +497,38 @@ function TripPlanner() {
               <div className="flex items-center text-left px-4 py-1 flex-1 w-full border-white/20 md:border-r border-b md:border-b-0 pb-3 md:pb-1">
                 <Calendar className="text-white opacity-60 w-5 h-5 mr-2.5 shrink-0" />
                 <div className="flex-1">
-                  <label className="block text-white/50 font-bold tracking-wider mb-0 text-[0.65rem]">TRIP DURATION</label>
-                  <select className="w-full bg-transparent text-white border-0 p-0 font-semibold shadow-none focus:outline-none focus:ring-0 text-sm cursor-pointer"
+                  <label className="block text-white/50 font-bold tracking-wider mb-0 text-[0.65rem]">
+                    TRIP DURATION
+                  </label>
+                  <select
+                    className="w-full bg-transparent text-white border-0 p-0 font-semibold shadow-none focus:outline-none focus:ring-0 text-sm cursor-pointer"
                     value={days}
-                    onChange={(e) => { setDays(e.target.value); setGeneratedPlan(null); }}>
-                    <option value="1" className="text-gray-900">1 Single Day</option>
-                    <option value="2" className="text-gray-900">2 Days Escape</option>
-                    <option value="3" className="text-gray-900">3 Days Standard</option>
-                    <option value="4" className="text-gray-900">4 Days Mini Week</option>
-                    <option value="5" className="text-gray-900">5 Days Immersion</option>
-                    <option value="6" className="text-gray-900">6 Days Deep Tour</option>
-                    <option value="7" className="text-gray-900">7 Days Full Epic</option>
+                    onChange={(e) => {
+                      setDays(e.target.value);
+                      setGeneratedPlan(null);
+                    }}
+                  >
+                    <option value="1" className="text-gray-900">
+                      1 Single Day
+                    </option>
+                    <option value="2" className="text-gray-900">
+                      2 Days Escape
+                    </option>
+                    <option value="3" className="text-gray-900">
+                      3 Days Standard
+                    </option>
+                    <option value="4" className="text-gray-900">
+                      4 Days Mini Week
+                    </option>
+                    <option value="5" className="text-gray-900">
+                      5 Days Immersion
+                    </option>
+                    <option value="6" className="text-gray-900">
+                      6 Days Deep Tour
+                    </option>
+                    <option value="7" className="text-gray-900">
+                      7 Days Full Epic
+                    </option>
                   </select>
                 </div>
               </div>
@@ -453,22 +537,39 @@ function TripPlanner() {
               <div className="flex items-center text-left px-4 py-1 flex-1 w-full">
                 <SlidersHorizontal className="text-white opacity-60 w-5 h-5 mr-2.5 shrink-0" />
                 <div className="flex-1">
-                  <label className="block text-white/50 font-bold tracking-wider mb-0 text-[0.65rem]">BUDGET TIER</label>
-                  <select className="w-full bg-transparent text-white border-0 p-0 font-semibold shadow-none focus:outline-none focus:ring-0 text-sm cursor-pointer"
+                  <label className="block text-white/50 font-bold tracking-wider mb-0 text-[0.65rem]">
+                    BUDGET TIER
+                  </label>
+                  <select
+                    className="w-full bg-transparent text-white border-0 p-0 font-semibold shadow-none focus:outline-none focus:ring-0 text-sm cursor-pointer"
                     value={budget}
-                    onChange={(e) => { setBudget(e.target.value); setGeneratedPlan(null); }}>
-                    <option value="economy" className="text-gray-900">Economy</option>
-                    <option value="standard" className="text-gray-900">Standard VIP</option>
+                    onChange={(e) => {
+                      setBudget(e.target.value);
+                      setGeneratedPlan(null);
+                    }}
+                  >
+                    <option value="economy" className="text-gray-900">
+                      Economy
+                    </option>
+                    <option value="standard" className="text-gray-900">
+                      Standard VIP
+                    </option>
                   </select>
                 </div>
               </div>
 
               {/* Submit Action */}
-              <button type="submit" className="text-lg rounded-full text-white font-bold px-6 py-2.5 w-full md:w-auto border-0 shadow-sm flex items-center justify-center gap-1.5"
-                style={{ backgroundColor: '#ff6f3c', fontSize: '0.95rem', minWidth: '160px' }}>
+              <button
+                type="submit"
+                className="text-lg rounded-full text-white font-bold px-6 py-2.5 w-full md:w-auto border-0 shadow-sm flex items-center justify-center gap-1.5"
+                style={{
+                  backgroundColor: "#ff6f3c",
+                  fontSize: "0.95rem",
+                  minWidth: "160px",
+                }}
+              >
                 <Cpu className="w-4 h-4" /> Build Plan
               </button>
-
             </form>
           </div>
         </div>
@@ -477,23 +578,45 @@ function TripPlanner() {
         <div className="relative pb-4 z-[3] max-w-7xl mx-auto px-4 w-full">
           <div className="flex gap-3 overflow-x-auto flex-nowrap pb-2 justify-start md:justify-center text-left hide-scrollbar">
             {destinations.map((node) => (
-              <div key={node.id} className={`shrink-0 w-[40%] sm:w-[23%] md:w-[14%] filter-tab-card ${city === node.id ? 'active' : ''}`} onClick={() => { setCity(node.id); setGeneratedPlan(null); }}>
-                <div className="img-thumbnail-node relative rounded-2xl overflow-hidden shadow h-[85px] bg-cover bg-center cursor-pointer" style={{ backgroundImage: `url(${node.img})` }}>
-                  <div className="card-glass-title absolute bottom-0 left-0 w-full p-1.5 text-white text-center font-bold text-xs" style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }}>{node.label}</div>
+              <div
+                key={node.id}
+                className={`shrink-0 w-[40%] sm:w-[23%] md:w-[14%] filter-tab-card ${city === node.id ? "active" : ""}`}
+                onClick={() => {
+                  setCity(node.id);
+                  setGeneratedPlan(null);
+                }}
+              >
+                <div
+                  className="img-thumbnail-node relative rounded-2xl overflow-hidden shadow h-[85px] bg-cover bg-center cursor-pointer"
+                  style={{ backgroundImage: `url(${node.img})` }}
+                >
+                  <div
+                    className="card-glass-title absolute bottom-0 left-0 w-full p-1.5 text-white text-center font-bold text-xs"
+                    style={{
+                      background: "rgba(0,0,0,0.5)",
+                      backdropFilter: "blur(4px)",
+                    }}
+                  >
+                    {node.label}
+                  </div>
                 </div>
               </div>
             ))}
           </div>
         </div>
-
       </section>
 
       {/* 2. CREATIVE TIMELINE GRID AND ACTIVE CONTENT CANVAS */}
       <section className="py-12 max-w-7xl mx-auto px-4">
         {loading && (
           <div className="text-center py-12">
-            <div className="spinner inline-block w-10 h-10 rounded-full border-4 border-gray-200 animate-spin" style={{ borderTopColor: '#ff6f3c' }}></div>
-            <p className="text-gray-500 font-semibold mt-3 text-sm tracking-wider">Compiling Your Custom {days}-Day Matrix Array...</p>
+            <div
+              className="spinner inline-block w-10 h-10 rounded-full border-4 border-gray-200 animate-spin"
+              style={{ borderTopColor: "#ff6f3c" }}
+            ></div>
+            <p className="text-gray-500 font-semibold mt-3 text-sm tracking-wider">
+              Compiling Your Custom {days}-Day Matrix Array...
+            </p>
           </div>
         )}
 
@@ -501,28 +624,50 @@ function TripPlanner() {
           <div>
             <div className="text-left border-b pb-3 mb-12 flex items-center justify-between flex-wrap gap-2">
               <div>
-                <span className="inline-block bg-gray-900 text-white px-3 py-1.5 rounded-lg mb-2 uppercase tracking-wider text-[0.65rem]">Custom Plan Generated</span>
-                <h2 className="font-extrabold text-gray-900 text-4xl m-0" style={{ letterSpacing: '-1px' }}>{currentData.title} ({generatedPlan.length} Days)</h2>
+                <span className="inline-block bg-gray-900 text-white px-3 py-1.5 rounded-lg mb-2 uppercase tracking-wider text-[0.65rem]">
+                  Custom Plan Generated
+                </span>
+                <h2
+                  className="font-extrabold text-gray-900 text-4xl m-0"
+                  style={{ letterSpacing: "-1px" }}
+                >
+                  {currentData.title} ({generatedPlan.length} Days)
+                </h2>
               </div>
-              <span className="text-lg font-bold text-gray-600 italic">{days} Days Personalized Grid</span>
+              <span className="text-lg font-bold text-gray-600 italic">
+                {days} Days Personalized Grid
+              </span>
             </div>
 
             <div className="flex flex-col lg:flex-row gap-6 items-start">
-
               {/* LEFT COLUMN: Timeline Controllers */}
               <div className="w-full lg:w-1/3 text-left">
                 <div className="timeline-scroller p-2 bg-white rounded-2xl border border-gray-100 shadow-sm">
                   {generatedPlan.map((item, idx) => (
-                    <div key={idx}
-                      className={`flex items-center p-3 mb-2 rounded-xl timeline-node-row cursor-pointer transition-all duration-200 ${activeDayIndex === idx ? 'active' : ''}`}
-                      onClick={() => setActiveDayIndex(idx)}>
-                      <div className="day-index-bubble font-bold mr-3 rounded-full flex items-center justify-center w-10 h-10 shrink-0"
-                        style={{ backgroundColor: activeDayIndex === idx ? '#ff6f3c' : '#f0ede4', color: activeDayIndex === idx ? 'white' : '#4a5568' }}>
+                    <div
+                      key={idx}
+                      className={`flex items-center p-3 mb-2 rounded-xl timeline-node-row cursor-pointer transition-all duration-200 ${activeDayIndex === idx ? "active" : ""}`}
+                      onClick={() => setActiveDayIndex(idx)}
+                    >
+                      <div
+                        className="day-index-bubble font-bold mr-3 rounded-full flex items-center justify-center w-10 h-10 shrink-0"
+                        style={{
+                          backgroundColor:
+                            activeDayIndex === idx ? "#ff6f3c" : "#f0ede4",
+                          color: activeDayIndex === idx ? "white" : "#4a5568",
+                        }}
+                      >
                         0{idx + 1}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <span className="block text-gray-500 text-xs font-bold">{item.day} PLAN</span>
-                        <strong className={`block ${activeDayIndex === idx ? 'text-gray-900' : 'text-gray-600'} text-sm truncate max-w-[200px]`}>{item.title}</strong>
+                        <span className="block text-gray-500 text-xs font-bold">
+                          {item.day} PLAN
+                        </span>
+                        <strong
+                          className={`block ${activeDayIndex === idx ? "text-gray-900" : "text-gray-600"} text-sm truncate max-w-[200px]`}
+                        >
+                          {item.title}
+                        </strong>
                       </div>
                       <ChevronRight className="text-gray-400 opacity-50 ml-auto w-4 h-4 shrink-0" />
                     </div>
@@ -538,62 +683,102 @@ function TripPlanner() {
                   return (
                     <div className="border-0 rounded-[2rem] shadow-sm overflow-hidden bg-white active-canvas-card animate-fade">
                       <div className="relative overflow-hidden h-[350px]">
-                        <img src={currentDayItem.img} alt={currentDayItem.title} className="w-full h-full object-cover transition-scale" />
-                        <div className="absolute bottom-0 left-0 w-full p-4 flex items-end justify-between" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0) 100%)' }}>
-                          <span className="px-3 py-2 text-white font-bold m-0 rounded-lg uppercase text-xs" style={{ backgroundColor: '#ff6f3c' }}>{currentDayItem.day} Execution Node</span>
+                        <img
+                          src={currentDayItem.img}
+                          alt={currentDayItem.title}
+                          className="w-full h-full object-cover transition-scale"
+                        />
+                        <div
+                          className="absolute bottom-0 left-0 w-full p-4 flex items-end justify-between"
+                          style={{
+                            background:
+                              "linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0) 100%)",
+                          }}
+                        >
+                          <span
+                            className="px-3 py-2 text-white font-bold m-0 rounded-lg uppercase text-xs"
+                            style={{ backgroundColor: "#ff6f3c" }}
+                          >
+                            {currentDayItem.day} Execution Node
+                          </span>
                           <span className="text-white font-semibold text-sm bg-black/50 px-3 py-1.5 rounded-full flex items-center gap-1.5">
-                            <Clock className="w-4 h-4 text-yellow-400" />{currentDayItem.time}
+                            <Clock className="w-4 h-4 text-yellow-400" />
+                            {currentDayItem.time}
                           </span>
                         </div>
                       </div>
                       <div className="p-6 md:p-10">
-                        <h3 className="text-3xl font-bold text-gray-900 mb-3" style={{ letterSpacing: '-0.5px' }}>{currentDayItem.title}</h3>
-                        <p className="text-gray-500 text-lg font-light mb-0 leading-loose" style={{ fontFamily: "'Inter', sans-serif" }}>
-                          {currentDayItem.desc} This micro-itinerary coordinate has been compiled based on geospatial proximity metrics and optimal transit loops to minimize daily exhaustion indexes.
+                        <h3
+                          className="text-3xl font-bold text-gray-900 mb-3"
+                          style={{ letterSpacing: "-0.5px" }}
+                        >
+                          {currentDayItem.title}
+                        </h3>
+                        <p
+                          className="text-gray-500 text-lg font-light mb-0 leading-loose"
+                          style={{ fontFamily: "'Inter', sans-serif" }}
+                        >
+                          {currentDayItem.desc} This micro-itinerary coordinate
+                          has been compiled based on geospatial proximity
+                          metrics and optimal transit loops to minimize daily
+                          exhaustion indexes.
                         </p>
                       </div>
                     </div>
                   );
                 })()}
               </div>
-
             </div>
           </div>
         ) : (
           !loading && (
             <div className="text-center py-12 bg-white rounded-[2rem] p-12 border shadow-sm">
               <CalendarRange className="text-gray-400 w-10 h-10 mb-2 mx-auto opacity-30" />
-              <h4 className="font-bold text-gray-600 text-xl">Custom Itinerary Setup Void</h4>
-              <p className="text-gray-500 text-sm max-w-[500px] mx-auto mb-0">Select your destination and specify exactly how many days you need inside the glassmorphism hero panel above.</p>
+              <h4 className="font-bold text-gray-600 text-xl">
+                Custom Itinerary Setup Void
+              </h4>
+              <p className="text-gray-500 text-sm max-w-[500px] mx-auto mb-0">
+                Select your destination and specify exactly how many days you
+                need inside the glassmorphism hero panel above.
+              </p>
             </div>
           )
         )}
       </section>
 
       {/* 2.5 AI PLACE RECOMMENDER — powered by Groq / gpt-oss-120b */}
-      <section className="py-12 max-w-7xl mx-auto px-4">
+      <section className="py-12 max-w-7xl mx-auto px-4" id="ai-plan-maker">
         <div
           className="p-6 md:p-10 rounded-[2rem] shadow-lg"
-          style={{ background: 'linear-gradient(145deg, #161614 0%, #26261f 100%)' }}
+          style={{
+            background: "linear-gradient(145deg, #161614 0%, #26261f 100%)",
+          }}
         >
           <div className="flex items-center gap-2 mb-3">
-            <Sparkles className="w-5 h-5" style={{ color: '#ff6f3c' }} />
+            <Sparkles className="w-5 h-5" style={{ color: "#ff6f3c" }} />
             <span
               className="inline-block px-3 py-1.5 rounded-lg text-[0.65rem] uppercase tracking-wider"
-              style={{ backgroundColor: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.7)' }}
+              style={{
+                backgroundColor: "rgba(255,255,255,0.08)",
+                color: "rgba(255,255,255,0.7)",
+              }}
             >
               AI Place Finder
             </span>
           </div>
           <h2
             className="text-3xl md:text-4xl font-bold mb-3 text-white"
-            style={{ letterSpacing: '-1px', fontFamily: "'Playfair Display', serif" }}
+            style={{
+              letterSpacing: "-1px",
+              fontFamily: "'Playfair Display', serif",
+            }}
           >
             Tell us what you're after
           </h2>
           <p className="text-white/60 text-sm mb-6 max-w-2xl leading-relaxed">
-            Describe the kind of places you want to visit history, nature, food, nightlife,
-            anything and our AI will match you with real places from Rafiq's database.
+            Describe the kind of places you want to visit history, nature, food,
+            nightlife, anything and our AI will match you with real places from
+            Rafiq's database.
           </p>
 
           <form onSubmit={handleAIRecommend} className="space-y-3">
@@ -604,27 +789,30 @@ function TripPlanner() {
               placeholder="e.g. I love ancient history and quiet places away from crowds, and I want somewhere with good local food nearby..."
               className="w-full rounded-2xl p-4 text-sm text-white placeholder-white/30 focus:outline-none resize-none"
               style={{
-                background: 'rgba(255,255,255,0.06)',
-                border: '1px solid rgba(255,255,255,0.15)',
+                background: "rgba(255,255,255,0.06)",
+                border: "1px solid rgba(255,255,255,0.15)",
               }}
             />
             <button
               type="submit"
               disabled={aiLoading}
               className="rounded-full text-white font-bold px-6 py-2.5 flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
-              style={{ backgroundColor: '#ff6f3c' }}
+              style={{ backgroundColor: "#ff6f3c" }}
             >
               {aiLoading ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
                 <Send className="w-4 h-4" />
               )}
-              {aiLoading ? 'Thinking...' : 'Find my places'}
+              {aiLoading ? "Thinking..." : "Find my places"}
             </button>
           </form>
 
           {aiError && (
-            <div className="mt-4 rounded-xl px-4 py-3 text-sm text-red-200" style={{ background: 'rgba(220,38,38,0.15)' }}>
+            <div
+              className="mt-4 rounded-xl px-4 py-3 text-sm text-red-200"
+              style={{ background: "rgba(220,38,38,0.15)" }}
+            >
               {aiError}
             </div>
           )}
@@ -633,7 +821,8 @@ function TripPlanner() {
             <div className="mt-8">
               {aiRecommendations.length === 0 ? (
                 <p className="text-white/50 text-sm">
-                  No strong matches found — try describing your interests a bit differently.
+                  No strong matches found — try describing your interests a bit
+                  differently.
                 </p>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -654,11 +843,16 @@ function TripPlanner() {
                       <div className="p-4 flex-1 flex flex-col gap-1.5">
                         <span
                           className="text-[10px] font-bold uppercase tracking-wider w-fit px-2 py-0.5 rounded-md"
-                          style={{ backgroundColor: 'rgba(255,111,60,0.15)', color: '#ff6f3c' }}
+                          style={{
+                            backgroundColor: "rgba(255,111,60,0.15)",
+                            color: "#ff6f3c",
+                          }}
                         >
                           {place.category}
                         </span>
-                        <h4 className="text-white font-bold text-sm">{place.name}</h4>
+                        <h4 className="text-white font-bold text-sm">
+                          {place.name}
+                        </h4>
                         <p className="text-white/40 text-xs flex items-center gap-1">
                           <MapPin className="w-3 h-3" /> {place.city}
                         </p>
@@ -677,21 +871,60 @@ function TripPlanner() {
 
       {/* 3. DYNAMIC MAP SYNC SECTION */}
       <section className="pb-12 mb-12 max-w-7xl mx-auto px-4">
-        <div className="p-6 md:p-10 overflow-hidden rounded-[2rem] shadow-lg" style={{ background: 'linear-gradient(145deg, #F6F3EC 0%, #EFE9DA 100%)', border: '1px solid #E8E5DD' }}>
+        <div
+          className="p-6 md:p-10 overflow-hidden rounded-[2rem] shadow-lg"
+          style={{
+            background: "linear-gradient(145deg, #F6F3EC 0%, #EFE9DA 100%)",
+            border: "1px solid #E8E5DD",
+          }}
+        >
           <div className="flex flex-col lg:flex-row items-center text-left gap-6">
             <div className="w-full lg:w-5/12 px-3">
-              <span className="inline-block px-3 py-1.5 rounded-lg mb-2 text-[0.65rem]" style={{ backgroundColor: '#161614', color: 'rgba(255,255,255,0.7)' }}>GEOSPATIAL SERVER INTERFACE</span>
-              <h2 className="text-4xl font-bold mb-3" style={{ letterSpacing: '-1px', color: '#161614', fontFamily: "'Playfair Display', serif" }}>Native Mapping Sync</h2>
-              <p className="text-sm mb-6 leading-loose" style={{ color: '#6E6E6A' }}>
-                Track spatial patterns and coordinates live. Renders structural vector coordinates loaded straight from cloud mapping databases simultaneously with active index routes.
+              <span
+                className="inline-block px-3 py-1.5 rounded-lg mb-2 text-[0.65rem]"
+                style={{
+                  backgroundColor: "#161614",
+                  color: "rgba(255,255,255,0.7)",
+                }}
+              >
+                GEOSPATIAL SERVER INTERFACE
+              </span>
+              <h2
+                className="text-4xl font-bold mb-3"
+                style={{
+                  letterSpacing: "-1px",
+                  color: "#161614",
+                  fontFamily: "'Playfair Display', serif",
+                }}
+              >
+                Native Mapping Sync
+              </h2>
+              <p
+                className="text-sm mb-6 leading-loose"
+                style={{ color: "#6E6E6A" }}
+              >
+                Track spatial patterns and coordinates live. Renders structural
+                vector coordinates loaded straight from cloud mapping databases
+                simultaneously with active index routes.
               </p>
-              <button type="button" className="text-white font-bold px-6 py-2.5 rounded-full shadow-sm text-sm flex items-center gap-1.5" style={{ backgroundColor: '#F36926' }}>
+              <button
+                type="button"
+                className="text-white font-bold px-6 py-2.5 rounded-full shadow-sm text-sm flex items-center gap-1.5"
+                style={{ backgroundColor: "#F36926" }}
+              >
                 Maximize Coordinate Canvas <ExternalLink className="w-4 h-4" />
               </button>
             </div>
 
             <div className="w-full lg:w-7/12">
-              <div className="map-iframe-container w-full rounded-3xl overflow-hidden" style={{ height: '390px', boxShadow: '0 12px 30px rgba(22,22,20,0.15)', border: '1px solid #E8E5DD' }}>
+              <div
+                className="map-iframe-container w-full rounded-3xl overflow-hidden"
+                style={{
+                  height: "390px",
+                  boxShadow: "0 12px 30px rgba(22,22,20,0.15)",
+                  border: "1px solid #E8E5DD",
+                }}
+              >
                 <iframe
                   title="Dynamic Egypt Map Node"
                   src={currentData.googleMapUrl}
@@ -700,8 +933,8 @@ function TripPlanner() {
                   style={{ border: 0 }}
                   allowFullScreen=""
                   loading="lazy"
-                  referrerPolicy="no-referrer-when-downgrade">
-                </iframe>
+                  referrerPolicy="no-referrer-when-downgrade"
+                ></iframe>
               </div>
             </div>
           </div>
@@ -782,7 +1015,6 @@ function TripPlanner() {
           100% { transform: translate(var(--drift), -105vh) scale(1); opacity: 0; }
         }
       `}</style>
-
     </div>
   );
 }

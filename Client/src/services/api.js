@@ -1,89 +1,47 @@
-const BASE = import.meta.env.VITE_API_URL || "/api";
+import { authFetch } from './authFetch';
 
-async function getJson(path) {
-  const url = `${BASE}${path}`;
+const BASE = import.meta.env.VITE_API_URL || '/api';
 
-  console.log("Requesting:", url);
-
-  const res = await fetch(url);
-
-  const text = await res.text();
-
-  console.log("Status:", res.status);
-  console.log("Response:", text);
-
-  if (!res.ok) {
-    throw new Error(`Request failed ${res.status}`);
+async function request(path, options = {}) {
+  const headers = new Headers(options.headers || {});
+  if (options.body && !headers.has('Content-Type') && !(options.body instanceof FormData)) {
+    headers.set('Content-Type', 'application/json');
   }
-
-  return JSON.parse(text);
+  const res = await authFetch(`${BASE}${path}`, { ...options, headers });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.message || `Request failed (${res.status})`);
+  return data;
 }
 
-export async function fetchStats() {
-  return getJson('/admin/stats')
+export function fetchStats() { return request('/admin/stats'); }
+export function fetchChart() { return request('/admin/chart'); }
+export function fetchClassifications() { return request('/admin/classifications'); }
+export function fetchIncidents() { return request('/admin/incidents'); }
+
+export function fetchReviews(params = {}) {
+  const query = new URLSearchParams(params).toString();
+  return request(`/admin/reviews${query ? `?${query}` : ''}`);
 }
 
-export async function fetchChart() {
-  return getJson('/admin/chart')
+export function fetchFraud(params = {}) {
+  const query = new URLSearchParams(params).toString();
+  return request(`/admin/fraud${query ? `?${query}` : ''}`);
 }
 
-export async function fetchClassifications() {
-  return getJson('/admin/classifications')
+export function flagReview({ id, reason }) {
+  return request('/admin/fraud/flag', { method: 'POST', body: JSON.stringify({ id, reason }) });
 }
 
-export async function fetchIncidents() {
-  return getJson('/admin/incidents')
+export function unflagReview({ id }) {
+  return request('/admin/fraud/unflag', { method: 'POST', body: JSON.stringify({ id }) });
 }
 
-export async function fetchReviews(params = {}) {
-  const query = new URLSearchParams(params).toString()
-  return getJson(`/admin/reviews${query ? `?${query}` : ''}`)
-}
+export function fetchReports() { return request('/admin/reports'); }
+export function fetchChats() { return request('/admin/chats'); }
+export function fetchChatDetails(id) { return request(`/admin/chats/${id}`); }
+export function deleteChat(id) { return request(`/admin/chats/${id}`, { method: 'DELETE' }); }
 
-export async function fetchFraud(params = {}) {
-  const query = new URLSearchParams(params).toString()
-  return getJson(`/admin/fraud${query ? `?${query}` : ''}`)
-}
-
-export async function flagReview({ id, reason }) {
-  const res = await fetch(`${BASE}/admin/fraud/flag`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ id, reason }),
-  })
-  if (!res.ok) throw new Error('Flag request failed')
-  return res.json()
-}
-
-export async function unflagReview({ id }) {
-  const res = await fetch(`${BASE}/admin/fraud/unflag`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ id }),
-  })
-  if (!res.ok) throw new Error('Unflag request failed')
-  return res.json()
-}
-
-export async function fetchReports() {
-  return getJson('/admin/reports')
-}
-
-export async function fetchChats() {
-  return getJson('/admin/chats')
-}
-
-export async function fetchChatDetails(id) {
-  return getJson(`/admin/chats/${id}`)
-}
-
-export async function deleteChat(id) {
-  const res = await fetch(`${BASE}/admin/chats/${id}`, {
-    method: 'DELETE',
-  })
-  if (!res.ok) throw new Error('Delete chat request failed')
-  return res.json()
-}
-
-export default { fetchStats, fetchChart, fetchClassifications, fetchIncidents, fetchReviews, fetchFraud, fetchReports, fetchChats, fetchChatDetails, deleteChat }
-
+export default {
+  fetchStats, fetchChart, fetchClassifications, fetchIncidents, fetchReviews,
+  fetchFraud, flagReview, unflagReview, fetchReports, fetchChats, fetchChatDetails, deleteChat,
+};

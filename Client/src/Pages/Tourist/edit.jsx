@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useNavigate, useOutletContext } from 'react-router-dom';
 import { 
   Camera, X, Plus, Save, ArrowLeft, Loader2
 } from 'lucide-react';
-import Navbar from '../../Components/Layout/TouristNav';
+import { authFetch } from '../../services/authFetch';
 const API_BASE_URL = import.meta.env.VITE_API_URL|| "/api";
 export default function EditProfile() {
-  const { userId } = useParams();
+  const verifiedUser = useOutletContext();
+  const userId = verifiedUser?._id;
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
@@ -34,7 +35,7 @@ export default function EditProfile() {
     const fetchProfile = async () => {
       try {
         setLoading(true);
-        const res = await fetch(`${API_BASE_URL}/profiles/${userId}`);
+        const res = await authFetch(`${API_BASE_URL}/profiles/${userId}`);
         if (!res.ok) throw new Error('Failed to load profile');
         const data = await res.json();
 
@@ -106,7 +107,7 @@ export default function EditProfile() {
     const uploadData = new FormData();
     uploadData.append('image', file);
 
-    const res = await fetch(`${API_BASE_URL}/upload/image`, {
+    const res = await authFetch(`${API_BASE_URL}/upload/image`, {
       method: 'POST',
       body: uploadData,
     });
@@ -136,7 +137,7 @@ export default function EditProfile() {
         coverUrl = await uploadImage(coverFile);
       }
 
-      const res = await fetch(`${API_BASE_URL}/profiles/${userId}`, {
+      const res = await authFetch(`${API_BASE_URL}/profiles/${userId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...formData, avatarUrl, coverUrl }),
@@ -144,7 +145,7 @@ export default function EditProfile() {
 
       if (!res.ok) throw new Error('Failed to update profile');
 
-      navigate(`/profile/${userId}`); // redirect back to profile view after saving
+      navigate('/tourist/profile');
     } catch (err) {
       setError(err.message);
     } finally {

@@ -14,9 +14,10 @@ const USE_MOCK = import.meta.env.VITE_USE_MOCK_CHAT === "true";
 function mapMessage(msg) {
   return {
     _id: msg._id,
-    senderId: msg.writerId,
+    senderId: String(msg.writerId),
     text: msg.content,
     createdAt: msg.createdAt,
+    author: msg.author,
   };
 }
 
@@ -26,8 +27,9 @@ function mapMessage(msg) {
 function mapChat(chat) {
   return {
     _id: chat._id,
-    touristId: chat.touristId,
-    tourGuideId: chat.tourGuideId,
+    touristId: String(chat.touristId),
+    tourGuideId: String(chat.tourGuideId),
+    participants: chat.participants,
     messages: (chat.messages || []).map(mapMessage),
   };
 }

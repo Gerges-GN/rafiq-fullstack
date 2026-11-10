@@ -1,4 +1,6 @@
-import React, { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { useOutletContext } from 'react-router-dom';
+import { authFetch } from '../../services/authFetch';
 import {
   MapPin,
   Clock,
@@ -24,32 +26,12 @@ import {
 
 const API_BASE_URL = import.meta.env?.VITE_API_URL || "/api";
 
-// Reads whichever storage the login actually used (remember-me vs session-only)
-function getStoredAuth() {
-  const source =
-    localStorage.getItem("token") != null ? localStorage : sessionStorage;
-
-  const token = source.getItem("token");
-  let user = null;
-  try {
-    const raw = source.getItem("user");
-    user = raw ? JSON.parse(raw) : null;
-  } catch {
-    user = null;
-  }
-
-  return { token, user };
-}
-
 async function apiRequest(path, options = {}) {
-  const { token } = getStoredAuth();
-
   let res;
   try {
-    res = await fetch(`${API_BASE_URL}${path}`, {
+    res = await authFetch(`${API_BASE_URL}${path}`, {
       headers: {
         "Content-Type": "application/json",
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
       ...options,
     });
@@ -72,11 +54,6 @@ async function apiRequest(path, options = {}) {
   }
 
   return data;
-}
-
-function getCurrentUserId() {
-  const { user } = getStoredAuth();
-  return user?._id || user?.id || null;
 }
 
 const tripApi = {
@@ -102,13 +79,10 @@ const bookingApi = {
   getByTouristId: (touristId) => apiRequest(`/bookings/tourist/${touristId}`),
 };
 
-function guideLanguages(guide) {
-  return Array.isArray(guide.languages) ? guide.languages : [];
-}
-
 // --- MAIN COMPONENT ---
 
-export default function TripsPage({ user }) {
+export default function TripsPage() {
+  const user = useOutletContext();
   const [selectedTrip, setSelectedTrip] = useState(null);
   const [selectedGuide, setSelectedGuide] = useState(null);
 
@@ -127,13 +101,7 @@ export default function TripsPage({ user }) {
   // their avatarUrl for the booking payload).
   const [touristProfile, setTouristProfile] = useState(null);
 
-  const storedAuth = getStoredAuth();
-  const touristId =
-    user?._id ||
-    user?.id ||
-    storedAuth.user?._id ||
-    storedAuth.user?.id ||
-    getCurrentUserId();
+  const touristId = user?._id;
 
   const showNotification = (msg) => {
     setNotification(msg);
@@ -220,11 +188,7 @@ export default function TripsPage({ user }) {
     try {
       await bookingApi.create({
         touristId,
-        touristName:
-          touristProfile?.ownerName ||
-          user?.name ||
-          storedAuth.user?.name ||
-          "Tourist",
+        touristName: touristProfile?.ownerName || user?.name || "Tourist",
         touristimg: touristProfile?.avatarUrl || "",
         tourGuideId: trip.tourGuideId,
         tourGuideName: guide.name,
@@ -451,16 +415,14 @@ export default function TripsPage({ user }) {
                       <p className="text-sm font-bold text-slate-900 truncate">
                         {getGuideByOwnerId(selectedTrip.tourGuideId).name}
                       </p>
-                      <div className="flex items-center gap-1">
-                        <Star className="w-3 h-3 text-orange-500 fill-orange-500" />
-                        <span className="text-xs font-semibold text-slate-500">
-                          {(
-                            getGuideByOwnerId(selectedTrip.tourGuideId)
-                              .rating || 0
-                          ).toFixed(1)}{" "}
-                          · {getGuideByOwnerId(selectedTrip.tourGuideId).city}
-                        </span>
-                      </div>
+                      {getGuideByOwnerId(selectedTrip.tourGuideId).reviews > 0 ? (
+                        <div className="flex items-center gap-1">
+                          <Star className="w-3 h-3 text-orange-500 fill-orange-500" />
+                          <span className="text-xs font-semibold text-slate-500">
+                            {getGuideByOwnerId(selectedTrip.tourGuideId).rating.toFixed(1)} · {getGuideByOwnerId(selectedTrip.tourGuideId).city}
+                          </span>
+                        </div>
+                      ) : <span className="text-xs text-slate-500">No reviews yet · {getGuideByOwnerId(selectedTrip.tourGuideId).city}</span>}
                     </div>
                     <span className="text-[10px] font-bold text-orange-600 uppercase tracking-wide whitespace-nowrap">
                       View Profile

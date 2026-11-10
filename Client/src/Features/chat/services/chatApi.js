@@ -1,18 +1,19 @@
 // src/features/chat/services/chatApi.js
 
-const BASE_URL = import.meta.env.VITE_API_URL;
+import { authFetch } from '../../../services/authFetch';
 
-
+const BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
 /**
  * Thin fetch wrapper — throws on non-2xx responses so React Query's
  * error state is triggered correctly.
  */
 async function request(url, options = {}) {
-  const res = await fetch(`${BASE_URL}${url}`, {
-    headers: { "Content-Type": "application/json" },
-    credentials: "include",
+  const headers = new Headers(options.headers || {});
+  if (options.body && !headers.has('Content-Type')) headers.set('Content-Type', 'application/json');
+  const res = await authFetch(`${BASE_URL}${url}`, {
     ...options,
+    headers,
   });
 
   if (!res.ok) {

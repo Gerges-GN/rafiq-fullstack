@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { X, Plus, Save, Loader2, ImagePlus } from "lucide-react";
+import { authFetch } from '../../services/authFetch';
 const API_BASE_URL = import.meta.env.VITE_API_URL|| "/api";
 export default function CreateProfileModal({
   isOpen,
@@ -96,7 +97,7 @@ export default function CreateProfileModal({
     const uploadData = new FormData();
     uploadData.append("image", file);
 
-    const res = await fetch(`${API_BASE_URL}/upload/image`, {
+    const res = await authFetch(`${API_BASE_URL}/upload/image`, {
       method: "POST",
       body: uploadData,
     });
@@ -136,7 +137,7 @@ export default function CreateProfileModal({
         owner: userId,
       };
 
-      const res = await fetch(`${API_BASE_URL}/profiles`, {
+      const res = await authFetch(`${API_BASE_URL}/profiles`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),

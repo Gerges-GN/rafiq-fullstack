@@ -1,6 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const chatController = require('../Controllers/Chat');
+const { verifyToken, requireRole } = require('../Middleware/Auth');
+
+router.use(verifyToken, requireRole('tourist', 'tourguide'));
 
 router.post('/', chatController.createChat);
 router.post('/:id/messages', chatController.sendMessage);

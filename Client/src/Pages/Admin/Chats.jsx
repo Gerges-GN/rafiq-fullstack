@@ -16,7 +16,6 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import DashboardLayout from "../../Components/Layout/DashboardLayout.jsx";
-import { currentAdmin } from "../../data/mockData.js";
 import { fetchChats, fetchChatDetails, deleteChat } from "../../services/api.js";
 import { Toast, useToast, fadeUp, scaleIn } from "./Adminshared.jsx";
 
@@ -133,35 +132,31 @@ export default function Chats() {
 
   // Search filter
   const filteredChats = chats.filter(chat => {
-    const touristName = chat.touristId?.name || "";
-    const touristEmail = chat.touristId?.email || "";
-    const guideName = chat.tourGuideId?.name || "";
-    const guideEmail = chat.tourGuideId?.email || "";
+    const touristName = chat.participants?.tourist?.name || "";
+    const guideName = chat.participants?.tourGuide?.name || "";
     const q = searchQuery.toLowerCase();
     
     return (
       touristName.toLowerCase().includes(q) ||
-      touristEmail.toLowerCase().includes(q) ||
-      guideName.toLowerCase().includes(q) ||
-      guideEmail.toLowerCase().includes(q)
+      guideName.toLowerCase().includes(q)
     );
   });
 
   // Calculate statistics
   const totalMonitored = chats.length;
   const totalMessages = chats.reduce((sum, c) => sum + (c.messages?.length || 0), 0);
-  const uniqueGuides = new Set(chats.map(c => c.tourGuideId?._id).filter(Boolean)).size;
-  const uniqueTourists = new Set(chats.map(c => c.touristId?._id).filter(Boolean)).size;
+  const uniqueGuides = new Set(chats.map(c => c.tourGuideId).filter(Boolean)).size;
+  const uniqueTourists = new Set(chats.map(c => c.touristId).filter(Boolean)).size;
 
   // Helper to resolve sender details
   const getSenderDetails = (writerId) => {
     if (!activeChat) return {};
-    const touristId = activeChat.touristId?._id || activeChat.touristId;
-    const guideId = activeChat.tourGuideId?._id || activeChat.tourGuideId;
+    const touristId = activeChat.touristId;
+    const guideId = activeChat.tourGuideId;
     
     if (writerId === touristId) {
       return {
-        name: activeChat.touristId?.name || "Tourist",
+        name: activeChat.participants?.tourist?.name || "Tourist",
         role: "Tourist",
         isTourist: true,
         bubbleClass: "bg-orange-50 border border-orange-100 text-gray-800 rounded-2xl rounded-tl-none self-start",
@@ -169,7 +164,7 @@ export default function Chats() {
       };
     } else if (writerId === guideId) {
       return {
-        name: activeChat.tourGuideId?.name || "Tour Guide",
+        name: activeChat.participants?.tourGuide?.name || "Tour Guide",
         role: "Guide",
         isTourist: false,
         bubbleClass: "bg-blue-50 border border-blue-100 text-gray-800 rounded-2xl rounded-tr-none self-end ml-auto",
@@ -188,7 +183,7 @@ export default function Chats() {
   return (
     <DashboardLayout
       sidebarProps={{ footer: "logout" }}
-      topbarProps={{ title: "Admin Panel - Chat Monitor", user: currentAdmin.places }}
+    topbarProps={{ title: "Admin Panel - Chat Monitor" }}
     >
       <div className="space-y-6">
         {/* Header Stats */}
@@ -278,8 +273,8 @@ export default function Chats() {
                 </div>
               ) : (
                 filteredChats.map((chat) => {
-                  const tourist = chat.touristId?.name || "Unknown Tourist";
-                  const guide = chat.tourGuideId?.name || "Unknown Guide";
+                  const tourist = chat.participants?.tourist?.name || "Unknown Tourist";
+                  const guide = chat.participants?.tourGuide?.name || "Unknown Guide";
                   const isSelected = activeChat?._id === chat._id;
                   const lastMsg = chat.messages?.[chat.messages.length - 1];
 
@@ -346,9 +341,9 @@ export default function Chats() {
                   <div>
                     <div className="flex items-center gap-2">
                       <h3 className="font-bold text-gray-950 flex items-center gap-1.5">
-                        {activeChat.touristId?.name || "Tourist"} 
+                        {activeChat.participants?.tourist?.name || "Tourist"} 
                         <span className="text-gray-300 font-light text-sm">and</span> 
-                        <span className="text-blue-800">{activeChat.tourGuideId?.name || "Guide"}</span>
+                        <span className="text-blue-800">{activeChat.participants?.tourGuide?.name || "Guide"}</span>
                       </h3>
                       {isActiveLoading && <Loader2 size={13} className="animate-spin text-orange-500" />}
                     </div>

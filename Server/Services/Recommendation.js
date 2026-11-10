@@ -2,6 +2,9 @@ const GROQ_API_URL = process.env.GROQ_API_URL;
 const MODEL = process.env.MODEL;
 
 const getPlaceRecommendations = async (description, places) => {
+  if (!GROQ_API_URL || !process.env.GROQ_API_KEY || !MODEL) {
+    throw new Error("Recommendation service is not configured.");
+  }
   const placesForPrompt = places.map((p) => ({
     id: p._id.toString(),
     name: p.name,
@@ -37,11 +40,11 @@ ${JSON.stringify(placesForPrompt, null, 2)}`;
       temperature: 0.3,
       response_format: { type: "json_object" },
     }),
+    signal: AbortSignal.timeout(20000),
   });
 
   if (!res.ok) {
-    const errText = await res.text().catch(() => "");
-    throw new Error(`Groq API request failed (${res.status}): ${errText}`);
+    throw new Error(`Recommendation provider returned HTTP ${res.status}.`);
   }
 
   const data = await res.json();
@@ -54,7 +57,7 @@ ${JSON.stringify(placesForPrompt, null, 2)}`;
   let parsed;
   try {
     parsed = JSON.parse(content);
-  } catch (err) {
+  } catch {
     throw new Error("Failed to parse Groq API response as JSON");
   }
 

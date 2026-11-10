@@ -3,6 +3,7 @@ import { X, ImagePlus, Loader2 } from "lucide-react";
 import Button from "../common/Button.jsx";
 import Input from "../common/Input.jsx";
 import FilterDropdown from "../common/FilterDropdown.jsx";
+import { authFetch } from '../../services/authFetch';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "/api";
 
@@ -50,7 +51,7 @@ export default function AddPlaceModal({ isOpen, onClose, onAdd }) {
     const uploadData = new FormData();
     uploadData.append("image", file);
 
-    const res = await fetch(`${API_BASE_URL}/upload/image`, {
+    const res = await authFetch(`${API_BASE_URL}/upload/image`, {
       method: "POST",
       body: uploadData,
     });

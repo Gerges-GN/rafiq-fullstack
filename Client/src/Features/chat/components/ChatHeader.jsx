@@ -1,5 +1,6 @@
 // src/features/chat/components/ChatHeader.jsx
 import { X, ArrowLeft } from "lucide-react";
+import Avatar from "../../../Components/common/Avatar";
 
 /**
  * Header of the chat window: guide avatar, name, online indicator,
@@ -8,9 +9,8 @@ import { X, ArrowLeft } from "lucide-react";
  * from the list, and can return to it).
  */
 export default function ChatHeader({ participant, onClose, onBack }) {
-  console.log(participant)
-  const {name, ownerName, avatarUrl } = participant || {};
-  
+  const { name, avatarUrl } = participant || {};
+  const displayName = name || "Conversation";
 
   return (
     <div className="flex items-center justify-between px-4 py-3 bg-orange-600 rounded-t-xl">
@@ -26,16 +26,10 @@ export default function ChatHeader({ participant, onClose, onBack }) {
           </button>
         )}
 
-        <div className="relative shrink-0">
-          <img
-            src={avatarUrl || "https://i.pravatar.cc/100?img=12"}
-            alt={name || ownerName || "Chat"}
-            className="w-9 h-9 rounded-full object-cover ring-2 ring-white/30"
-          />
-        </div>
+        <Avatar src={avatarUrl} alt={displayName} size="xs" ring="ring-white/30" />
         <div className="min-w-0">
           <p className="text-sm font-semibold text-white truncate">
-            {name || ownerName || "Chat"}
+            {displayName}
           </p>
         </div>
       </div>

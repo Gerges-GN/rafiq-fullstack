@@ -1,38 +1,21 @@
+import { authFetch, getAuthToken } from './authFetch';
+
 const API_BASE_URL = import.meta.env.VITE_API_URL || "/api";
 
 // Single source of truth for the token — checks both storages.
 export function getToken() {
-  const t = localStorage.getItem("token") || sessionStorage.getItem("token");
-  return t;
-}
-
-export function getCurrentUserId() {
-  const token = getToken();
-  if (!token) {
-    console.warn("[auth] getCurrentUserId: no token found in either storage");
-    return null;
-  }
-  try {
-    const payload = JSON.parse(atob(token.split(".")[1]));
-    const id = payload.id || payload._id || payload.userId || payload.sub;
-    if (!id)
-      console.warn("[auth] payload has no id/_id/userId/sub field:", payload);
-    return id || null;
-  } catch (err) {
-    console.warn("[auth] token decode failed:", err);
-    return null;
-  }
+  return getAuthToken();
 }
 
 export async function apiRequest(path, options = {}) {
-  const token = getToken();
+  const headers = new Headers(options.headers || {});
+  if (!headers.has('Content-Type') && !(options.body instanceof FormData)) {
+    headers.set('Content-Type', 'application/json');
+  }
 
-  const res = await fetch(`${API_BASE_URL}${path}`, {
-    headers: {
-      "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
+  const res = await authFetch(`${API_BASE_URL}${path}`, {
     ...options,
+    headers,
   });
 
   const data = await res.json();
@@ -53,7 +36,7 @@ export async function uploadImage(file) {
   const uploadData = new FormData();
   uploadData.append("image", file);
 
-  const res = await fetch(`${API_BASE_URL}/upload/image`, {
+  const res = await authFetch(`${API_BASE_URL}/upload/image`, {
     method: "POST",
     body: uploadData,
   });
@@ -70,7 +53,7 @@ export async function uploadImage(file) {
 }
 
 export const profileApi = {
-  getByOwnerId: (ownerId) => apiRequest(`/tourguide-profiles/owner/${ownerId}`),
+  getByOwnerId: () => apiRequest(`/tourguide-profiles/me`),
   create: (payload) =>
     apiRequest(`/tourguide-profiles`, {
       method: "POST",

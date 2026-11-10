@@ -33,10 +33,10 @@ const tourGuideProfileSchema = new mongoose.Schema(
         status: {
             type: String,
             enum: {
-                values: ['pending', 'approved', 'suspended'],
-                message: "Status must be either 'pending', 'approved', or 'suspended'",
+                values: ['pending', 'approved', 'rejected', 'suspended'],
+                message: "Status must be pending, approved, rejected, or suspended",
             },
-            default: 'active',
+            default: 'pending',
         },
         rate: {
             type: String,

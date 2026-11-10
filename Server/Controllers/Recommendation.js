@@ -3,10 +3,13 @@ const { getPlaceRecommendations } = require("../Services/Recommendation");
 
 const recommendPlaces = async (req, res) => {
   try {
-    const { description } = req.body;
+    const description = req.body?.description;
 
-    if (!description || !description.trim()) {
+    if (typeof description !== "string" || !description.trim()) {
       return res.status(400).json({ message: "Please describe what you're looking for." });
+    }
+    if (description.trim().length > 1000) {
+      return res.status(400).json({ message: "Please keep your trip description under 1,000 characters." });
     }
 
     // Pull all places from our own DB — the model only picks among these,
@@ -31,8 +34,8 @@ const recommendPlaces = async (req, res) => {
       }));
 
     res.status(200).json({ recommendations });
-  } catch (err) {
-    res.status(500).json({ message: err.message || "Failed to generate recommendations" });
+  } catch {
+    res.status(502).json({ message: "Trip recommendations are temporarily unavailable." });
   }
 };
 

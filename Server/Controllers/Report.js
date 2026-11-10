@@ -31,7 +31,7 @@ async function computeDailyMetrics(dateInput) {
       Review.countDocuments({ createdAt: dateRange, flagged: true }),
       Booking.countDocuments({ createdAt: dateRange }),
       TourGuideProfile.countDocuments({
-        status: "Approved",
+        status: "approved",
         verified: true,
         createdAt: { $lt: end }, // existed as of that day
       }),
@@ -76,8 +76,8 @@ exports.generateReport = async (req, res) => {
     );
 
     res.status(200).json(report);
-  } catch (err) {
-    res.status(500).json({ message: err.message || "Failed to generate report." });
+  } catch {
+    res.status(500).json({ message: "Failed to generate report." });
   }
 };
 
@@ -94,8 +94,8 @@ exports.getReports = async (req, res) => {
 
     const reports = await Report.find(filter).sort({ date: -1 });
     res.status(200).json(reports);
-  } catch (err) {
-    res.status(500).json({ message: err.message || "Failed to fetch reports." });
+  } catch {
+    res.status(500).json({ message: "Failed to fetch reports." });
   }
 };
 
@@ -109,8 +109,8 @@ exports.getReportByDate = async (req, res) => {
       return res.status(404).json({ message: "No report found for that date." });
     }
     res.status(200).json(report);
-  } catch (err) {
-    res.status(500).json({ message: err.message || "Failed to fetch report." });
+  } catch {
+    res.status(500).json({ message: "Failed to fetch report." });
   }
 };
 
@@ -122,7 +122,7 @@ exports.deleteReport = async (req, res) => {
       return res.status(404).json({ message: "Report not found." });
     }
     res.status(200).json({ message: "Report deleted." });
-  } catch (err) {
-    res.status(500).json({ message: err.message || "Failed to delete report." });
+  } catch {
+    res.status(500).json({ message: "Failed to delete report." });
   }
 };

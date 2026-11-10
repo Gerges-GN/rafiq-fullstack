@@ -1,5 +1,8 @@
 const Review = require('../Models/Review')
 const Chat = require('../Models/Chat')
+const serializeChat = require('../Services/chatIdentity')
+
+const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 
 function parseDate(value) {
   if (!value) return null
@@ -101,7 +104,7 @@ exports.getClassifications = async (req, res) => {
 
 exports.getIncidents = async (req, res) => {
   try {
-    const incidents = await Review.find({ $or: [{ flagged: true }, { status: { $in: ['FLAGGED', 'UNDER REVIEW'] } }] })
+    const incidents = await Review.find({ $or: [{ flagged: true }, { status: { $in: ['FLAGGED', 'UNDER_REVIEW'] } }] })
       .sort({ createdAt: -1 })
       .limit(8)
       .lean()
@@ -131,7 +134,8 @@ exports.getReviews = async (req, res) => {
     const page = Math.max(1, Number(req.query.page) || 1)
     const limit = Math.min(50, Number(req.query.limit) || 12)
     const filter = req.query.filter || 'all'
-    const search = req.query.search?.trim() || ''
+    const search = typeof req.query.search === 'string' ? req.query.search.trim() : ''
+    if (search.length > 100) return res.status(400).json({ error: 'Search text must be 100 characters or fewer' })
     const sortBy = req.query.sortBy || 'newest'
 
     const query = {}
@@ -139,10 +143,11 @@ exports.getReviews = async (req, res) => {
     if (filter === 'guides') query.entityType = 'Guide'
     if (filter === 'negative') query.rating = { $lte: 2 }
     if (search) {
+      const matcher = new RegExp(escapeRegex(search), 'i')
       query.$or = [
-        { reviewerName: new RegExp(search, 'i') },
-        { entityName: new RegExp(search, 'i') },
-        { text: new RegExp(search, 'i') },
+        { reviewerName: matcher },
+        { entityName: matcher },
+        { text: matcher },
       ]
     }
 
@@ -159,19 +164,21 @@ exports.getReviews = async (req, res) => {
 
 exports.getFraud = async (req, res) => {
   try {
-    const search = req.query.search?.trim() || ''
+    const search = typeof req.query.search === 'string' ? req.query.search.trim() : ''
+    if (search.length > 100) return res.status(400).json({ error: 'Search text must be 100 characters or fewer' })
     const query = {
       $or: [
         { flagged: true },
         { rating: { $lte: 2 } },
-        { status: { $in: ['FLAGGED', 'UNDER REVIEW'] } },
+        { status: { $in: ['FLAGGED', 'UNDER_REVIEW'] } },
       ],
     }
     if (search) {
+      const matcher = new RegExp(escapeRegex(search), 'i')
       query.$or.push(
-        { reviewerName: new RegExp(search, 'i') },
-        { entityName: new RegExp(search, 'i') },
-        { text: new RegExp(search, 'i') },
+        { reviewerName: matcher },
+        { entityName: matcher },
+        { text: matcher },
       )
     }
 
@@ -222,7 +229,7 @@ exports.getReports = async (req, res) => {
     const classifications = Object.entries(counts).map(([label, count]) => ({ label, pct: Math.round((count / Math.max(1, totalReviews)) * 100), color: label === 'Guide' ? 'bg-brand' : label === 'Place' ? 'bg-orange-400' : 'bg-red-300' }))
 
     const incidents = reviews
-      .filter((review) => review.flagged || ['FLAGGED', 'UNDER REVIEW'].includes(review.status))
+      .filter((review) => review.flagged || ['FLAGGED', 'UNDER_REVIEW'].includes(review.status))
       .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
       .slice(0, 8)
       .map((review) => ({
@@ -259,9 +266,10 @@ exports.getFraudById = async (req, res) => {
 
 exports.flagReview = async (req, res) => {
   try {
-    const { id, reason } = req.body
+    const id = typeof req.body?.id === 'string' ? req.body.id : ''
     if (!id) return res.status(400).json({ error: 'id is required' })
-    const updated = await Review.findByIdAndUpdate(id, { flagged: true, flagReason: reason || 'Manual flag', status: 'FLAGGED' }, { new: true }).lean()
+    const updated = await Review.findByIdAndUpdate(id, { $set: { flagged: true, status: 'FLAGGED' } }, { new: true, runValidators: true }).lean()
+    if (!updated) return res.status(404).json({ error: 'Not found' })
     res.json({ updated })
   } catch (error) {
     console.error(error)
@@ -271,9 +279,10 @@ exports.flagReview = async (req, res) => {
 
 exports.unflagReview = async (req, res) => {
   try {
-    const { id } = req.body
+    const id = typeof req.body?.id === 'string' ? req.body.id : ''
     if (!id) return res.status(400).json({ error: 'id is required' })
-    const updated = await Review.findByIdAndUpdate(id, { flagged: false, flagReason: '', status: 'PUBLISHED' }, { new: true }).lean()
+    const updated = await Review.findByIdAndUpdate(id, { $set: { flagged: false, status: 'PUBLISHED' } }, { new: true, runValidators: true }).lean()
+    if (!updated) return res.status(404).json({ error: 'Not found' })
     res.json({ updated })
   } catch (error) {
     console.error(error)
@@ -284,9 +293,13 @@ exports.unflagReview = async (req, res) => {
 exports.updateFraud = async (req, res) => {
   try {
     const id = req.params.id
-    const updates = req.body || {}
-    delete updates._id
-    const updated = await Review.findByIdAndUpdate(id, updates, { new: true }).lean()
+    const body = req.body || {}
+    const updates = Object.fromEntries(['status', 'action', 'flagged'].filter((field) => Object.hasOwn(body, field)).map((field) => [field, body[field]]))
+    if (!Object.keys(updates).length) return res.status(400).json({ error: 'No valid moderation fields were provided' })
+    if (updates.status !== undefined && !['PUBLISHED', 'FLAGGED', 'UNDER_REVIEW', 'REMOVED'].includes(updates.status)) return res.status(400).json({ error: 'Invalid review status' })
+    if (updates.action !== undefined && !['Menu', 'Delete', 'Verify'].includes(updates.action)) return res.status(400).json({ error: 'Invalid review action' })
+    if (updates.flagged !== undefined && typeof updates.flagged !== 'boolean') return res.status(400).json({ error: 'flagged must be a boolean' })
+    const updated = await Review.findByIdAndUpdate(id, { $set: updates }, { new: true, runValidators: true }).lean()
     if (!updated) return res.status(404).json({ error: 'Not found' })
     res.json({ updated })
   } catch (error) {
@@ -297,6 +310,9 @@ exports.updateFraud = async (req, res) => {
 
 exports.dbScan = async (req, res) => {
   try {
+    if (process.env.ENABLE_ADMIN_DB_SCAN !== 'true') {
+      return res.status(404).json({ error: 'Database inspection is not enabled for this project.' })
+    }
     const { MongoClient } = require('mongodb')
     const uri = process.env.MONGO_URI
     if (!uri) return res.status(400).json({ error: 'MONGO_URI not set' })
@@ -338,26 +354,28 @@ exports.migrateReviews = async (req, res) => {
     const uri = process.env.MONGO_URI
     if (!uri) return res.status(400).json({ error: 'MONGO_URI not set' })
 
-    const sourceDbName = req.body?.source || 'test'
-    const targetDbName = req.body?.target || process.env.MONGO_DB || 'Rafiq'
+    const sourceDbName = process.env.REVIEW_MIGRATION_SOURCE_DB
+    const targetDbName = process.env.REVIEW_MIGRATION_TARGET_DB
+    if (!sourceDbName || !targetDbName) return res.status(404).json({ error: 'Review migration is not enabled for this project.' })
+    if (sourceDbName === targetDbName) return res.status(400).json({ error: 'Source and target databases must differ.' })
     const client = new MongoClient(uri)
     await client.connect()
 
     const sourceColl = client.db(sourceDbName).collection('reviews')
     const docs = await sourceColl.find().toArray()
     let migrated = 0
+    let skipped = 0
     for (const doc of docs) {
-      const filter = { _id: doc._id }
-      const replace = Object.assign({}, doc)
       try {
-        await client.db(targetDbName).collection('reviews').replaceOne(filter, replace, { upsert: true })
+        await client.db(targetDbName).collection('reviews').insertOne(doc)
         migrated += 1
-      } catch (e) {
-        // ignore individual errors
+      } catch (error) {
+        if (error.code === 11000) skipped += 1
+        else throw error
       }
     }
     await client.close()
-    res.json({ migrated, source: sourceDbName, target: targetDbName })
+    res.json({ migrated, skipped, source: sourceDbName, target: targetDbName })
   } catch (error) {
     console.error(error)
     res.status(500).json({ error: 'Migration failed' })
@@ -367,10 +385,8 @@ exports.migrateReviews = async (req, res) => {
 exports.getAllChats = async (req, res) => {
   try {
     const chats = await Chat.find()
-      .populate('touristId', 'name email')
-      .populate('tourGuideId', 'name email')
       .sort({ updatedAt: -1 });
-    res.status(200).json(chats);
+    res.status(200).json(await Promise.all(chats.map(serializeChat)));
   } catch (err) {
     console.error('Failed to get all chats for admin:', err);
     res.status(500).json({ error: 'Failed to fetch chats' });
@@ -379,14 +395,12 @@ exports.getAllChats = async (req, res) => {
 
 exports.getChatById = async (req, res) => {
   try {
-    const chat = await Chat.findById(req.params.id)
-      .populate('touristId', 'name email')
-      .populate('tourGuideId', 'name email');
+    const chat = await Chat.findById(req.params.id);
 
     if (!chat) {
       return res.status(404).json({ error: 'Chat not found' });
     }
-    res.status(200).json(chat);
+    res.status(200).json(await serializeChat(chat));
   } catch (err) {
     console.error('Failed to get chat by id for admin:', err);
     res.status(500).json({ error: 'Failed to fetch chat details' });

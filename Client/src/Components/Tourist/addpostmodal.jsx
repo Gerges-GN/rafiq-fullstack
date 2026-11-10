@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { X, Plus, ImagePlus, Loader2 } from "lucide-react";
+import { authFetch } from '../../services/authFetch';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "/api";
 
@@ -79,7 +80,7 @@ const AddPostModal = ({ onClose, ownerId, onPostCreated }) => {
     const uploadData = new FormData();
     uploadData.append("image", file);
 
-    const res = await fetch(`${API_BASE_URL}/upload/image`, {
+    const res = await authFetch(`${API_BASE_URL}/upload/image`, {
       method: "POST",
       body: uploadData,
     });
@@ -125,7 +126,7 @@ const AddPostModal = ({ onClose, ownerId, onPostCreated }) => {
         images.map((img) => uploadImage(img.file))
       );
 
-      const res = await fetch(`${API_BASE_URL}/posts`, {
+      const res = await authFetch(`${API_BASE_URL}/posts`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

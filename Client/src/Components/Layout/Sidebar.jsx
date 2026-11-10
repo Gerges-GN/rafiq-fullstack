@@ -1,4 +1,3 @@
-import React from "react";
 import { NavLink } from "react-router-dom";
 import {
   LayoutGrid,
@@ -6,7 +5,6 @@ import {
   MessageSquare,
   Map,
   Star,
-  ShieldAlert,
   Users,
   BarChart2,
   LogOut,
@@ -14,6 +12,7 @@ import {
   X,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../auth/AuthContext";
 /**
  * Left navigation sidebar shared across every dashboard page.
  *
@@ -25,12 +24,12 @@ import { useNavigate } from "react-router-dom";
  * @param {{status: 'operational'|'issue', label: string}} [props.systemStatus] - Used when footer='status'.
  */
 const NAV_ITEMS = [
-  { to: "/dashboard", label: "Dashboard", icon: LayoutGrid },
-  { to: "/guides", label: "Guides", icon: Compass },
-  { to: "/chats", label: "Chats", icon: MessageSquare },
-  { to: "/places", label: "Places", icon: Map },
+  { to: "/admin/dashboard", label: "Dashboard", icon: LayoutGrid },
+  { to: "/admin/guides", label: "Guides", icon: Compass },
+  { to: "/admin/chats", label: "Chats", icon: MessageSquare },
+  { to: "/admin/places", label: "Places", icon: Map },
   { to: "/admin/reviews", label: "Reviews", icon: Star },
-  { to: "/users", label: "Users", icon: Users },
+  { to: "/admin/users", label: "Users", icon: Users },
   { to: "/admin/reports", label: "Reports", icon: BarChart2 },
 ];
 
@@ -44,12 +43,9 @@ export default function Sidebar({
   onClose,
 }) {
   const navigate = useNavigate();
+  const { logout } = useAuth();
   const handleLogout = () => {
-    // clear both, since "Remember me" decided which one Login.jsx used
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    sessionStorage.removeItem("token");
-    sessionStorage.removeItem("user");
+    logout();
     navigate("/login");
   };
   return (
@@ -120,8 +116,9 @@ export default function Sidebar({
           <button
             type="button"
             onClick={handleLogout}
-            className="w-full flex items-center justify-center px-3 py-2.5 rounded-lg text-sm font-semibold text-[#fe6800] bg-[#fe6800] hover:bg-[#fe6800] transition-colors"
+            className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg text-sm font-semibold text-white bg-[#fe6800] hover:bg-[#e85f00] transition-colors"
           >
+            <LogOut size={18} />
             Logout
           </button>
         </div>

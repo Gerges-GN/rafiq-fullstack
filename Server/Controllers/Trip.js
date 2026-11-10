@@ -1,107 +1,91 @@
 const Trip = require('../Models/Trip');
+const TourGuideProfile = require('../Models/TourGuideProfile');
+const Booking = require('../Models/Booking');
 
-// POST /api/trips
+const EDIT_FIELDS = ['title', 'location', 'days', 'details', 'images'];
+
+function pick(body, fields) {
+  return Object.fromEntries(fields.filter((field) => Object.hasOwn(body || {}, field)).map((field) => [field, body[field]]));
+}
+
+function isOwnerOrAdmin(req, trip) {
+  return String(trip.tourGuideId) === String(req.user.id) || req.user.role === 'admin';
+}
+
 exports.createTrip = async (req, res) => {
   try {
-    const { title, location, days, details, images, tourGuideId } = req.body;
-
-    if (!title || !location || !days || !tourGuideId) {
-      return res
-        .status(400)
-        .json({ message: 'Title, location, days, and tourGuideId are required.' });
+    const fields = pick(req.body, EDIT_FIELDS);
+    if (!fields.title || !fields.location || !fields.days) {
+      return res.status(400).json({ message: 'Title, location, and days are required.' });
     }
-
-    const newTrip = await Trip.create({
-      title,
-      location,
-      days,
-      details,
-      images,
-      tourGuideId,
-    });
-
-    res.status(201).json(newTrip);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
+    const guideProfile = await TourGuideProfile.findOne({ owner: req.user.id }).select('status verified');
+    if (!guideProfile || guideProfile.status !== 'approved' || guideProfile.verified !== true) {
+      return res.status(403).json({ message: 'Only approved, verified guides can publish trips.' });
+    }
+    const trip = await Trip.create({ ...fields, tourGuideId: req.user.id });
+    return res.status(201).json(trip);
+  } catch {
+    return res.status(400).json({ message: 'Unable to create trip.' });
   }
 };
 
-// GET /api/trips  (supports ?location=&tourGuideId=)
 exports.getTrips = async (req, res) => {
   try {
-    const { location, tourGuideId } = req.query;
-
     const filter = {};
-
-    if (location) filter.location = location;
-    if (tourGuideId) filter.tourGuideId = tourGuideId;
-
+    if (req.query.location) filter.location = req.query.location;
+    if (req.query.tourGuideId) filter.tourGuideId = req.query.tourGuideId;
     const trips = await Trip.find(filter).sort({ createdAt: -1 });
-
-    res.status(200).json(trips);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
+    return res.status(200).json(trips);
+  } catch {
+    return res.status(500).json({ message: 'Unable to fetch trips.' });
   }
 };
 
-// GET /api/trips/:id
 exports.getTripById = async (req, res) => {
   try {
     const trip = await Trip.findById(req.params.id);
-
-    if (!trip) {
-      return res.status(404).json({ message: 'Trip not found' });
-    }
-
-    res.status(200).json(trip);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
+    if (!trip) return res.status(404).json({ message: 'Trip not found.' });
+    return res.status(200).json(trip);
+  } catch {
+    return res.status(400).json({ message: 'Unable to fetch trip.' });
   }
 };
 
-// PUT /api/trips/:id
 exports.updateTrip = async (req, res) => {
   try {
-    const updatedTrip = await Trip.findByIdAndUpdate(
-      req.params.id,
-      { $set: req.body },
-      { new: true, runValidators: true }
-    );
-
-    if (!updatedTrip) {
-      return res.status(404).json({ message: 'Trip not found' });
-    }
-
-    res.status(200).json(updatedTrip);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
+    const trip = await Trip.findById(req.params.id);
+    if (!trip) return res.status(404).json({ message: 'Trip not found.' });
+    if (!isOwnerOrAdmin(req, trip)) return res.status(403).json({ message: 'Forbidden.' });
+    const updates = pick(req.body, EDIT_FIELDS);
+    if (!Object.keys(updates).length) return res.status(400).json({ message: 'No valid trip fields provided.' });
+    Object.assign(trip, updates);
+    await trip.save();
+    return res.status(200).json(trip);
+  } catch {
+    return res.status(400).json({ message: 'Unable to update trip.' });
   }
 };
 
-// DELETE /api/trips/:id
 exports.deleteTrip = async (req, res) => {
   try {
-    const deletedTrip = await Trip.findByIdAndDelete(req.params.id);
-
-    if (!deletedTrip) {
-      return res.status(404).json({ message: 'Trip not found' });
+    const trip = await Trip.findById(req.params.id);
+    if (!trip) return res.status(404).json({ message: 'Trip not found.' });
+    if (!isOwnerOrAdmin(req, trip)) return res.status(403).json({ message: 'Forbidden.' });
+    if (await Booking.exists({ tripId: trip._id })) {
+      return res.status(409).json({ message: 'This trip has bookings and cannot be deleted while those records exist.' });
     }
-
-    res.status(200).json({ message: 'Trip deleted successfully' });
-  } catch (err) {
-    res.status(500).json({ message: err.message });
+    await trip.deleteOne();
+    return res.status(200).json({ message: 'Trip deleted successfully.' });
+  } catch {
+    return res.status(400).json({ message: 'Unable to delete trip.' });
   }
 };
 
-// GET /api/trips/tourguide/:tourGuideId
 exports.getTripsByTourGuideId = async (req, res) => {
   try {
-    const { tourGuideId } = req.params;
-
-    const trips = await Trip.find({ tourGuideId }).sort({ createdAt: -1 });
-
-    res.status(200).json(trips);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
+    const trips = await Trip.find({ tourGuideId: req.params.tourGuideId }).sort({ createdAt: -1 });
+    return res.status(200).json(trips);
+  } catch {
+    return res.status(400).json({ message: 'Unable to fetch trips.' });
   }
 };

@@ -4,6 +4,7 @@ const messageSchema = new mongoose.Schema(
   {
     writerId: {
       type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
       required: [true, 'Writer id is required'],
     },
     content: {

@@ -2,150 +2,107 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 require("dotenv").config();
+const createRateLimiter = require("./Middleware/rateLimit");
+
+if (!process.env.JWT_SECRET || Buffer.byteLength(process.env.JWT_SECRET, 'utf8') < 32) {
+    throw new Error("JWT_SECRET must be configured with at least 32 bytes");
+}
+if (!process.env.MONGO_URI) {
+    throw new Error("MONGO_URI must be configured");
+}
 
 const app = express();
 
-console.log("=== SERVER START ===");
-console.log("NODE_ENV:", process.env.NODE_ENV);
-console.log("MONGO_URI exists:", !!process.env.MONGO_URI);
-console.log("JWT_SECRET exists:", !!process.env.JWT_SECRET);
+const allowedOrigins = new Set(
+  (process.env.FRONTEND_ORIGINS || "http://localhost:5173,http://127.0.0.1:5173,http://localhost:4173")
+    .split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean),
+);
 
-app.use(express.json());
+app.disable("x-powered-by");
+app.use((req, res, next) => {
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+  res.setHeader("X-Frame-Options", "DENY");
+  next();
+});
+app.use(express.json({ limit: "100kb" }));
 app.use(express.urlencoded({ extended: true }));
 
 app.use(cors({
-  origin: true,
-  credentials: true,
+  origin(origin, callback) {
+    callback(null, !origin || allowedOrigins.has(origin));
+  },
+  credentials: false,
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
 }));
 
-// MongoDB
-mongoose.connect(process.env.MONGO_URI)
-.then(() => console.log("✅ MongoDB Connected"))
-.catch(err => {
-    console.error("❌ Mongo Error");
-    console.error(err);
+const databaseReady = mongoose.connect(process.env.MONGO_URI)
+  .then(() => {
+    console.log("MongoDB connected");
+    return true;
+  })
+  .catch((error) => {
+    console.error("MongoDB connection failed:", error.message);
+    return false;
+  });
+
+// Requests wait for the initial connection and never present a disconnected API as healthy.
+app.use(async (req, res, next) => {
+  try {
+    if (mongoose.connection.readyState !== 1) await databaseReady;
+    if (mongoose.connection.readyState !== 1) {
+      return res.status(503).json({ message: "Database is unavailable." });
+    }
+    return next();
+  } catch {
+    return res.status(503).json({ message: "Database is unavailable." });
+  }
 });
 
-// ---------- LOAD ROUTES ONE BY ONE ----------
-try {
-    app.use("/api/users", require("./Routes/User"));
-    console.log("✅ User route loaded");
-} catch (e) {
-    console.error("❌ User route failed");
-    console.error(e);
-}
+app.use("/api/users/login", createRateLimiter({ windowMs: 15 * 60 * 1000, max: 10 }));
+app.use("/api/users/register", createRateLimiter({ windowMs: 60 * 60 * 1000, max: 5 }));
+app.use("/api/ai", createRateLimiter({ windowMs: 60 * 1000, max: 20 }));
 
-try {
-    app.use("/api/profiles", require("./Routes/TouristProfile"));
-    console.log("✅ TouristProfile route loaded");
-} catch (e) {
-    console.error("❌ TouristProfile route failed");
-    console.error(e);
-}
-
-try {
-    app.use("/api/posts", require("./Routes/Post"));
-    console.log("✅ Post route loaded");
-} catch (e) {
-    console.error("❌ Post route failed");
-    console.error(e);
-}
-
-try {
-    app.use("/api/places", require("./Routes/Place"));
-    console.log("✅ Place route loaded");
-} catch (e) {
-    console.error("❌ Place route failed");
-    console.error(e);
-}
-
-try {
-    app.use("/api/upload", require("./Routes/Upload"));
-    console.log("✅ Upload route loaded");
-} catch (e) {
-    console.error("❌ Upload route failed");
-    console.error(e);
-}
-
-try {
-    app.use("/api/ai", require("./Routes/Recommendation"));
-    console.log("✅ Recommendation route loaded");
-} catch (e) {
-    console.error("❌ Recommendation route failed");
-    console.error(e);
-}
-
-try {
-    app.use("/api/chats", require("./Routes/Chat"));
-    console.log("✅ Chat route loaded");
-} catch (e) {
-    console.error("❌ Chat route failed");
-    console.error(e);
-}
-
-try {
-    app.use("/api/trips", require("./Routes/Trip"));
-    console.log("✅ Trip route loaded");
-} catch (e) {
-    console.error("❌ Trip route failed");
-    console.error(e);
-}
-
-try {
-    app.use("/api/tourguide-profiles", require("./Routes/TourGuideProfile"));
-    console.log("✅ TourGuide route loaded");
-} catch (e) {
-    console.error("❌ TourGuide route failed");
-    console.error(e);
-}
-
-try {
-    app.use("/api/bookings", require("./Routes/Booking"));
-    console.log("✅ Booking route loaded");
-} catch (e) {
-    console.error("❌ Booking route failed");
-    console.error(e);
-}
-
-try {
-    app.use("/api/reviews", require("./Routes/Review"));
-    console.log("✅ Review route loaded");
-} catch (e) {
-    console.error("❌ Review route failed");
-    console.error(e);
-}
-
-try {
-    app.use("/api/reports", require("./Routes/Report"));
-    console.log("✅ Report route loaded");
-} catch (e) {
-    console.error("❌ Report route failed");
-    console.error(e);
-}
-
-try {
-    app.use("/api/admin", require("./Routes/Admin"));
-    console.log("✅ Admin route loaded");
-} catch (e) {
-    console.error("❌ Admin route failed");
-    console.error(e);
-}
+app.use("/api/users", require("./Routes/User"));
+app.use("/api/profiles", require("./Routes/TouristProfile"));
+app.use("/api/posts", require("./Routes/Post"));
+app.use("/api/places", require("./Routes/Place"));
+app.use("/api/upload", require("./Routes/Upload"));
+app.use("/api/ai", require("./Routes/Recommendation"));
+app.use("/api/chats", require("./Routes/Chat"));
+app.use("/api/trips", require("./Routes/Trip"));
+app.use("/api/tourguide-profiles", require("./Routes/TourGuideProfile"));
+app.use("/api/bookings", require("./Routes/Booking"));
+app.use("/api/reviews", require("./Routes/Review"));
+app.use("/api/reports", require("./Routes/Report"));
+app.use("/api/admin", require("./Routes/Admin"));
 
 app.get("/api", (req, res) => {
     res.json({ status: "Backend running" });
 });
 
 app.use((err, req, res, next) => {
-    console.error(err);
-    res.status(500).json({
-        success: false,
-        message: err.message
-    });
+    console.error("Unhandled API error:", err.message);
+    const status = err.code === 'LIMIT_FILE_SIZE' ? 413 : (err.statusCode || err.status || 500);
+    const safeStatus = status >= 400 && status < 500 ? status : 500;
+    const message = safeStatus === 413
+      ? "The request is too large."
+        : safeStatus < 500
+        ? "Invalid request."
+        : "Internal server error.";
+    res.status(safeStatus).json({ success: false, message });
 });
 
 if (process.env.NODE_ENV !== "production") {
-    app.listen(process.env.PORT || 5000, () => {
-        console.log("Local server started");
+    databaseReady.then((ready) => {
+      if (!ready) {
+        process.exitCode = 1;
+        return;
+      }
+      app.listen(process.env.PORT || 5000, () => console.log("Local server started"));
     });
 }
 

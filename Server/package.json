@@ -3,8 +3,15 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "start": "node app.js",
-    "dev": "nodemon app.js"
+    "start": "node App.js",
+    "dev": "nodemon App.js",
+    "test": "node --test",
+    "bootstrap-admin": "node scripts/bootstrap-admin.js",
+    "seed:demo": "node scripts/seed-demo.js",
+    "seed:demo:images": "node scripts/seed-demo-images.js",
+    "seed:demo:inspect": "node scripts/inspect-demo-db.js",
+    "demo:identities:update": "node scripts/update-demo-identities.js",
+    "verify:demo:accounts": "node scripts/verify-demo-accounts.js"
   },
   "keywords": [],
   "author": "",

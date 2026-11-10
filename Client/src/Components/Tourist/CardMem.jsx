@@ -2,6 +2,9 @@ import { useState } from 'react';
 import { 
   MapPin, Heart, MessageCircle, Bookmark
 } from 'lucide-react';
+import { authFetch } from '../../services/authFetch';
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
 const PostCard = ({ post, onToggleSave, onOpenPost }) => {
   const [isSaving, setIsSaving] = useState(false);
@@ -15,7 +18,7 @@ const PostCard = ({ post, onToggleSave, onOpenPost }) => {
     setIsSaving(true);
 
     try {
-      const res = await fetch(`http://localhost:5000/api/posts/${post.id}/save`, {
+      const res = await authFetch(`${API_BASE_URL}/posts/${post.id}/save`, {
         method: 'PATCH',
       });
 

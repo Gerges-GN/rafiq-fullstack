@@ -1,6 +1,4 @@
-// src/features/chat/components/ConversationItem.jsx
-import { useState, useEffect, useRef } from "react";
-import useParticipantProfile from "../hooks/useParticipantProfile";
+import Avatar from "../../../Components/common/Avatar";
 function formatRelativeTime(dateStr) {
   if (!dateStr) return "";
   const diffMs = Date.now() - new Date(dateStr).getTime();
@@ -18,21 +16,18 @@ export default function ConversationItem({
   isActive,
   onClick,
   currentUserId,
-  currentUserRole,
 }) {
-  
-  const { touristId, tourGuideId, messages = [] } = chat;
+  const { touristId, messages = [] } = chat;
 
-  const participantId = touristId === currentUserId ? tourGuideId : touristId;
+  const isTourist = String(touristId) === String(currentUserId);
+  const participant = chat.participants?.[isTourist ? "tourGuide" : "tourist"];
 
   const lastMessage = messages[messages.length - 1];
 
   const unreadCount = 0;
 
-  const fetchedProfile = useParticipantProfile(participantId, currentUserRole);
-
-  const avatarUrl = fetchedProfile?.avatarUrl;
-  const name = fetchedProfile?.name || fetchedProfile?.ownerName || "…";
+  const avatarUrl = participant?.avatarUrl;
+  const name = participant?.name || "Unknown traveler";
 
   return (
     <button
@@ -43,11 +38,7 @@ export default function ConversationItem({
         ${isActive ? "bg-orange-50" : "hover:bg-gray-200"}
       `}
     >
-      <img
-        src={avatarUrl}
-        alt={name}
-        className="w-10 h-10 rounded-full object-cover shrink-0 bg-gray-100"
-      />
+      <Avatar src={avatarUrl} alt={name} size="sm" />
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between gap-2">
           <p

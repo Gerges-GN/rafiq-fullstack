@@ -1,7 +1,6 @@
 import React from 'react'
 import DashboardLayout from '../../Components/Layout/DashboardLayout.jsx'
 import Card from '../../Components/common/Card.jsx'
-import { currentAdmin } from '../../data/mockData.js'
 
 /**
  * Generic placeholder used for sidebar routes that weren't part of the
@@ -16,7 +15,7 @@ export default function ComingSoon({ title }) {
   return (
     <DashboardLayout
       sidebarProps={{ footer: 'logout' }}
-      topbarProps={{ title: 'Admin Panel - Tourism Management', user: currentAdmin.guides }}
+    topbarProps={{ title: 'Admin Panel - Tourism Management', showLogout: true }}
     >
       <Card className="flex flex-col items-center justify-center text-center py-24">
         <h2 className="text-xl font-bold text-ink-900 mb-2">{title}</h2>

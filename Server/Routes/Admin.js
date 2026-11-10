@@ -1,6 +1,9 @@
 const express = require('express')
 const router = express.Router()
 const Admin = require('../Controllers/Admin')
+const { verifyToken, requireRole } = require('../Middleware/Auth')
+
+router.use(verifyToken, requireRole('admin'))
 
 router.get('/stats', Admin.getStats)
 router.get('/chart', Admin.getChart)

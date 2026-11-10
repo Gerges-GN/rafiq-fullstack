@@ -1,27 +1,26 @@
+import { authFetch } from './authFetch';
+
 // --- INLINE API HELPERS (no separate api.js file) ---
 //
 // ASSUMPTIONS (change these if wrong):
 //   1. Base URL — reads VITE_API_URL from your .env if set (e.g.
 //      VITE_API_URL=http://localhost:5000/api), otherwise falls back to the
 //      relative "/api" (only works if your dev server proxies it).
-//   2. Auth token is stored in sessionStorage under the key "token", and the
-//      backend's verifyToken middleware expects "Authorization: Bearer <token>".
-//   3. Logged-in user's info (id, name, etc.) is stored in sessionStorage
-//      under the key "user" as JSON, alongside "token".
+// Authenticated requests use the token stored by Login in localStorage or sessionStorage.
 
 const API_BASE_URL = import.meta.env?.VITE_API_URL || "/api";
 
 export async function apiRequest(path, options = {}) {
-  const token = sessionStorage.getItem("token");
+  const headers = new Headers(options.headers || {});
+  if (!headers.has('Content-Type') && !(options.body instanceof FormData)) {
+    headers.set('Content-Type', 'application/json');
+  }
 
   let res;
   try {
-    res = await fetch(`${API_BASE_URL}${path}`, {
-      headers: {
-        "Content-Type": "application/json",
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
+    res = await authFetch(`${API_BASE_URL}${path}`, {
       ...options,
+      headers,
     });
   } catch {
     throw new Error(
@@ -87,15 +86,4 @@ export const reviewApi = {
 
 export function guideLanguages(guide) {
   return Array.isArray(guide.languages) ? guide.languages : [];
-}
-
-// Reads the logged-in user's info out of localStorage.
-// Change this if your login flow stores the user differently.
-export function getCurrentUser() {
-  try {
-    const raw = localStorage.getItem("tourist");
-    return raw ? JSON.parse(raw) : null;
-  } catch {
-    return null;
-  }
 }

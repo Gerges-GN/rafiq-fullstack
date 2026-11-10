@@ -9,6 +9,7 @@ import ChatPanel from "./components/ChatPanel";
 import useChatList from "./hooks/useChatList";
 import useChat from "./hooks/useChat";
 import { useChatContext } from "./context/ChatContext";
+import { useAuth } from '../../auth/AuthContext';
 
 export { ChatProvider, useChatContext } from "./context/ChatContext";
 
@@ -22,11 +23,7 @@ export default function ChatWidget({ initialChatId }) {
   const { isOpen, selectedGuide, chatId, openChat, closeChat } =
     useChatContext();
 
-  const [user] = useState(() =>
-    JSON.parse(
-      localStorage.getItem("user") || sessionStorage.getItem("user") || "null",
-    ),
-  );
+  const { user } = useAuth();
 
   // Keep view local to the widget (Context is UI-only per requirement).
   const [view, setView] = useState(initialChatId ? "conversation" : "list");
@@ -126,14 +123,12 @@ export default function ChatWidget({ initialChatId }) {
                 onSelect={openConversation}
                 isLoading={isListLoading}
                 currentUserId={userId}
-                currentUserRole={user.role}
               />
             </>
           ) : (
             <ChatPanel
               messages={messages}
               currentUserId={userId}
-              currentUserRole={user.role}
               chat={chatForPanel}
               isLoading={isChatLoading}
               isSending={isSending}

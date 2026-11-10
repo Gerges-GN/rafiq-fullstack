@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { LayoutDashboard, User, MessageCircle, Loader2, AlertTriangle, Sparkles, Trash2, CheckCircle2, XCircle, Save, PlusCircle } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useOutletContext } from "react-router-dom";
+import { useAuth } from "../../auth/AuthContext";
 import GuideInbox from "../../Features/chat/pages/GuideInbox";
 
 import {
@@ -8,34 +9,29 @@ import {
   tripApi,
   bookingApi,
   uploadImage,
-  getCurrentUserId,
   DEFAULT_AVATAR,
 } from "../../services/Guideapi";
 
 import AvailabilityCard from "../../Components/Tourguide/Availabilitycard";
-import NewTripForm from "../../components/Tourguide/NewTripForm";
-import BookingRequests from "../../components/Tourguide/BookingRequests";
-import TripPackagesList from "../../components/Tourguide/TripPackagesList";
-import TripDetailsModal from "../../components/Tourguide/TripDetailsModal";
-import ProfileView from "../../components/Tourguide/ProfileView";
-import ProfileEditForm from "../../components/Tourguide/ProfileEditForm";
-import CreateGuideProfileModal from "../../components/Tourguide/CreateGuideProfileModal";
+import NewTripForm from "../../Components/Tourguide/Newtripform";
+import BookingRequests from "../../Components/Tourguide/Bookingrequests";
+import TripPackagesList from "../../Components/Tourguide/Trippackageslist";
+import TripDetailsModal from "../../Components/Tourguide/Tripdetailsmodal";
+import ProfileView from "../../Components/Tourguide/Profileview";
+import ProfileEditForm from "../../Components/Tourguide/Profileeditform";
+import CreateGuideProfileModal from "../../Components/Tourguide/Createguideprofilemodal";
 
 // --- MAIN PORTAL PAGE COMPONENT ---
 const GuideDashboard = () => {
   const navigate = useNavigate();
+  const { logout } = useAuth();
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    sessionStorage.removeItem("token");
-    sessionStorage.removeItem("user");
+    logout();
     navigate("/login");
   };
   const [activeTab, setActiveTab] = useState("dashboard");
-  const [user] = useState(() =>
-        JSON.parse(localStorage.getItem("user") || sessionStorage.getItem("user") || "null")
-  );
-  const tourGuideId = user?._id || user?.id || getCurrentUserId();
+  const user = useOutletContext();
+  const tourGuideId = user?._id;
   const [profileInfo, setProfileInfo] = useState(null);
   const [profileNotFound, setProfileNotFound] = useState(false);
   const [isCreateModalOpen, setCreateModalOpen] = useState(false);
@@ -406,7 +402,7 @@ const GuideDashboard = () => {
           </div>
         )}
 
-        {activeTab === "chat" && <GuideInbox guideId={tourGuideId} currentUserRole={user.role}/>}
+        {activeTab === "chat" && <GuideInbox guideId={tourGuideId} />}
       </div>
 
       <TripDetailsModal

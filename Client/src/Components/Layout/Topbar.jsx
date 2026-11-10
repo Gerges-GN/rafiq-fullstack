@@ -3,6 +3,7 @@ import { Bell, Settings, LogOut, Menu } from "lucide-react";
 import Avatar from "../common/Avatar.jsx";
 import SearchInput from "../common/SearchInput.jsx";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from '../../auth/AuthContext';
 
 export default function Topbar({
   title,
@@ -14,16 +15,10 @@ export default function Topbar({
 }) {
   const navigate = useNavigate();
 
-  const user = JSON.parse(
-    localStorage.getItem("user") || sessionStorage.getItem("user") || "null"
-  );
+  const { user, logout } = useAuth();
 
   const handleLogout = () => {
-    // clear both, since "Remember me" decided which one Login.jsx used
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    sessionStorage.removeItem("token");
-    sessionStorage.removeItem("user");
+    logout();
     navigate("/login");
   };
 
@@ -75,6 +70,18 @@ export default function Topbar({
             <p className="text-xs text-ink-400">{user?.role}</p>
           </div>
         </div>
+
+        {showLogout && (
+          <button
+            type="button"
+            onClick={handleLogout}
+            className={`inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold transition-colors ${logoutVariant === "text" ? "text-ink-500 hover:bg-red-50 hover:text-status-red" : "border border-surface-border text-ink-600 hover:bg-red-50 hover:text-status-red"}`}
+            aria-label="Log out"
+          >
+            <LogOut size={17} />
+            <span className="hidden sm:inline">Logout</span>
+          </button>
+        )}
 
         
       </div>

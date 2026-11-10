@@ -10,11 +10,12 @@ import AddPlaceCard from "../../Components/common/AddPlaceCard.jsx";
 import Card from "../../Components/common/Card.jsx";
 import DataTable from "../../Components/common/DataTable.jsx";
 import Badge from "../../Components/common/Badge.jsx";
-import { currentAdmin } from "../../data/mockData.js";
 import AddPlaceModal from "../../Components/modals/AddPlaceModal.jsx";
 import PlaceDetailModal from "../../Components/common/PlaceDetailModal.jsx";
 import EditPlaceModal from "../../Components/modals/EditPlaceModal.jsx";
 import DeleteConfirmationModal from "../../Components/modals/DeleteConfirmationModal.jsx";
+import { authFetch } from '../../services/authFetch';
+import { useAuth } from '../../auth/AuthContext';
 const API_BASE_URL = import.meta.env.VITE_API_URL || "/api";
 const getPaginationItems = (currentPage, totalPages) => {
   if (totalPages <= 10) {
@@ -52,7 +53,7 @@ const getPaginationItems = (currentPage, totalPages) => {
   return result;
 };
 
-const getLatestUpdates = (places) => {
+const getLatestUpdates = (places, modifiedBy) => {
   const sortedPlaces = [...places].sort((a, b) => {
     const dateA = new Date(a.updatedAt || a.createdAt);
     const dateB = new Date(b.updatedAt || b.createdAt);
@@ -66,7 +67,7 @@ const getLatestUpdates = (places) => {
     return {
       id: place.id,
       name: place.name,
-      modifiedBy: currentAdmin.places.name,
+      modifiedBy,
       date: updatedAt.toLocaleDateString("en-US", {
         month: "short",
         day: "numeric",
@@ -80,6 +81,7 @@ const getLatestUpdates = (places) => {
 const ITEMS_PER_PAGE = 5;
 
 export default function Places() {
+  const { user } = useAuth();
   const [allPlaces, setAllPlaces] = useState([]);
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -97,7 +99,7 @@ export default function Places() {
       setIsLoading(true);
       setError(null);
       try {
-        const response = await fetch(`${API_BASE_URL}/places`);
+        const response = await authFetch(`${API_BASE_URL}/places`);
         if (!response.ok) {
           throw new Error("Failed to load tourist places.");
         }
@@ -149,7 +151,7 @@ export default function Places() {
         category: newPlaceData.category,
         city: newPlaceData.location,
       };
-      const response = await fetch(`${API_BASE_URL}/places/add`, {
+      const response = await authFetch(`${API_BASE_URL}/places/add`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -202,7 +204,7 @@ export default function Places() {
         description: updatedPlace.description,
       };
 
-      const response = await fetch(
+      const response = await authFetch(
         `${API_BASE_URL}/places/${updatedPlace.id}`,
         {
           method: "PUT",
@@ -249,7 +251,7 @@ export default function Places() {
   const handleDeletePlace = async (placeId) => {
     setError(null);
     try {
-      const response = await fetch(`${API_BASE_URL}/places/${placeId}`, {
+      const response = await authFetch(`${API_BASE_URL}/places/${placeId}`, {
         method: "DELETE",
       });
 
@@ -332,7 +334,7 @@ export default function Places() {
     startIndex,
     startIndex + ITEMS_PER_PAGE,
   );
-  const latestUpdates = getLatestUpdates(allPlaces);
+  const latestUpdates = getLatestUpdates(allPlaces, user?.name || 'Admin');
   const paginationItems = getPaginationItems(currentPage, totalPages);
 
   return (
@@ -340,7 +342,6 @@ export default function Places() {
       sidebarProps={{ showLogo: false, footer: "logout", active: "/places" }}
       topbarProps={{
         title: "Dashboard - Tourism Mgmt",
-        user: currentAdmin.places,
         showLogout: true,
         logoutVariant: "text",
       }}

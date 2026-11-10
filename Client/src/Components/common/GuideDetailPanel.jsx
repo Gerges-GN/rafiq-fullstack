@@ -16,6 +16,7 @@ export default function GuideDetailPanel({
   guide,
   onClose,
   onApprove,
+  onReject,
   onSuspend,
 }) {
   if (!guide) return null;
@@ -34,9 +35,11 @@ export default function GuideDetailPanel({
           <Avatar src={guide.avatarUrl} alt={guide.name} size="lg" />
           <div>
             <h3 className="text-xl font-bold text-ink-900">{guide.name}</h3>
-            <p className="text-ink-500">{guide.location}</p>
+            <p className="text-ink-500">{guide.city || guide.location}</p>
           </div>
         </div>
+
+        {guide.bio && <p className="text-sm leading-relaxed text-ink-600">{guide.bio}</p>}
 
         <Card>
           <div className="space-y-4">
@@ -82,6 +85,15 @@ export default function GuideDetailPanel({
               onClick={onApprove}
             >
               Approve Guide
+            </Button>
+          )}
+          {guide.status === "Pending" && (
+            <Button
+              variant="outline"
+              icon={<XCircle size={16} />}
+              onClick={onReject}
+            >
+              Reject Application
             </Button>
           )}
           {guide.status !== "Suspended" && (

@@ -1,42 +1,12 @@
 import { useState } from 'react';
 import {
-  MapPin, Calendar, Edit2, Share, CheckCircle, Check
+  MapPin, Calendar, Edit2, Share, CheckCircle
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
-const ProfileHeader = ({ user, stats, id }) => {
+const ProfileHeader = ({ user, stats }) => {
   const navigate = useNavigate();
-  const [copied, setCopied] = useState(false);
-
-  const handleShare = async () => {
-    const profileUrl = `${window.location.origin}/profile/${id}`;
-    const shareData = {
-      title: `${user.name} on Rafiq`,
-      text: `Check out ${user.name}'s travel profile on Rafiq!`,
-      url: profileUrl,
-    };
-
-    // Use native share sheet if available (mobile browsers, some desktop browsers)
-    if (navigator.share) {
-      try {
-        await navigator.share(shareData);
-      } catch (err) {
-        // User cancelled the share sheet — not an actual error, ignore it
-        if (err.name !== 'AbortError') {
-          console.error('Share failed:', err);
-        }
-      }
-    } else {
-      // Fallback: copy link to clipboard
-      try {
-        await navigator.clipboard.writeText(profileUrl);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
-      } catch (err) {
-        console.error('Copy failed:', err);
-      }
-    }
-  };
+  const [shareNotice, setShareNotice] = useState(false);
   return (
     <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 relative mb-6">
       <div className="h-32 sm:h-48 md:h-64 w-full relative">
@@ -74,17 +44,17 @@ const ProfileHeader = ({ user, stats, id }) => {
             ))}
           </div>
           <div className="flex gap-3 w-full sm:w-auto">
-            <button onClick={() => navigate(`/profile/edit/${id}`)} className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors">
+            <button onClick={() => navigate('/tourist/profile/edit')} className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors">
               <Edit2 className="w-4 h-4" /> Edit
             </button>
             <button
-              onClick={handleShare}
+              onClick={() => setShareNotice(true)}
               className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg text-sm font-medium hover:bg-orange-600 transition-colors shadow-sm shadow-orange-500/20"
             >
-              {copied ? <Check className="w-4 h-4" /> : <Share className="w-4 h-4" />}
-              {copied ? 'Copied!' : 'Share'}
+              <Share className="w-4 h-4" /> Share
             </button>
           </div>
+          {shareNotice && <p role="status" className="text-xs text-gray-500">Profiles are private, so sharing is unavailable.</p>}
         </div>
       </div>
     </div>

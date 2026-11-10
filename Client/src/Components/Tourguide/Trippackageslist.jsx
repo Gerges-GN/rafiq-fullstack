@@ -1,5 +1,5 @@
 import React from "react";
-import TripCard from "./TripCard";
+import TripCard from "./Tripcard";
 
 const TripPackagesList = ({ trips, onOpenDetails, onDeleteTrip }) => {
   return (

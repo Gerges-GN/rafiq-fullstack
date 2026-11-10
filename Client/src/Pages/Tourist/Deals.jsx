@@ -1,9 +1,9 @@
 import { useMemo, useState } from "react";
+import { useOutletContext } from 'react-router-dom';
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { MapPin, Inbox, LogIn, Clock } from "lucide-react";
 import { bookingApi, tripApi } from "../../services/Touristapi";
-import { getCurrentTouristId } from "../../utils/currentTourest";
 import DealDetailsModal from "../../Components/Tourist/DealDetailsModal";
 
 const STATUS_STYLES = {
@@ -99,12 +99,13 @@ function DealRow({ deal, index, onOpenDetails }) {
 }
 
 export default function MyDeals() {
+  const verifiedUser = useOutletContext();
   const [status, setStatus] = useState("All");
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [selectedDeal, setSelectedDeal] = useState(null);
 
-  const touristId = getCurrentTouristId();
+  const touristId = verifiedUser?._id;
 
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ["my-deals", touristId],

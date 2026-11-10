@@ -1,14 +1,16 @@
 import { useState, useEffect, useCallback } from "react";
-import { useParams } from "react-router-dom";
+import { useOutletContext } from "react-router-dom";
 import { MapPin, MessageCircle, Globe, PlusCircle } from "lucide-react";
 
 import ProfileHeader from "../../Components/Tourist/ProfileHeader";
 import Sidebar from "../../Components/Tourist/sidebartourist";
 import Feed from "../../Components/Tourist/Feed";
 import CreateProfileModal from "../../Components/modals/CreateProfileModal";
+import { authFetch } from '../../services/authFetch';
 const API_BASE_URL = import.meta.env.VITE_API_URL || "/api";
 export default function Profile() {
-  const { userId } = useParams();
+  const verifiedUser = useOutletContext();
+  const userId = verifiedUser?._id;
 
   const [profileData, setProfileData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -23,7 +25,7 @@ export default function Profile() {
         setError("");
         setProfileNotFound(false);
 
-        const response = await fetch(`${API_BASE_URL}/profiles/${userId}`, {
+        const response = await authFetch(`${API_BASE_URL}/profiles/${userId}`, {
           signal,
         });
 
@@ -39,8 +41,18 @@ export default function Profile() {
 
         const data = await response.json();
 
+        const savedIds = (data.saved_posts || []).map((id) => String(id?._id || id));
+        const savedPosts = await Promise.all(savedIds.map(async (id) => {
+          try {
+            const savedResponse = await authFetch(`${API_BASE_URL}/posts/${id}`, { signal });
+            return savedResponse.ok ? await savedResponse.json() : null;
+          } catch (err) {
+            if (err.name === 'AbortError') throw err;
+            return null;
+          }
+        }));
+        data.saved_posts = savedPosts.filter(Boolean);
         setProfileData(data);
-        localStorage.setItem("tourist", JSON.stringify(data));
       } catch (err) {
         if (err.name !== "AbortError") {
           console.error(err);
@@ -90,6 +102,7 @@ export default function Profile() {
       <>
         <div className="min-h-screen bg-[#fafafa] flex items-center justify-center px-4">
           <div className="bg-white rounded-3xl shadow-xl p-10 max-w-md w-full text-center">
+            {verifiedUser?.guideApplicationStatus && <GuideApplicationBanner status={verifiedUser.guideApplicationStatus} />}
             <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-orange-100 flex items-center justify-center">
               <PlusCircle className="w-12 h-12 text-orange-500" />
             </div>
@@ -122,13 +135,11 @@ export default function Profile() {
   if (!profileData) {
     return null;
   }
-  console.log(profileData, "profiledata");
-  
 
   const user = {
     // Uses owner.username if populated; falls back to ownerName if present
     name:
-      profileData.owner?.username || profileData.ownerName || "Unknown User",
+      profileData.owner?.name || profileData.ownerName || "Unknown User",
     isVerified: profileData.isVerified || false,
     tagline: profileData.headline || "",
     location: profileData.location || "",
@@ -191,7 +202,8 @@ export default function Profile() {
     ],
   };
 
-  const posts = (profileData.posts || []).map((post) => ({
+  const feedPosts = [...(profileData.posts || []), ...(profileData.saved_posts || [])];
+  const posts = feedPosts.filter((post, index, all) => all.findIndex((item) => String(item._id) === String(post._id)) === index).map((post) => ({
     id: post._id,
     location: post.tripLocation,
     imageCount: `1/${post.images?.length || 1}`,
@@ -213,13 +225,14 @@ export default function Profile() {
     description: post.description,
     likes: post.numLikes ?? 0,
     comments: post.numComments ?? 0,
-    saved: post.saved ?? false,
+    saved: (profileData.saved_posts || []).some((savedPost) => String(savedPost._id) === String(post._id)),
   }));
 
   return (
     <div className="min-h-screen bg-[#fafafa] font-sans selection:bg-orange-100 selection:text-orange-900">
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-        <ProfileHeader user={user} stats={stats} id={userId} />
+        {verifiedUser?.guideApplicationStatus && <GuideApplicationBanner status={verifiedUser.guideApplicationStatus} />}
+        <ProfileHeader user={user} stats={stats} />
 
         <div className="flex flex-col lg:flex-row gap-6 sm:gap-8">
           <aside className="w-full lg:w-[300px] xl:w-[320px] shrink-0">
@@ -233,4 +246,13 @@ export default function Profile() {
       </main>
     </div>
   );
+}
+
+function GuideApplicationBanner({ status }) {
+  const message = status === 'pending'
+    ? 'Your Tour Guide application is waiting for Admin review. Guide tools will unlock once it is approved.'
+    : status === 'rejected'
+      ? 'Your Tour Guide application was not approved. Your account remains available as a Tourist.'
+      : 'Your Tour Guide access is currently suspended. Contact the platform administrator for more information.';
+  return <div role="status" className="mx-auto mb-6 max-w-7xl rounded-xl border border-orange-200 bg-orange-50 px-5 py-4 text-sm text-orange-950">{message}</div>;
 }

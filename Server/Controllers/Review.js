@@ -1,125 +1,151 @@
 const Review = require('../Models/Review');
+const User = require('../Models/User');
+const Place = require('../Models/Place');
+const Profile = require('../Models/TouristProfile');
+const TourGuideProfile = require('../Models/TourGuideProfile');
 
-// POST /api/reviews
+const PUBLIC_FIELDS = [
+  '_id', 'reviewerName', 'reviewerAvatarUrl', 'entityType', 'tourGuideId', 'placeId',
+  'entityName', 'entityAvatarUrl', 'rating', 'text', 'createdAt', 'updatedAt',
+];
+
+function publicReview(review) {
+  const value = review.toObject ? review.toObject() : { ...review };
+  return Object.fromEntries(PUBLIC_FIELDS.filter((field) => value[field] !== undefined).map((field) => [field, value[field]]));
+}
+
+function isAuthorOrAdmin(req, review) {
+  return String(review.reviewerId) === String(req.user.id) || req.user.role === 'admin';
+}
+
+async function publicReviews(filter) {
+  const rows = await Review.find({ ...filter, status: 'PUBLISHED' }).sort({ createdAt: -1 });
+  return rows.map(publicReview);
+}
+
 exports.createReview = async (req, res) => {
   try {
-    const { reviewerId, entityType, entityName } = req.body;
-
-    if (!reviewerId || !entityType || !entityName) {
-      return res
-        .status(400)
-        .json({ message: 'reviewerId, entityType, and entityName are required.' });
+    const { entityType, rating, text } = req.body || {};
+    if (!['Guide', 'Place'].includes(entityType) || !Number.isInteger(rating) || rating < 1 || rating > 5 || typeof text !== 'string' || !text.trim()) {
+      return res.status(400).json({ message: 'A valid review target, rating, and text are required.' });
     }
 
-    const newReview = await Review.create(req.body);
+    const [reviewer, profile] = await Promise.all([
+      User.findById(req.user.id).select('name'),
+      req.user.role === 'tourguide'
+        ? TourGuideProfile.findOne({ owner: req.user.id }).select('avatarUrl')
+        : Profile.findOne({ owner: req.user.id }).select('avatarUrl'),
+    ]);
+    if (!reviewer) return res.status(401).json({ message: 'Authentication required.' });
 
-    res.status(201).json(newReview);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
+    let target;
+    let targetFields;
+    if (entityType === 'Guide') {
+      target = await TourGuideProfile.findOne({ owner: req.body.tourGuideId }).select('owner name avatarUrl status verified');
+      if (!target || target.status !== 'approved' || target.verified !== true) {
+        return res.status(404).json({ message: 'Review target not found.' });
+      }
+      const targetAccount = await User.findById(target.owner).select('name');
+      if (!targetAccount) return res.status(404).json({ message: 'Review target not found.' });
+      targetFields = { tourGuideId: target.owner, entityName: targetAccount.name, entityAvatarUrl: target.avatarUrl || '' };
+    } else {
+      target = await Place.findById(req.body.placeId).select('name imageUrl');
+      if (!target) return res.status(404).json({ message: 'Review target not found.' });
+      targetFields = { placeId: target._id, entityName: target.name, entityAvatarUrl: target.imageUrl || '' };
+    }
+
+    const review = await Review.create({
+      reviewerId: req.user.id,
+      reviewerName: reviewer.name,
+      reviewerAvatarUrl: profile?.avatarUrl || '',
+      entityType,
+      ...targetFields,
+      rating,
+      text: text.trim().slice(0, 5000),
+      status: 'PUBLISHED',
+    });
+    return res.status(201).json(publicReview(review));
+  } catch {
+    return res.status(400).json({ message: 'Unable to create review.' });
   }
 };
 
-// GET /api/reviews/:id
 exports.getReviewById = async (req, res) => {
   try {
-    const review = await Review.findById(req.params.id);
-
-    if (!review) {
-      return res.status(404).json({ message: 'Review not found' });
-    }
-
-    res.status(200).json(review);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
+    const review = await Review.findOne({ _id: req.params.id, status: 'PUBLISHED' });
+    if (!review) return res.status(404).json({ message: 'Review not found.' });
+    return res.status(200).json(publicReview(review));
+  } catch {
+    return res.status(400).json({ message: 'Unable to fetch review.' });
   }
 };
 
-// GET /api/reviews/reviewer/:reviewerId
 exports.getReviewsByReviewerId = async (req, res) => {
   try {
-    const reviews = await Review.find({ reviewerId: req.params.reviewerId }).sort({
-      createdAt: -1,
-    });
-
-    res.status(200).json(reviews);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
+    return res.status(200).json(await publicReviews({ reviewerId: req.params.reviewerId }));
+  } catch {
+    return res.status(500).json({ message: 'Unable to fetch reviews.' });
   }
 };
 
-// GET /api/reviews/tourguide/:tourGuideId
 exports.getReviewsByTourGuideId = async (req, res) => {
   try {
-    const reviews = await Review.find({ tourGuideId: req.params.tourGuideId }).sort({
-      createdAt: -1,
-    });
-
-    res.status(200).json(reviews);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
+    return res.status(200).json(await publicReviews({ tourGuideId: req.params.tourGuideId }));
+  } catch {
+    return res.status(500).json({ message: 'Unable to fetch reviews.' });
   }
 };
 
-// GET /api/reviews/place/:placeId
 exports.getReviewsByPlaceId = async (req, res) => {
   try {
-    const reviews = await Review.find({ placeId: req.params.placeId }).sort({
-      createdAt: -1,
-    });
-
-    res.status(200).json(reviews);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
+    return res.status(200).json(await publicReviews({ placeId: req.params.placeId }));
+  } catch {
+    return res.status(500).json({ message: 'Unable to fetch reviews.' });
   }
 };
 
-// GET /api/reviews
 exports.getReviews = async (req, res) => {
   try {
-    const { status } = req.query;
-
-    const filter = {};
-
-    if (status) filter.status = status;
-
-    const reviews = await Review.find(filter).sort({ createdAt: -1 });
-
-    res.status(200).json(reviews);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
+    return res.status(200).json(await publicReviews({}));
+  } catch {
+    return res.status(500).json({ message: 'Unable to fetch reviews.' });
   }
 };
 
-// PUT /api/reviews/:id
 exports.updateReview = async (req, res) => {
   try {
-    const updatedReview = await Review.findByIdAndUpdate(
-      req.params.id,
-      { $set: req.body },
-      { new: true, runValidators: true }
-    );
+    const review = await Review.findById(req.params.id);
+    if (!review) return res.status(404).json({ message: 'Review not found.' });
+    if (!isAuthorOrAdmin(req, review)) return res.status(404).json({ message: 'Review not found.' });
 
-    if (!updatedReview) {
-      return res.status(404).json({ message: 'Review not found' });
+    const allowedFields = req.user.role === 'admin' ? ['text', 'rating', 'status', 'flagged', 'action'] : ['text', 'rating'];
+    const updates = Object.fromEntries(allowedFields
+      .filter((field) => Object.hasOwn(req.body || {}, field))
+      .map((field) => [field, req.body[field]]));
+    if (!Object.keys(updates).length) return res.status(400).json({ message: 'No valid review fields provided.' });
+    if (updates.text !== undefined && (typeof updates.text !== 'string' || !updates.text.trim() || updates.text.length > 5000)) {
+      return res.status(400).json({ message: 'Review text is invalid.' });
+    }
+    if (updates.rating !== undefined && (!Number.isInteger(updates.rating) || updates.rating < 1 || updates.rating > 5)) {
+      return res.status(400).json({ message: 'Review rating must be from 1 to 5.' });
     }
 
-    res.status(200).json(updatedReview);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
+    Object.assign(review, updates);
+    await review.save();
+    return res.status(200).json(req.user.role === 'admin' ? review : publicReview(review));
+  } catch {
+    return res.status(400).json({ message: 'Unable to update review.' });
   }
 };
 
-// DELETE /api/reviews/:id
 exports.deleteReview = async (req, res) => {
   try {
-    const deletedReview = await Review.findByIdAndDelete(req.params.id);
-
-    if (!deletedReview) {
-      return res.status(404).json({ message: 'Review not found' });
-    }
-
-    res.status(200).json({ message: 'Review deleted successfully' });
-  } catch (err) {
-    res.status(500).json({ message: err.message });
+    const review = await Review.findById(req.params.id);
+    if (!review) return res.status(404).json({ message: 'Review not found.' });
+    if (!isAuthorOrAdmin(req, review)) return res.status(404).json({ message: 'Review not found.' });
+    await review.deleteOne();
+    return res.status(200).json({ message: 'Review deleted successfully.' });
+  } catch {
+    return res.status(400).json({ message: 'Unable to delete review.' });
   }
 };

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { authFetch } from '../../services/authFetch';
 
 // ---------- CONFIG ----------
 // Matches your actual Mongo schema: name, city, category ("Touristic" | "Historical"), imageUrl, description
@@ -52,7 +53,7 @@ export default function Explore() {
       setLoading(true);
       setError(null);
       try {
-        const res = await fetch(API_URL, { method: "GET" });
+        const res = await authFetch(API_URL, { method: "GET" });
         if (!res.ok) {
           throw new Error(`HTTP ${res.status}`);
         }
@@ -128,10 +129,10 @@ export default function Explore() {
         />
         <div className="absolute inset-0 z-[2] bg-gradient-to-b from-black/10 via-black/35 to-black/85" />
 
-        <div className="absolute top-40 right-12 z-[5] hidden sm:block rounded-3xl border border-white/50 bg-white/90 px-6 py-4 shadow-[0_20px_40px_rgba(0,0,0,0.12)] backdrop-blur-md">
-          <div className="mb-1 text-[0.85rem] tracking-[2px] text-[#E2A856]">★★★★★</div>
-          <div className="text-[1.25rem] font-bold">4.9 / 5</div>
-          <div className="text-[0.68rem] font-semibold tracking-wide text-[#6E6E6A]">From 15,000+ Global Travelers</div>
+        <div className="absolute top-40 right-12 z-[5] hidden rounded-3xl border border-white/50 bg-white/90 px-6 py-4 shadow-[0_20px_40px_rgba(0,0,0,0.12)] backdrop-blur-md sm:block">
+          <div className="mb-1 text-[0.68rem] font-semibold uppercase tracking-[2px] text-[#6E6E6A]">Place directory</div>
+          <div className="text-[1.25rem] font-bold">{loading ? 'Loading…' : `${places.length} places`}</div>
+          <div className="text-[0.68rem] font-semibold tracking-wide text-[#6E6E6A]">Egypt destinations</div>
         </div>
 
         <div className="relative z-[5] mt-10 flex h-full flex-col items-center justify-center px-6 text-center text-white">
@@ -149,8 +150,7 @@ export default function Explore() {
               wordSpacing: "4px",
             }}
           >
-            From hidden majestic desert oases to the brilliant sapphire waters of the
-            Red Sea explore all 27 architectural governorates perfectly crafted for you.
+            Explore historical sites, museums, islands, and coastal destinations across Egypt.
           </p>
         </div>
       </header>

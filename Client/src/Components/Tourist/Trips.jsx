@@ -9,6 +9,7 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { tripApi, profileApi } from "../../services/Touristapi";
+import TouristNav from "../Layout/TouristNav";
 
 export default function TripsPage() {
   const [selectedTrip, setSelectedTrip] = useState(null);
@@ -83,7 +84,7 @@ export default function TripsPage() {
   if (loadError) {
     return (
       <div className="relative">
-        <Navbar className="mb-10" />
+        <TouristNav className="mb-10" />
         <div className="min-h-[60vh] flex items-center justify-center p-6">
           <div className="bg-white border border-red-100 rounded-2xl p-6 max-w-md text-center space-y-3">
             <AlertTriangle className="w-8 h-8 text-red-500 mx-auto" />
@@ -271,16 +272,14 @@ export default function TripsPage() {
                       <p className="text-sm font-bold text-slate-900 truncate">
                         {getGuideByOwnerId(selectedTrip.tourGuideId).name}
                       </p>
-                      <div className="flex items-center gap-1">
-                        <Star className="w-3 h-3 text-orange-500 fill-orange-500" />
-                        <span className="text-xs font-semibold text-slate-500">
-                          {(
-                            getGuideByOwnerId(selectedTrip.tourGuideId)
-                              .rating || 0
-                          ).toFixed(1)}{" "}
-                          · {getGuideByOwnerId(selectedTrip.tourGuideId).city}
-                        </span>
-                      </div>
+                      {getGuideByOwnerId(selectedTrip.tourGuideId).reviews > 0 ? (
+                        <div className="flex items-center gap-1">
+                          <Star className="w-3 h-3 text-orange-500 fill-orange-500" />
+                          <span className="text-xs font-semibold text-slate-500">
+                            {getGuideByOwnerId(selectedTrip.tourGuideId).rating.toFixed(1)} · {getGuideByOwnerId(selectedTrip.tourGuideId).city}
+                          </span>
+                        </div>
+                      ) : <span className="text-xs text-slate-500">No reviews yet · {getGuideByOwnerId(selectedTrip.tourGuideId).city}</span>}
                     </div>
                     <span className="text-[10px] font-bold text-orange-600 uppercase tracking-wide whitespace-nowrap">
                       View Profile

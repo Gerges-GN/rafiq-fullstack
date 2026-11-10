@@ -2,13 +2,13 @@ import React from 'react'
 
 /**
  * List of items with a thumbnail, name, a horizontal magnitude bar, and a
- * trailing count. Used for "Most Searched Cities".
+ * trailing count. Used to summarize Places grouped by city.
  *
  * @param {Object} props
- * @param {{name: string, searches: number, max: number, image?: string}[]} props.items
- * @param {string} [props.unitLabel='searches']
+ * @param {{name: string, count: number, max: number, image?: string}[]} props.items
+ * @param {string} [props.unitLabel='items']
  */
-export default function RankedList({ items = [], unitLabel = 'searches' }) {
+export default function RankedList({ items = [], unitLabel = 'items' }) {
   return (
     <ul className="space-y-4">
       {items.map((item) => (
@@ -20,13 +20,13 @@ export default function RankedList({ items = [], unitLabel = 'searches' }) {
             <div className="flex items-center justify-between mb-1.5">
               <span className="text-sm font-semibold text-ink-900">{item.name}</span>
               <span className="text-xs text-ink-500">
-                {item.searches.toLocaleString()} {unitLabel}
+                {item.count.toLocaleString()} {unitLabel}
               </span>
             </div>
             <div className="w-full h-1.5 rounded-full bg-gray-200 overflow-hidden">
               <div
                 className="h-full rounded-full bg-brand-500"
-                style={{ width: `${(item.searches / item.max) * 100}%` }}
+                style={{ width: `${(item.count / item.max) * 100}%` }}
               />
             </div>
           </div>
