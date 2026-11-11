@@ -87,6 +87,8 @@ function StatCount({ value, suffix = "" }) {
   const [display, setDisplay] = useState("0");
   const started = useRef(false);
   useEffect(() => {
+    started.current = false;
+    if (value == null) return undefined;
     const el = ref.current;
     if (!el) return;
     const obs = new IntersectionObserver(
@@ -110,6 +112,7 @@ function StatCount({ value, suffix = "" }) {
     obs.observe(el);
     return () => obs.disconnect();
   }, [value]);
+  if (value == null) return <span aria-label="Unavailable">—</span>;
   return (
     <span ref={ref}>
       {display}
@@ -168,31 +171,65 @@ const STOPS = [
 export default function Home() {
   const navigate = useNavigate();
   const [places, setPlaces] = useState([]);
+  const [placesStatus, setPlacesStatus] = useState("loading");
   const [guides, setGuides] = useState([]);
+  const [guidesStatus, setGuidesStatus] = useState("loading");
   const [voices, setVoices] = useState([]);
+  const [contentLoadAttempt, setContentLoadAttempt] = useState(0);
 
   useEffect(() => {
     const controller = new AbortController();
-    Promise.all([
-      fetch(`${API_BASE_URL}/places`, { signal: controller.signal }).then((res) => res.ok ? res.json() : []),
-      fetch(`${API_BASE_URL}/tourguide-profiles`, { signal: controller.signal }).then((res) => res.ok ? res.json() : []),
-      fetch(`${API_BASE_URL}/reviews`, { signal: controller.signal }).then((res) => res.ok ? res.json() : []),
-    ]).then(([placeRows, guideRows, reviewRows]) => {
-      setPlaces(Array.isArray(placeRows) ? placeRows : []);
-      setGuides(Array.isArray(guideRows) ? guideRows : []);
-      setVoices(Array.isArray(reviewRows) ? reviewRows.slice(0, 3).map((review) => ({
-        name: review.reviewerName || "Demo traveler",
-        trip: `${review.entityType === "Guide" ? "Guide" : "Place"}: ${review.entityName || "Egypt experience"}`,
-        quote: review.text,
-        rating: review.rating,
-      })) : []);
-    }).catch((error) => {
-      if (error.name !== "AbortError") console.error("Home page content could not be loaded.");
+    const fetchRows = async (path) => {
+      const response = await fetch(`${API_BASE_URL}${path}`, { signal: controller.signal });
+      if (!response.ok) throw new Error(`Request failed (${response.status})`);
+      const rows = await response.json();
+      if (!Array.isArray(rows)) throw new Error("The server returned an invalid list.");
+      return rows;
+    };
+
+    Promise.allSettled([
+      fetchRows("/places"),
+      fetchRows("/tourguide-profiles"),
+      fetchRows("/reviews"),
+    ]).then(([placeResult, guideResult, reviewResult]) => {
+      if (controller.signal.aborted) return;
+
+      if (placeResult.status === "fulfilled") {
+        setPlaces(placeResult.value);
+        setPlacesStatus("ready");
+      } else {
+        setPlacesStatus("error");
+        console.error("Home page places could not be loaded.", placeResult.reason);
+      }
+
+      if (guideResult.status === "fulfilled") {
+        setGuides(guideResult.value);
+        setGuidesStatus("ready");
+      } else {
+        setGuidesStatus("error");
+        console.error("Home page guides could not be loaded.", guideResult.reason);
+      }
+
+      if (reviewResult.status === "fulfilled") {
+        setVoices(reviewResult.value.slice(0, 3).map((review) => ({
+          name: review.reviewerName || "Demo traveler",
+          trip: `${review.entityType === "Guide" ? "Guide" : "Place"}: ${review.entityName || "Egypt experience"}`,
+          quote: review.text,
+          rating: review.rating,
+        })));
+      } else {
+        console.error("Home page reviews could not be loaded.", reviewResult.reason);
+      }
     });
     return () => controller.abort();
-  }, []);
+  }, [contentLoadAttempt]);
 
-  const cityCount = new Set(places.map((place) => place.city).filter(Boolean)).size;
+  const cityCount = placesStatus === "ready"
+    ? new Set(places.map((place) => place.city).filter(Boolean)).size
+    : null;
+  const placesCount = placesStatus === "ready" ? places.length : null;
+  const guidesCount = guidesStatus === "ready" ? guides.length : null;
+  const statsUnavailable = placesStatus === "error" || guidesStatus === "error";
   const routeGroups = [
     { name: "Cairo & Giza", tag: "Greater Cairo", cities: ["Cairo", "Giza"] },
     { name: "Luxor", tag: "Upper Egypt", cities: ["Luxor"] },
@@ -343,8 +380,8 @@ export default function Home() {
                   <Compass className="h-4 w-4 text-[#FF6A2C]" />
                 </span>
                 <div>
-                  <div className="text-sm font-extrabold leading-none">{places.length} Egypt places</div>
-                  <div className="text-[10px] text-gray-500">{guides.length} approved local guides</div>
+                  <div className="text-sm font-extrabold leading-none">{placesCount ?? "—"} Egypt places</div>
+                  <div className="text-[10px] text-gray-500">{guidesCount ?? "—"} approved local guides</div>
                 </div>
               </div>
             </div>
@@ -355,8 +392,8 @@ export default function Home() {
         <Reveal delay={200}>
           <div className="mt-16 flex flex-wrap items-center justify-center gap-12 border-t border-gray-100 pt-10 sm:justify-between">
             {[
-              { v: places.length, s: "", l: "Egypt places" },
-              { v: guides.length, s: "", l: "Approved guides" },
+              { v: placesCount, s: "", l: "Egypt places" },
+              { v: guidesCount, s: "", l: "Approved guides" },
               { v: cityCount, s: "", l: "Egyptian cities" },
             ].map((s) => (
               <div key={s.l} className="text-center">
@@ -367,6 +404,18 @@ export default function Home() {
               </div>
             ))}
           </div>
+          {statsUnavailable && (
+            <p className="mt-4 text-center text-sm text-gray-500">
+              Some live counts couldn&apos;t load.{" "}
+              <button
+                type="button"
+                onClick={() => setContentLoadAttempt((attempt) => attempt + 1)}
+                className="font-semibold text-[#FF6A2C] underline"
+              >
+                Retry
+              </button>
+            </p>
+          )}
         </Reveal>
       </section>
 
@@ -404,8 +453,8 @@ export default function Home() {
             </p>
             <div className="grid grid-cols-3 gap-4 max-w-[440px]">
               {[
-                { n: places.length, l: "Egypt places" },
-                { n: guides.length, l: "Approved guides" },
+                { n: placesCount, l: "Egypt places" },
+                { n: guidesCount, l: "Approved guides" },
                 { n: cityCount, l: "Egyptian cities" },
               ].map((s) => (
                 <div key={s.l} className="rounded-2xl border border-gray-100 bg-white p-5 text-center shadow-sm transition hover:-translate-y-1">

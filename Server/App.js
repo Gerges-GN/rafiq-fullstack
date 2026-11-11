@@ -39,21 +39,29 @@ app.use(cors({
   allowedHeaders: ["Content-Type", "Authorization"],
 }));
 
-const databaseReady = mongoose.connect(process.env.MONGO_URI)
-  .then(() => {
-    console.log("MongoDB connected");
-    return true;
-  })
-  .catch((error) => {
-    console.error("MongoDB connection failed:", error.message);
-    return false;
-  });
+let databaseConnectionPromise;
+const connectDatabase = () => {
+  if (mongoose.connection.readyState === 1) return Promise.resolve(true);
+  if (!databaseConnectionPromise) {
+    databaseConnectionPromise = mongoose.connect(process.env.MONGO_URI)
+      .then(() => {
+        console.log("MongoDB connected");
+        return true;
+      })
+      .catch((error) => {
+        console.error("MongoDB connection failed:", error.message);
+        return false;
+      })
+      .finally(() => {
+        databaseConnectionPromise = null;
+      });
+  }
+  return databaseConnectionPromise;
+};
 
-// Requests wait for the initial connection and never present a disconnected API as healthy.
 app.use(async (req, res, next) => {
   try {
-    if (mongoose.connection.readyState !== 1) await databaseReady;
-    if (mongoose.connection.readyState !== 1) {
+    if (!(await connectDatabase()) || mongoose.connection.readyState !== 1) {
       return res.status(503).json({ message: "Database is unavailable." });
     }
     return next();
@@ -97,7 +105,7 @@ app.use((err, req, res, next) => {
 });
 
 if (require.main === module) {
-    databaseReady.then((ready) => {
+    connectDatabase().then((ready) => {
       if (!ready) {
         process.exitCode = 1;
         return;
