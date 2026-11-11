@@ -60,6 +60,9 @@ export default function GuidesPage() {
     setLoadError("");
     try {
       const guidesData = await profileApi.getAll();
+      if (!Array.isArray(guidesData)) {
+        throw new Error("The server returned an invalid tour guide list.");
+      }
       setGuides(guidesData);
     } catch (err) {
       setLoadError(err.message || "Failed to load tour guides.");

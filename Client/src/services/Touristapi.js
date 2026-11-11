@@ -28,11 +28,15 @@ export async function apiRequest(path, options = {}) {
     );
   }
 
+  if (res.status === 204) return null;
+
   let data = null;
   try {
     data = await res.json();
   } catch {
-    // no body (e.g. some DELETE responses, or a non-JSON error page)
+    throw new Error(
+      `The server returned a non-JSON response (HTTP ${res.status}). Check the API deployment and Vercel routing.`,
+    );
   }
 
   if (!res.ok) {
