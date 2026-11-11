@@ -12,10 +12,6 @@ import {
 const Footer = () => {
   return (
     <footer className="relative overflow-hidden bg-[#071320] text-white">
-
-      {/* Background Pattern */}
-      <div className="absolute inset-0 opacity-[0.04] bg-[url('/images/pattern.png')] bg-repeat"></div>
-
       <div className="relative px-8 lg:px-20 py-12">
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">

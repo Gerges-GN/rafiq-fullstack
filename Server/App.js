@@ -96,13 +96,13 @@ app.use((err, req, res, next) => {
     res.status(safeStatus).json({ success: false, message });
 });
 
-if (process.env.NODE_ENV !== "production") {
+if (require.main === module) {
     databaseReady.then((ready) => {
       if (!ready) {
         process.exitCode = 1;
         return;
       }
-      app.listen(process.env.PORT || 5000, () => console.log("Local server started"));
+      app.listen(process.env.PORT || 5000, "0.0.0.0", () => console.log("Server started"));
     });
 }
 
